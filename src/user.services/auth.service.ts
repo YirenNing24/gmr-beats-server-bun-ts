@@ -153,7 +153,7 @@ export default class AuthService {
         uuid: user.properties.userId,
 
 
-        token: jwt.sign(username, JWT_SECRET, {expiresIn: "1h"}),
+        token: jwt.sign({ username }, JWT_SECRET, {expiresIn: "1h"}),
       };
     } catch (error) {
       throw error;
