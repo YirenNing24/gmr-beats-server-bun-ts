@@ -18,7 +18,7 @@ const auth = (app: Elysia) => {
       const { username, password } = context.body as { username: string; password: string };
 
       const driver: Driver = getDriver();
-      const authService = new AuthService(driver);
+      const authService: AuthService = new AuthService(driver);
       const output = await authService.authenticate(username, password);
 
       const { token, uuid, ...userProperties } = output;
@@ -56,8 +56,8 @@ const auth = (app: Elysia) => {
   
       const { username } = decodedToken as { username: string };
   
-      const driver = getDriver();
-      const authService = new AuthService(driver);
+      const driver: Driver = getDriver();
+      const authService: AuthService = new AuthService(driver);
       const output = await authService.validateSession(username);
   
       return output;

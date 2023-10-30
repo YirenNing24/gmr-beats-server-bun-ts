@@ -153,7 +153,7 @@ export default class AuthService {
         uuid: user.properties.userId,
 
 
-        token: jwt.sign(username, JWT_SECRET, {expiresIn: '1h'}),
+        token: jwt.sign(username, JWT_SECRET, {expiresIn: "1h"}),
       };
     } catch (error) {
       throw error;
@@ -170,8 +170,8 @@ async validateSession(username: string) {
     // const profileService = new ProfileService();
 
     // Open a new session
-    const session:Session = this.driver.session();
-    const res:QueryResult = await session.executeRead(tx =>
+    const session: Session = this.driver.session();
+    const res: QueryResult = await session.executeRead(tx =>
       tx.run('MATCH (u:User {username: $username}) RETURN u', { username })
     );
 
