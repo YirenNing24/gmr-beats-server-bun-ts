@@ -133,8 +133,8 @@ export default class AuthService {
 
       // Compare Passwords
       const user = res.records[0].get('u');
-      const encryptedPassword:string = user.properties.password;
-      const correct:boolean = await compare(unencryptedPassword, encryptedPassword);
+      const encryptedPassword: string = user.properties.password;
+      const correct: boolean = await compare(unencryptedPassword, encryptedPassword);
       if (!correct) {
         //@ts-ignore
         throw new ValidationError('Incorrect password.', {});  
