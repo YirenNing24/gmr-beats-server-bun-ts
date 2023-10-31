@@ -2,7 +2,7 @@ import auth from './auth.routes'
 import store from './store.routes'
 import profile from './profile.routes'
 import inventory from './inventory.route'
-import Elysia from 'elysia'
+import chat from './chat.routes'
 
 // import { insertChats } from '../game.services/chat.service';
 // Routes Registration Function
@@ -14,6 +14,8 @@ const routes = (app: any) => {
     app.use(profile)
     app.use(store)
     app.use(inventory)
+    
+    app.use(chat)
 
     //   app.register(chat);
     //   app.register(insertChats)

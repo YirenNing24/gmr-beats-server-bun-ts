@@ -1,27 +1,17 @@
 //* ELYSIA
 import Elysia from "elysia";
 import { cors } from '@elysiajs/cors'
-import jwt from "@elysiajs/jwt";
 
 //* DATABASES
 import { initDriver } from './db/memgraph';
 
-
 //* INITIALIZERS
-import { JWT_SECRET, NEO4J_PASSWORD, NEO4J_URI, NEO4J_USERNAME } from './config/constants.js';
+import { NEO4J_PASSWORD, NEO4J_URI, NEO4J_USERNAME } from './config/constants.js';
 import routes from "./routes/index";
 
 
 const app: Elysia = new Elysia()
 
-app.use(jwt({
-    name: 'beats',
-    secret: JWT_SECRET,
-    sign:{
-      expiresIn: '1h'
-    }
-  })
-);
 
 //@ts-ignore
 app.use(cors({
