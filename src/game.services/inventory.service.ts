@@ -50,6 +50,6 @@ constructor(driver: Driver) {
       }
 
 }
-    
+    //@test
 
 export default  InventoryService
