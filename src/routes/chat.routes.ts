@@ -11,7 +11,7 @@ import Elysia from "elysia";
     //@ts-ignore
     message(ws, message) {
         ws.send(message)
-        const params = ws.data.params
+        const params = ws.data
         console.log(params)
         
     }
