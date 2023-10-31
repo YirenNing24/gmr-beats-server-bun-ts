@@ -6,7 +6,7 @@ import Elysia from "elysia";
 
 
  const chat = (app: Elysia) => {
-  
+  //@ts-ignore
    app.ws('/api/chats/:room', {
     open(ws) {
         const data = ws.data
