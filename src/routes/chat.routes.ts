@@ -9,9 +9,11 @@ import Elysia from "elysia";
   
    app.ws('/api/chats/:room', {
     //@ts-ignore
-    message(ws, message, route) {
+    message(ws, message) {
         ws.send(message)
-        console.log(route)
+        const params = ws.data.params
+        console.log(params)
+        
     }
 })
 
