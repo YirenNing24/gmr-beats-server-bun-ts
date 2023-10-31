@@ -4,16 +4,14 @@ import jwt from 'jsonwebtoken'
 import { getDriver } from '../db/memgraph';
 import AuthService from '../user.services/auth.service';
 
-
-
-import { API_PREFIX, JWT_SECRET } from '../config/constants';
 import { Driver } from 'neo4j-driver';
+import { JWT_SECRET } from '../config/constants';
 
 
 
 const auth = (app: Elysia) => {
 
-  app.post(`${API_PREFIX}/login/beats`, async (context) => {
+  app.post("api/login/beats", async (context) => {
     try {
       const { username, password } = context.body as { username: string; password: string };
 
@@ -47,13 +45,11 @@ const auth = (app: Elysia) => {
         throw new Error('Bearer token not found in Authorization header');
       }
   
-      const jwtToken = authorizationHeader.substring(7);
+      const jwtToken: string = authorizationHeader.substring(7);
   
       // Verify the JWT token using 'jsonwebtoken' with options
-      const decodedToken = jwt.decode(jwtToken)
-  
-      console.log(decodedToken);
-  
+      const decodedToken = jwt.verify(jwtToken, JWT_SECRET)
+      
       const { username } = decodedToken as { username: string };
   
       const driver: Driver = getDriver();
@@ -97,7 +93,7 @@ const auth = (app: Elysia) => {
         const { anon, email, userName, password, firstName, lastName } = context.body as 
         { anon: boolean, email: string, userName: string, password: string, firstName: string, lastName: string };
 
-      const driver:Driver = getDriver();
+      const driver: Driver = getDriver();
       const authService = new AuthService(driver);
       const output = await authService.register(anon, email, password, userName, firstName, lastName);
 
@@ -111,7 +107,7 @@ const auth = (app: Elysia) => {
     try {
       const { username, email } = context.body as {username: string, email: string}
 
-      const driver:Driver = getDriver();
+      const driver: Driver = getDriver();
       const authService = new AuthService(driver);
       const output = await authService.resetPassword(username, email)
 

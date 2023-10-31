@@ -10,12 +10,10 @@ import ProfileService from '../game.services/profile.service'
 //** UUID GENERATOR */
 import { nanoid } from "nanoid/async";
 import { Driver, QueryResult, Session } from 'neo4j-driver-core'
-import jwt  from 'jsonwebtoken'
+import jwt from 'jsonwebtoken'
 
 
-
-
-export default class AuthService {
+class AuthService {
   /**
    * @type {neo4j.Driver}
    */
@@ -31,25 +29,24 @@ export default class AuthService {
       this.driver = driver;
   }
 
-
   async register(anon: boolean, email: string, password: string, userName: string, firstName: string, lastName: string) {
     const walletService = new WalletService();
     const replenishService = new Replenishments()
 
-    const userId:string = await nanoid()
-    const inventoryCard:string = JSON.stringify(cardInventory);
-    const statsPlayer:string = JSON.stringify(playerStats)
-    const inventoryPowerUp:string = JSON.stringify(powerUpInventory)
+    const userId: string = await nanoid()
+    const inventoryCard: string = JSON.stringify(cardInventory);
+    const statsPlayer: string = JSON.stringify(playerStats)
+    const inventoryPowerUp: string = JSON.stringify(powerUpInventory)
     
-    const encrypted:string = await hash(password, parseInt(SALT_ROUNDS))
-    const locKey:string = await hash(userName, parseInt(SALT_ROUNDS))
+    const encrypted: string = await hash(password, parseInt(SALT_ROUNDS))
+    const locKey: string = await hash(userName, parseInt(SALT_ROUNDS))
 
     const localWallet = await walletService.createWallet(locKey)
     // Open a new session
-    const session:Session = this.driver.session()
+    const session: Session = this.driver.session()
     try {
       // Create the User node in a write transaction
-       const res:QueryResult = await session.executeWrite(
+       const res: QueryResult = await session.executeWrite(
          tx => tx.run(
            `
              CREATE (u:User {
@@ -74,7 +71,7 @@ export default class AuthService {
        )
       // Extract the user from the result
       const [ first ] = res.records
-      const node:any = first.get('u')
+      const node: any = first.get('u')
 
       const { password, ...safeProperties } = node.properties
       // Close the session
@@ -151,8 +148,6 @@ export default class AuthService {
         energy, wallet, playerStats: stats, username,
         ...safeProperties,
         uuid: user.properties.userId,
-
-
         token: jwt.sign({ username }, JWT_SECRET, {expiresIn: "1h"}),
       };
     } catch (error) {
@@ -212,3 +207,6 @@ async resetPassword(username: string, email: string) {
 
 
 }
+
+
+export default AuthService

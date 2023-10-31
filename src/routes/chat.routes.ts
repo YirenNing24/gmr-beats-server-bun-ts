@@ -1,24 +1,19 @@
 
 // import ChatService from "../game.services/chat.service";
 
+import Elysia from "elysia";
 
 
-// const router = (app: FastifyInstance, options: FastifyPluginOptions, done: () => void) => {
+
+ const chat = (app: Elysia) => {
   
-//   app.get("/api/chats/:room", { websocket: true}, (connection: any, request: FastifyRequest) => {
-//       try {
-//         //@ts-ignore
-//         const room:string = request.params.room;
-
-//         const chatService = new ChatService(connection);
-//         chatService.chatRoom(room)
-//       } catch (error) {
-//         console.log(error)
-//       }
-//     }
-//   );
+   app.ws('/api/chats/:room', {
+    message(ws, message) {
+        ws.send(message)
+    }
+})
 
 //   done();
-// };
+ };
 
-// export default router;
+ export default chat;
