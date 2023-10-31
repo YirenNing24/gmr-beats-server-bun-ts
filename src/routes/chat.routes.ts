@@ -1,19 +1,19 @@
-
-// import ChatService from "../game.services/chat.service";
-
 import Elysia from "elysia";
 
-
-
- const chat = (app: Elysia) => {
-  
-   app.ws('/api/chats/:room', {
+const chat = (app: Elysia) => {
+  app.ws('/api/chats/:room', {
     message(ws, message) {
-        ws.send(message)
+      // Access the 'room' parameter from the URL using ws.params
+      //@ts-ignore
+      const room = ws.params.room;
+      
+      // Now, you can use the 'room' variable in your WebSocket handler
+      console.log(`Room: ${room}`);
+      
+      // Send the message
+      ws.send(message);
     }
-})
+  });
+};
 
-//   done();
- };
-
- export default chat;
+export default chat;
