@@ -8,12 +8,13 @@ import Elysia from "elysia";
  const chat = (app: Elysia) => {
   
    app.ws('/api/chats/:room', {
-    //@ts-ignore
+    open(ws) {
+        const data = ws.data
+        console.log(data)
+    },
     message(ws, message) {
         ws.send(message)
         const params = ws.data
-        console.log(params)
-        
     }
 })
 
