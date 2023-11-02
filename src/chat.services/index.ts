@@ -5,7 +5,7 @@ import { ElysiaWS } from "elysia/ws";
 
 class ChatService {
 
-  
+
   
   async publish (type: string, data: any) {
     const outgoing = {
@@ -18,6 +18,7 @@ class ChatService {
 
   async initPubSub(ws: ElysiaWS<any>) {
     console.log('burat mataba')
+    ws.send('buart mataba')
     keydb.on("message", (_, message) => {
       const { serverId, type, data } = JSON.parse(message) as {
         serverId: string;
