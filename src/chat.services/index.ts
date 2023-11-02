@@ -16,18 +16,17 @@ class ChatService {
   };
 
   async initPubSub(ws: ElysiaWS<any>) {
-    console.log(ws)
     keydb.on("message", (_, message) => {
       const { serverId, type, data } = JSON.parse(message) as {
         serverId: string;
         type: string;
         data: object;
       };
-
+      ws.send('tae')
       if (serverId === SERVER_ID) {
         return;
       }
-      ws.send('tae')
+      
       
       
     });
