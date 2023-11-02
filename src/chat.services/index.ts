@@ -4,8 +4,7 @@ import { ElysiaWS } from "elysia/ws";
 
 
 class ChatService {
-
-
+  
   async publish (type: string, data: any) {
     const outgoing = {
         serverId: SERVER_ID,
