@@ -4,6 +4,38 @@ import { ElysiaWS } from "elysia/ws";
 
 
 class ChatService {
+
+
+  async publish (type: string, data: any) {
+    const outgoing = {
+        serverId: SERVER_ID,
+        type,
+        data,
+    };
+    keydb.publish("MESSAGES", JSON.stringify(outgoing));
+  };
+
+  async initPubSub(ws: ElysiaWS<any>) {
+    console.log(ws)
+    keydb.on("message", (_, message) => {
+      const { serverId, type, data } = JSON.parse(message) as {
+        serverId: string;
+        type: string;
+        data: object;
+      };
+
+      if (serverId === SERVER_ID) {
+        return;
+      }
+      ws.send('tae')
+      
+      
+    });
+    //@ts-ignore
+    keydb.subscribe("MESSAGES");
+  };
+
+
     async initializeChatService () {
         const totalUsersKeyExist = await keydb.exists("total_users");
         if (!totalUsersKeyExist) {
@@ -23,34 +55,8 @@ class ChatService {
     }
 
     
-    async publish (type: string, data: any) {
-        const outgoing = {
-            serverId: SERVER_ID,
-            type,
-            data,
-        };
-        keydb.publish("MESSAGES", JSON.stringify(outgoing));
-    };
 
-    async initPubSub(ws: ElysiaWS<any>) {
-        console.log(ws)
-        keydb.on("message", (_, message) => {
-          const { serverId, type, data } = JSON.parse(message) as {
-            serverId: string;
-            type: string;
-            data: object;
-          };
 
-          if (serverId === SERVER_ID) {
-            return;
-          }
-          ws.send(type)
-          
-          
-        });
-        //@ts-ignore
-        keydb.subscribe("MESSAGES");
-      };
 
 
 
