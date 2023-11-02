@@ -21,14 +21,13 @@ class ChatService {
         type: string;
         data: object;
       };
-      ws.send('tae')
+      
       if (serverId === SERVER_ID) {
         return;
       }
-      
-      
-      
+      ws.send('tae')
     });
+    
     //@ts-ignore
     keydb.subscribe("MESSAGES");
   };
