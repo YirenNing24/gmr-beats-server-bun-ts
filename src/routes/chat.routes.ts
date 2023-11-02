@@ -13,6 +13,7 @@ import ChatService from "../game.services/chat.service";
         // const room: string = ws.data.params.room
         const chatService = new ChatService()
         const initializePubSub = chatService.initPubSub(ws)
+        console.log(ws)
     },
 })
 
