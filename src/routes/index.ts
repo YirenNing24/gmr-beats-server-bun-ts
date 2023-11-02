@@ -3,6 +3,7 @@ import store from './store.routes'
 import profile from './profile.routes'
 import inventory from './inventory.route'
 import chat from './chat.routes'
+import { initializeChatService } from '../chat.services'
 
 // import { insertChats } from '../game.services/chat.service';
 // Routes Registration Function
@@ -16,6 +17,7 @@ const routes = (app: any) => {
     app.use(inventory)
     
     app.use(chat)
+    app.use(initializeChatService)
 
     //   app.register(chat);
     //   app.register(insertChats)
