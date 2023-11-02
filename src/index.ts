@@ -1,8 +1,10 @@
 import app from "./app";
-import { APP_PORT } from "./config/constants";
+import { APP_PORT, IP_ADDRESS} from "./config/constants";
+
 
 const port: number = APP_PORT;
+const hostname: string = IP_ADDRESS
 
-app.listen({ port, hostname: '0.0.0.0' }, () => {
-    console.log(`Beats admin server is running on port http://localhost:${port}/`);
+app.listen({ port, hostname }, () => {
+    console.log(`Beats admin server is running on port http://${hostname}:${port}/`);
 });

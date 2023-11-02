@@ -1,21 +1,19 @@
-
-// import ChatService from "../game.services/chat.service";
-
 import Elysia from "elysia";
+import ChatService from "../game.services/chat.service";
+
+
+
 
 
 
  const chat = (app: Elysia) => {
-  //@ts-ignore
+
    app.ws('/api/chats/:room', {
     open(ws) {
-        const data = ws.data
-        console.log(data)
+        // const room: string = ws.data.params.room
+        const chatService = new ChatService()
+        const initializePubSub = chatService.initPubSub(ws)
     },
-    message(ws, message) {
-        ws.send(message)
-        const params = ws.data
-    }
 })
 
 //   done();

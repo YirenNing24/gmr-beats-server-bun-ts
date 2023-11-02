@@ -1,4 +1,4 @@
-import keydb from "../db/redis";
+import keydb from "../db/keydb.client";
 /**
  * Class representing the Replenishments functionality.
  */

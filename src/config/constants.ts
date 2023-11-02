@@ -1,7 +1,7 @@
 // Import required modules
 import { config } from 'dotenv';
 import { Mumbai } from "@thirdweb-dev/chains";
-
+import ip from 'ip'
 // Load config from .env file
 config();
 
@@ -13,6 +13,8 @@ export const API_ID: string | undefined = process.env.API_ID;
 export const HOST: string = process.env.HOST || 'localhost';
 export const JWT_SECRET: string = process.env.JWT_SECRET || 'a secret key';
 export const SALT_ROUNDS: string = process.env.SALT_ROUNDS;
+export const IP_ADDRESS: string = ip.address()
+export const SERVER_ID = `${IP_ADDRESS}:${APP_PORT}`;
 
 // Neo4j Database Configuration
 export const NEO4J_URI: string | undefined = process.env.NEO4J_URI;
@@ -49,6 +51,7 @@ export const EDITION_ADDRESS: string = '0x09F143c0222505D7985482fCc7D3Abf7E3C987
 export const CARD_MARKETPLACE: string = '0x7dc65A3EeBdFbCAC10C9f0a0ecaA62f98a8d1f00'; // ** CARD MARKETPLACE ADDRESS
 export const BUNDLE_MARKETPLACE: string = '0xcd5CB69Dcc7D52eAe5CD99Cc43F92F329507ED6E'; // ** LOOTBOX MARKETPLACE ADDRESS
 
+
 const factoryAddress: string = FACTORIES[CHAIN.chainId];
 export const SMART_WALLET_CONFIG: {
   chain: typeof CHAIN;
@@ -61,3 +64,4 @@ export const SMART_WALLET_CONFIG: {
   factoryAddress: factoryAddress,
   secretKey: SECRET_KEY,
 };
+
