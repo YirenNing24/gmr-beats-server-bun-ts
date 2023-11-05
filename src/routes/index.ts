@@ -12,10 +12,15 @@ import Elysia from 'elysia'
 
 const routes = (app: Elysia) => {
 
+    //@ts-ignore
     app.use(auth)
+    //@ts-ignore
     .use(profile)
+    //@ts-ignore
     .use(store)
+    //@ts-ignore
     .use(inventory)
+    //@ts-ignore
     .use(chat)
 
 
