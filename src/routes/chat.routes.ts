@@ -12,7 +12,7 @@ interface Message {
 
  const chat = (app: Elysia) => {
 
-   app.ws('/api/chats/:room', { async open(ws) {
+   app.ws('/api/chats/:room', { async message(ws, message: Message) {
         try {
             
             //@ts-ignore
@@ -27,11 +27,10 @@ interface Message {
             // const decodedToken = await ws.data.jwt.verify(jwtToken);
             
             const room: string = ws.data.params.room;
-            console.log(room)
             const chatService: ChatService = new ChatService()
             chatService.chatRoom(room, ws)
 
-            // listenAll(message)
+            listenAll(message)
 
             
 

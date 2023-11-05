@@ -17,7 +17,8 @@ const watchedRooms: Record<string, boolean> = {};
 class ChatService {
 
     async chatRoom(room: string, ws: ElysiaWS<any>): Promise<void> {
-      console.log("room po patingin")
+      
+      console.log("room po patingin: ", room)
         try{
             const connection: rt.Connection = await getRethinkDB();
             let query: rt.Sequence = rt.db('beats').table("chats").filter({ roomId: room });
