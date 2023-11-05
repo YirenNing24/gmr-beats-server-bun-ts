@@ -12,7 +12,7 @@ interface Message {
   username: string
 }
 
-const watchedRooms: Record<string, boolean> = {};
+const watchedRooms = {};
 
 class ChatService {
 
@@ -22,7 +22,7 @@ class ChatService {
         try{
             const connection: rt.Connection = await getRethinkDB();
             let query: rt.Sequence = rt.db('beats').table("chats").filter({ roomId: room });
-
+            console.log(query)
              // Subscribe to new messages
              if (!watchedRooms[room]) {
               const cursor: Promise<rt.Cursor> = query.changes().run(connection);

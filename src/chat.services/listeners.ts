@@ -19,10 +19,7 @@ const listenAll = async (message: Message): Promise<void> => {
     // Insert the parsed message into the "chats" table with a time
       await rt.db(RDB_DATABASE)
         .table("chats")
-        .insert({
-          message,
-          ts: Date.now(),
-        })
+        .insert(Object.assign(message, { ts: Date.now()}))
         .run(connection);
     
   } catch (error: any) {
