@@ -7,7 +7,7 @@ import store from './store.routes'
 import profile from './profile.routes'
 import inventory from './inventory.route'
 import chat from './chat.routes'
-
+import listenAll from '../chat.services/listeners'
 
 // import { insertChats } from '../game.services/chat.service';
 // Routes Registration Function
@@ -24,6 +24,8 @@ const routes = (app: Elysia) => {
     app.use(inventory)
     //@ts-ignore
     app.use(chat)
+    //@ts-ignore
+    app.use(listenAll)
   }
   
 

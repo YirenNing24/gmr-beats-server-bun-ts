@@ -12,7 +12,6 @@ import routes from "./routes/index";
 
 const app: Elysia = new Elysia()
 
-
 //@ts-ignore
 app.use(cors({
   origin: ['http://localhost:8081'],
@@ -26,13 +25,9 @@ app.use(cors({
   ],
   credentials: true,
   maxAge: 600,
-}));
-
-
+}))
 //@ts-ignore
-app.use(routes)
-
-
+.use(routes);
 
 //@ts-ignore
 initDriver(NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD);
