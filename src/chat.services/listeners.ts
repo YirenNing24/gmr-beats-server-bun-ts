@@ -15,7 +15,7 @@ interface Message {
 const listenAll = async (message: Message): Promise<void> => {
     console.log(message, "listen allll")
   try {
-    const parsedMessage = JSON.parse(message.toString());
+    // const parsedMessage = JSON.parse(message.toString());
 
     // Check if the message is not blank or null
 
