@@ -18,7 +18,6 @@ const rdbConnect = async (): Promise<rt.Connection> => {
       rdbConn = null;
     });
 
-    console.log('RethinkDB Initialized!');
     rdbConn = conn;
     return conn;
   } catch (error) {

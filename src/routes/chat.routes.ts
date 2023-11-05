@@ -1,10 +1,18 @@
 import Elysia from "elysia";
 import ChatService from "../chat.services";
+import listenAll from "../chat.services/listeners";
+
+interface Message {
+    message: string
+    roomdId: string
+    username: string
+}
+
 
 
  const chat = (app: Elysia) => {
 
-   app.ws('/api/chats/:room', { async message(ws, message) {
+   app.ws('/api/chats/:room', { async message(ws, message: Message) {
         try {
             //@ts-ignore
             // const authorizationHeader: string | null = ws.data.headers.authorization;
@@ -20,7 +28,9 @@ import ChatService from "../chat.services";
             const room: string = ws.data.params.room;
             const chatService: ChatService = new ChatService()
             console.log(message)
-            //@ts-ignore
+
+            listenAll(message)
+
             chatService.chatRoom(room, ws)
 
         } catch (error) {
