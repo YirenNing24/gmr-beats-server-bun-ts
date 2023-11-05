@@ -25,8 +25,8 @@ const routes = (app: Elysia) => {
     //@ts-ignore
     app.use(chat)
     //@ts-ignore
-    // listenAll()
-  }
+    app.use(listenAll)
+}
   
 
 export default routes;
