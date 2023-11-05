@@ -6,10 +6,14 @@ import { getRethinkDB } from "../db/rethink";
 import { ElysiaWS } from "elysia/ws";
 import { WebSocketServer } from "ws";
 
+interface Message {
+  message: string
+  roomdId: string
+  username: string
+}
 
 
 class ChatService {
-
     async chatRoom(room: string, ws: ElysiaWS<any>): Promise<void> {
         try{
             const watchedRooms: Record<string, boolean> = {};
@@ -39,7 +43,7 @@ class ChatService {
                   throw error;
                 }
                 try {
-                  const result: any[] = await cursor.toArray();
+                  const result: Message[] = await cursor.toArray();
                   const room_data = {
                     data: result,
                     handle: room,
