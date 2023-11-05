@@ -12,17 +12,14 @@ interface Message {
   username: string
 }
 
-const watchedRooms = {};
+const watchedRooms: Record<string, boolean> = {};
 
 class ChatService {
 
     async chatRoom(room: string, ws: ElysiaWS<any>): Promise<void> {
-      
-      console.log("room po patingin: ", room)
         try{
             const connection: rt.Connection = await getRethinkDB();
             let query: rt.Sequence = rt.db('beats').table("chats").filter({ roomId: room });
-            console.log(query)
              // Subscribe to new messages
              if (!watchedRooms[room]) {
               const cursor: Promise<rt.Cursor> = query.changes().run(connection);
@@ -33,9 +30,9 @@ class ChatService {
                     return;
                   }
                   if (row.new_val) {
-                    const roomData: string = JSON.stringify(row.new_val);
-                    console.log(roomData)
-                      ws.send(roomData)
+                    const room_data: Message = row.new_val;
+                    const roomData: string = JSON.stringify(room_data);
+                    ws.send(roomData)
                     }
                  });
               });
