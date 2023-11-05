@@ -1,5 +1,7 @@
+// * ELYSIA APP
 import Elysia from 'elysia'
 
+// * ROUTE FILES
 import auth from './auth.routes'
 import store from './store.routes'
 import profile from './profile.routes'
@@ -11,24 +13,18 @@ import chat from './chat.routes'
 // Routes Registration Function
 // This function is responsible for registering all the routes and services within the application.
 
-const routes = (app: any) => {
+const routes = (app: Elysia) => {
 
     //@ts-ignore
     app.use(auth)
     //@ts-ignore
-    .use(profile)
+    app.use(profile)
     //@ts-ignore
-    .use(store)
+    app.use(store)
     //@ts-ignore
-    .use(inventory)
+    app.use(inventory)
     //@ts-ignore
-    .use(chat)
-
-
-    //   app.register(chat);
-    //   app.register(insertChats)
-
-
+    app.use(chat)
   }
   
 
