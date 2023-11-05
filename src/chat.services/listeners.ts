@@ -1,6 +1,3 @@
-// * WEBSOCKET SERVER
-import { WebSocketServer } from "ws";
-
 // * RETHINK DB IMPORTS
 import rt from "rethinkdb";
 import { getRethinkDB } from "../db/rethink";
