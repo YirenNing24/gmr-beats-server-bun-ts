@@ -25,7 +25,7 @@ const routes = (app: Elysia) => {
     //@ts-ignore
     app.use(chat)
     //@ts-ignore
-    app.use(listenAll)
+    listenAll()
   }
   
 
