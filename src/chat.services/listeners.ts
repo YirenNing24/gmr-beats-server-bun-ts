@@ -15,13 +15,9 @@ interface Message {
 const listenAll = async (message: Message) => {
   try {
     const parsedMessage = JSON.parse(message.toString());
-    if (
-      parsedMessage &&
-      parsedMessage.message !== null &&
-      parsedMessage.message !== ""
-    ) {
+    if ( parsedMessage && parsedMessage.message !== null && parsedMessage.message !== "") 
+    {
       const connection: rt.Connection = await getRethinkDB();
-      // Insert the parsed message into the "chats" table with a timestamp
       await rt
         .db(RDB_DATABASE)
         .table("chats")
@@ -30,7 +26,6 @@ const listenAll = async (message: Message) => {
           ts: Date.now(),
         })
         .run(connection);
-      connection.close();
     }
   } catch (error: any) {
     throw Error("Error processing message:", error);

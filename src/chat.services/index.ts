@@ -10,11 +10,6 @@ import { WebSocketServer } from "ws";
 
 class ChatService {
 
-    ws?: ElysiaWS<any>;
-    constructor(ws?: ElysiaWS<any>) {
-      this.ws = ws;
-    }
-  
     async chatRoom(room: string, ws: ElysiaWS<any>): Promise<void> {
         try{
             const watchedRooms: Record<string, boolean> = {};
