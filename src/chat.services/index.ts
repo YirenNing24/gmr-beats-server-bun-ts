@@ -42,20 +42,21 @@ class ChatService {
               watchedRooms[room] = true;
               }
               let orderedQuery: rt.Sequence = query.orderBy(rt.desc("ts")).limit(10);
-              orderedQuery.run(connection, async (error, cursor) => {
+              orderedQuery.run(connection, (error, cursor) => {
                 if (error) {
                   throw error;
                 }
                 try {
-                  const result: Message[] = await cursor.toArray();
+                  cursor.toArray((error, result) => {
+                    if (error) throw error;
+                    const roomData = {
+                      data: result,
+                      handle: room,
+                    };
+                    // const roomData: string = JSON.stringify(room_data);
+                    ws.send(roomData);
+                  })
 
-                  console.log(result, "anu po result pleaseeee")
-                  const room_data = {
-                    data: result,
-                    handle: room,
-                  };
-                  const roomData: string = JSON.stringify(room_data);
-                  ws.send(roomData);
                 } catch (error: any) {
                   console.error("Error processing query result:", error);
                 }
