@@ -12,24 +12,23 @@ interface Message {
     username: string
 }
 
-const listenAll = async (message: string): Promise<void> => {
+const listenAll = async (message: Message): Promise<void> => {
     console.log(message, "listen allll")
   try {
     const parsedMessage = JSON.parse(message.toString());
 
     // Check if the message is not blank or null
-    if ( parsedMessage && parsedMessage.message !== null && parsedMessage.message !== "") {
-      const connection: rt.Connection = await getRethinkDB();
 
+    const connection: rt.Connection = await getRethinkDB();
     // Insert the parsed message into the "chats" table with a time
       await rt.db(RDB_DATABASE)
         .table("chats")
         .insert({
-          ...parsedMessage,
+          message,
           ts: Date.now(),
         })
         .run(connection);
-    }
+    
   } catch (error: any) {
     console.error("Error processing message:", error);
   }
