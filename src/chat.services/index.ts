@@ -14,7 +14,7 @@ interface Message {
 
 
 class ChatService {
-  
+
     async chatRoom(room: string, ws: ElysiaWS<any>): Promise<void> {
         try{
             const watchedRooms: Record<string, boolean> = {};
@@ -47,7 +47,7 @@ class ChatService {
                 try {
                   const result: Message[] = await cursor.toArray();
 
-                  console.log(result)
+                  console.log(result, "anu po result pleaseeee")
                   const room_data = {
                     data: result,
                     handle: room,
