@@ -12,7 +12,7 @@ interface Message {
     username: string
 }
 
-const listenAll = async (message: Message): Promise<void> => {
+const listenAll = async (message: string): Promise<void> => {
     console.log(message, "listen allll")
   try {
     const parsedMessage = JSON.parse(message.toString());

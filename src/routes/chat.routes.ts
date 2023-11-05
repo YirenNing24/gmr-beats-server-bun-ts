@@ -2,17 +2,10 @@ import Elysia from "elysia";
 import ChatService from "../chat.services";
 import listenAll from "../chat.services/listeners";
 
-interface Message {
-    message: string
-    roomdId: string
-    username: string
-}
-
-
 
  const chat = (app: Elysia) => {
 
-   app.ws('/api/chats/:room', { async message(ws, message: Message) {
+   app.ws('/api/chats/:room', { async message(ws, message: string) {
         try {
             //@ts-ignore
             // const authorizationHeader: string | null = ws.data.headers.authorization;
