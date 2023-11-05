@@ -12,8 +12,9 @@ interface Message {
 
  const chat = (app: Elysia) => {
 
-   app.ws('/api/chats/:room', { async message(ws, message: Message) {
+   app.ws('/api/chats/:room', { async open(ws) {
         try {
+            
             //@ts-ignore
             // const authorizationHeader: string | null = ws.data.headers.authorization;
             // if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
@@ -26,11 +27,13 @@ interface Message {
             // const decodedToken = await ws.data.jwt.verify(jwtToken);
             
             const room: string = ws.data.params.room;
+            console.log(room)
             const chatService: ChatService = new ChatService()
-
-            listenAll(message)
-
             chatService.chatRoom(room, ws)
+
+            // listenAll(message)
+
+            
 
         } catch (error) {
             ws.send(error)
