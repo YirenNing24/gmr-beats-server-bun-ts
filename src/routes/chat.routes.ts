@@ -4,8 +4,7 @@ import ChatService from "../chat.services";
 
  const chat = (app: Elysia) => {
 
-   app.ws('/api/chats/:room', { 
-        async message(ws) {
+   app.ws('/api/chats/:room', { async message(ws) {
         try {
             //@ts-ignore
             // const authorizationHeader: string | null = ws.data.headers.authorization;
