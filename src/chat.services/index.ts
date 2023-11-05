@@ -14,15 +14,16 @@ interface Message {
 
 
 class ChatService {
+  
     async chatRoom(room: string, ws: ElysiaWS<any>): Promise<void> {
         try{
             const watchedRooms: Record<string, boolean> = {};
-            const conn: rt.Connection = await getRethinkDB();
+            const connection: rt.Connection = await getRethinkDB();
             let query: rt.Sequence = rt.db('beats').table("chats").filter({ roomId: room });
 
              // Subscribe to new messages
              if (!watchedRooms[room]) {
-              const cursor: Promise<rt.Cursor> = query.changes().run(conn);
+              const cursor: Promise<rt.Cursor> = query.changes().run(connection);
               cursor.then((cursor) => {
                 cursor.each((error, row) => {
                   if (error) {
@@ -31,6 +32,7 @@ class ChatService {
                   }
                   if (row.new_val) {
                     const roomData: string = JSON.stringify(row.new_val);
+                    console.log(roomData)
                       ws.send(roomData)
                     }
                  });
@@ -38,12 +40,14 @@ class ChatService {
               watchedRooms[room] = true;
               }
               let orderedQuery: rt.Sequence = query.orderBy(rt.desc("ts")).limit(10);
-              orderedQuery.run(conn, async (error, cursor) => {
+              orderedQuery.run(connection, async (error, cursor) => {
                 if (error) {
                   throw error;
                 }
                 try {
                   const result: Message[] = await cursor.toArray();
+
+                  console.log(result)
                   const room_data = {
                     data: result,
                     handle: room,
