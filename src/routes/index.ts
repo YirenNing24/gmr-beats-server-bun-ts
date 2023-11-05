@@ -14,7 +14,6 @@ import chat from './chat.routes'
 // This function is responsible for registering all the routes and services within the application.
 
 const routes = (app: Elysia) => {
-
     //@ts-ignore
     app.use(auth)
     //@ts-ignore
