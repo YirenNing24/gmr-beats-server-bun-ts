@@ -16,6 +16,7 @@ interface Message {
 class ChatService {
 
     async chatRoom(room: string, ws: ElysiaWS<any>): Promise<void> {
+      console.log("room po patingin")
         try{
             const watchedRooms: Record<string, boolean> = {};
             const connection: rt.Connection = await getRethinkDB();
