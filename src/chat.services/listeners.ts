@@ -1,14 +1,18 @@
 // * WEBSOCKET SERVER
 import {  WebSocketServer } from "ws";
 
+
 // * RETHINK DB IMPORTS
 import rt from 'rethinkdb'
 import { getRethinkDB } from "../db/rethink";
 import { RDB_DATABASE } from "../config/constants";
+import { ElysiaWS } from "elysia/ws";
 
 
 const listenAll = () => {
- const ws: WebSocketServer = new WebSocketServer()
+
+   
+ const ws = new ElysiaWS()
     ws.on("connection", (client) => {
         client.addEventListener("message", async (message) => {
             try{

@@ -4,7 +4,7 @@ import ChatService from "../chat.services";
 
  const chat = (app: Elysia) => {
 
-   app.ws('/api/chats/:room', { async message(ws) {
+   app.ws('/api/chats/:room', { async message(ws, message) {
         try {
             //@ts-ignore
             // const authorizationHeader: string | null = ws.data.headers.authorization;
@@ -16,10 +16,10 @@ import ChatService from "../chat.services";
             // const jwtToken: string | null = authorizationHeader.substring(7);
             // // Verify the JWT token using 'jsonwebtoken' with options
             // const decodedToken = await ws.data.jwt.verify(jwtToken);
-
+            
             const room: string = ws.data.params.room;
             const chatService: ChatService = new ChatService()
-
+            console.log(message)
             //@ts-ignore
             chatService.chatRoom(room, ws)
 
