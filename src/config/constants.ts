@@ -1,9 +1,6 @@
-// Import required modules
-import { config } from 'dotenv';
-import { Mumbai } from "@thirdweb-dev/chains";
 import ip from 'ip'
-// Load config from .env file
-config();
+import { Mumbai } from "@thirdweb-dev/chains";
+
 
 // API Configuration
 export const API_PREFIX: string = process.env.API_PREFIX || '/api';
@@ -12,17 +9,17 @@ export const API_KEY: string | undefined = process.env.API_KEY;
 export const API_ID: string | undefined = process.env.API_ID;
 export const HOST: string = process.env.HOST || 'localhost';
 export const JWT_SECRET: string = process.env.JWT_SECRET || 'a secret key';
-export const SALT_ROUNDS: string = process.env.SALT_ROUNDS;
+export const SALT_ROUNDS: string | undefined = process.env.SALT_ROUNDS;
 export const IP_ADDRESS: string = ip.address()
-export const SERVER_ID = `${IP_ADDRESS}:${APP_PORT}`;
+export const SERVER_ID: string = `${IP_ADDRESS}:${APP_PORT}`;
 
 // Neo4j Database Configuration
 export const NEO4J_URI: string | undefined = process.env.NEO4J_URI;
-export const NEO4J_USERNAME: string | undefined = process.env.NEO4J_USERNAME;
-export const NEO4J_PASSWORD: string | undefined = process.env.NEO4J_PASSWORD;
+export const NEO4J_USERNAME: string  = process.env.NEO4J_USERNAME || ""
+export const NEO4J_PASSWORD: string = process.env.NEO4J_PASSWORD || ""
 
 // RethinkDB Configuration
-export const RDB_DATABASE: string | undefined = process.env.RDB_DATABASE;
+export const RDB_DATABASE: string = process.env.RDB_DATABASE || ""
 export const RDB_PORT: number = Number(process.env.RDB_PORT) || 28015;
 
 // KeyDB Configuration
@@ -37,7 +34,7 @@ export const KDB: { host: string | undefined; port: string | number; password: s
 };
 
 // Thirdweb SDK Configuration
-export const SECRET_KEY: string = process.env.SECRET_KEY;
+export const SECRET_KEY: string = process.env.SECRET_KEY || ""
 // Chain and Wallet Factory Configuration
 export const CHAIN: typeof Mumbai = Mumbai;
 export const FACTORIES: Record<number, string> = { [Mumbai.chainId]: "0xB164886ED35942D2B4aCb042c1c41D4B5c0EABe1" };

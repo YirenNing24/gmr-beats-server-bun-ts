@@ -1,82 +1,66 @@
-import keydb from "../db/keydb.client";
-import { SERVER_ID } from "../config/constants";
+// * RETHINK DB IMPORTS
+import rt from "rethinkdb"
+import { getRethinkDB } from "../db/rethink";
+
+// * WEBSOCKET SERVERs
 import { ElysiaWS } from "elysia/ws";
+import { WebSocketServer } from "ws";
+
 
 
 class ChatService {
 
-  async publish (type: string, data: any) {
-    const outgoing = {
-        serverId: SERVER_ID,
-        type,
-        data,
-    };
-    keydb.publish("MESSAGES", JSON.stringify(outgoing));
-  };
-
-  async initPubSub(ws: ElysiaWS<any>) {
-    keydb.on("message", (_, message) => {
-      const { serverId, type, data } = JSON.parse(message) as {
-        serverId: string;
-        type: string;
-        data: object;
-      };
-      
-      if (serverId === SERVER_ID) {
-        return;
-      }
-      ws.send(data)
-    });
-    
-    //@ts-ignore
-    keydb.subscribe("MESSAGES");
-  };
-
-
-    async initializeChatService () {
-        const totalUsersKeyExist = await keydb.exists("total_users");
-        if (!totalUsersKeyExist) {
-            /** This counter is used for the id */
-            await keydb.set("total_users", 0);
-            /**
-             * Some rooms have pre-defined names. When the clients attempts to fetch a room, an additional lookup
-             * is handled to resolve the name.
-             * Rooms with private messages don't have a name
-             */
-            await keydb.set(`room:${0}:name`, "General");
-        
-            /** Create demo data with the default users */
-
-          }
-        
+    ws?: ElysiaWS<any>;
+    constructor(ws?: ElysiaWS<any>) {
+      this.ws = ws;
     }
+  
+    async chatRoom(room: string, ws: ElysiaWS<any>): Promise<void> {
+        try{
+            const webSocketServer = new WebSocketServer()
+            const watchedRooms: Record<string, boolean> = {};
+            const conn: rt.Connection = await getRethinkDB();
+            let query: rt.Sequence = rt.db('beats').table("chats").filter({ roomId: room });
 
-    
-
-
-
-
-
-
+             // Subscribe to new messages
+             if (!watchedRooms[room]) {
+              const cursor: Promise<rt.Cursor> = query.changes().run(conn);
+              cursor.then((cursor) => {
+                cursor.each((error, row) => {
+                  if (error) {
+                    console.error(error);
+                    return;
+                  }
+                  if (row.new_val) {
+                    const roomData: string = JSON.stringify(row.new_val);
+                    for (const client of webSocketServer.clients) {
+                      client.send(roomData)
+                     }
+                    }
+                 });
+              });
+              watchedRooms[room] = true;
+              }
+              let orderedQuery: rt.Sequence = query.orderBy(rt.desc("ts")).limit(10);
+              orderedQuery.run(conn, async (error, cursor) => {
+                if (error) {
+                  throw error;
+                }
+                try {
+                  const result: any[] = await cursor.toArray();
+                  const room_data = {
+                    data: result,
+                    handle: room,
+                  };
+                  const roomData: string = JSON.stringify(room_data);
+                  ws.send(roomData);
+                } catch (error: any) {
+                  console.error("Error processing query result:", error);
+                }
+              });
+          } catch (error: any) {
+        }
+      }
 }
 
 export default ChatService
-
-
-export const initializeChatService = async () => {
-  const totalUsersKeyExist = await keydb.exists("total_users");
-  if (!totalUsersKeyExist) {
-      /** This counter is used for the id */
-      await keydb.set("total_users", 0);
-      /**
-       * Some rooms have pre-defined names. When the clients attempts to fetch a room, an additional lookup
-       * is handled to resolve the name.
-       * Rooms with private messages don't have a name
-       */
-      await keydb.set(`room:${0}:name`, "General");
-  
-      /** Create demo data with the default users */
-
-    }
-  
-}

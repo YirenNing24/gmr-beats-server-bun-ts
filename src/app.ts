@@ -7,7 +7,6 @@ import { initDriver } from './db/memgraph';
 
 //* INITIALIZERS
 import { NEO4J_PASSWORD, NEO4J_URI, NEO4J_USERNAME } from './config/constants.js';
-import { initializeChatService } from "./chat.services/index.js";
 import routes from "./routes/index";
 
 
@@ -33,11 +32,9 @@ app.use(cors({
 //@ts-ignore
 app.use(routes)
 
-initializeChatService()
+
 
 //@ts-ignore
 initDriver(NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD);
-
-
 
 export default app

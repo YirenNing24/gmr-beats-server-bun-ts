@@ -21,6 +21,7 @@
     "@types/ip": "^1.1.2",
     "@types/jsonwebtoken": "^9.0.2",
     "@types/node": "^20.5.1",
+    "@types/rethinkdb": "^2.3.19",
     "bcrypt-ts": "^4.0.0",
     "crypto-random-string": "^5.0.0",
     "dotenv": "^16.3.1",

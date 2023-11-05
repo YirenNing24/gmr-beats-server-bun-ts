@@ -3,7 +3,7 @@ import store from './store.routes'
 import profile from './profile.routes'
 import inventory from './inventory.route'
 import chat from './chat.routes'
-import { initializeChatService } from '../chat.services'
+
 import Elysia from 'elysia'
 
 // import { insertChats } from '../game.services/chat.service';
@@ -13,11 +13,10 @@ import Elysia from 'elysia'
 const routes = (app: Elysia) => {
 
     app.use(auth)
-    app.use(profile)
-    app.use(store)
-    app.use(inventory)
-    
-    app.use(chat)
+    .use(profile)
+    .use(store)
+    .use(inventory)
+    .use(chat)
 
 
     //   app.register(chat);
