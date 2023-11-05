@@ -17,7 +17,6 @@ class ChatService {
   
     async chatRoom(room: string, ws: ElysiaWS<any>): Promise<void> {
         try{
-            const webSocketServer = new WebSocketServer()
             const watchedRooms: Record<string, boolean> = {};
             const conn: rt.Connection = await getRethinkDB();
             let query: rt.Sequence = rt.db('beats').table("chats").filter({ roomId: room });
@@ -33,9 +32,7 @@ class ChatService {
                   }
                   if (row.new_val) {
                     const roomData: string = JSON.stringify(row.new_val);
-                    for (const client of webSocketServer.clients) {
-                      client.send(roomData)
-                     }
+                      ws.send(roomData)
                     }
                  });
               });
