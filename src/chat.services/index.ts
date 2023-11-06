@@ -25,6 +25,8 @@ class ChatService {
               query.changes().run(connection, (error, cursor) => {
                 if (error) throw error;
                 cursor.each((error, row) => {
+                  console.log(error)
+                  console.log('row: ', row.new_val)
                   if (row.new_val) {
                     const room_data: Message = row.new_val;
                     const roomData: string = JSON.stringify(room_data);
