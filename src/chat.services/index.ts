@@ -23,7 +23,6 @@ class ChatService {
             let query: rt.Sequence = rt.db('beats').table("chats").filter({ roomId: room });
              // Subscribe to new messages
              if (!watchedRooms[room]) {
-              console.log('watched ba?1/1/1/1/')
               const cursor: Promise<rt.Cursor> = query.changes().run(connection);
               cursor.then((cursor) => {
                 cursor.each((err, row) => {

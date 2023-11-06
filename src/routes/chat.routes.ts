@@ -9,7 +9,7 @@ interface Message {
 }
 
  const chat = (app: Elysia): void => {
-   app.ws('/api/chats/:room', { async message(ws, message) {
+   app.ws('/api/chats/:room', { async open(ws) {
         try {
             //@ts-ignore
             // const authorizationHeader: string | null = ws.data.headers.authorization;
@@ -21,9 +21,9 @@ interface Message {
             // const jwtToken: string | null = authorizationHeader.substring(7);
             // // Verify the JWT token using 'jsonwebtoken' with options
             // const decodedToken = await ws.data.jwt.verify(jwtToken);
-            const msg = message as Message
-            ws.send(message)
-            listenAll(msg)
+            // const msg = message as Message
+            // ws.send(message)
+            // await listenAll(msg)
 
             const room: string = ws.data.params.room
             const chatService: ChatService = new ChatService()
