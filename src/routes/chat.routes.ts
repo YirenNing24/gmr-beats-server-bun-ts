@@ -23,13 +23,10 @@ interface Message {
         const room: string = ws.data.params.room
         const chatService: ChatService = new ChatService()
         chatService.chatRoom(room, ws)
-        ws.subscribe(room)
-        
+
     }, async message(ws, message) {
         //@ts-ignore
-        const room: string = ws.data.params.room
         const msg = message as Message
-        ws.publish(room, msg)
         listenAll(msg)
     }})
 

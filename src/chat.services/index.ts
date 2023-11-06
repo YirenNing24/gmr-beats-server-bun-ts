@@ -27,7 +27,7 @@ class ChatService {
                 if (error) throw error;
                 cursor.each((error, row) => {
                   if (row.new_val) {
-                    console.log(row.new_val)
+                    console.log(row.new_val, " row bat ito?!?")
                     ws.send(row.new_val)
                   }
                 })
