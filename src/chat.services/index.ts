@@ -17,7 +17,7 @@ const watchedRooms: Record<string, boolean> = {};
 
 class ChatService {
 
-    async chatRoom(room: string, ws: ElysiaWS<any>): Promise<void> {
+    async chatRoom(room: string, ws: ElysiaWS<any>, newMessage: any): Promise<void> {
         try{
             
             const connection: rt.Connection = await getRethinkDB();
@@ -28,7 +28,7 @@ class ChatService {
                 cursor.each((error, row) => {
                   if (row.new_val) {
                     console.log(row.new_val, " row bat ito?!?")
-                    ws.send(row.new_val)
+                    newMessage(row.new_val)
                   }
                 })
               })

@@ -8,6 +8,15 @@ interface Message {
     username: string
 }
 
+interface NewMessage {
+    
+        id: string
+        message: string
+        roomId: string
+        ts: number
+        username: string
+    
+}
 // {
 //     "message": "string",
 //     "roomdId": "string",
@@ -20,7 +29,15 @@ interface Message {
         //@ts-ignore
         const room: string = ws.data.params.room
         const chatService: ChatService = new ChatService()
-        chatService.chatRoom(room, ws)
+        ws.subscribe(room)
+
+        const newMessage = (message: NewMessage): void => {
+            ws.publish(room, message) 
+        }
+
+        chatService.chatRoom(room, ws, newMessage)
+
+
 
     }, message(ws, message) {
         //@ts-ignore
