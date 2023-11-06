@@ -9,7 +9,11 @@ interface Message {
 }
 
  const chat = (app: Elysia): void => {
-   app.ws('/api/chats/:room', { async open(ws) {
+
+
+
+   app.ws('/api/chats/:room', { async open(ws, message) {
+    
         try {
             //@ts-ignore
             // const authorizationHeader: string | null = ws.data.headers.authorization;
@@ -24,7 +28,7 @@ interface Message {
             // const msg = message as Message
             // ws.send(message)
             // await listenAll(msg)
-
+            console.log(message)
             const room: string = ws.data.params.room
             const chatService: ChatService = new ChatService()
             chatService.chatRoom(room, ws)
