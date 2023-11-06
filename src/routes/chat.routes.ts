@@ -59,6 +59,7 @@ interface Message {
             // ws.send(message)
             // await listenAll(msg)
             const msg = message as Message
+            console.log(msg)
             listenAll(msg)
 
         } catch (error) {
