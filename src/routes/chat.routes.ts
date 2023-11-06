@@ -15,16 +15,14 @@ interface Message {
 // }
 
  const chat = (app: Elysia): void => {
-
-
    app.ws('/api/chats/:room', { 
-    async open(ws) {
+    open(ws) {
         //@ts-ignore
         const room: string = ws.data.params.room
         const chatService: ChatService = new ChatService()
         chatService.chatRoom(room, ws)
 
-    }, async message(ws, message) {
+    }, message(ws, message) {
         //@ts-ignore
         const msg = message as Message
         listenAll(msg)
