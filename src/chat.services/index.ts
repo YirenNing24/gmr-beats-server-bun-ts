@@ -23,21 +23,29 @@ class ChatService {
 
             let query: rt.Sequence = rt.db('beats').table("chats").filter({ roomId: room });
              if (!watchedRooms[room]) {
-              const cursor: Promise<rt.Cursor> = query.changes().run(connection);
-              cursor.then((cursor) => {
+              query.changes().run(connection, (error, cursor) => {
+                if (error) throw error;
                 cursor.each((error, row) => {
-                  console.log(row)
-                  if (error) 
-                    throw error  
                   if (row.new_val) {
-                    console.log(row.new_val, "wheereerereerree")
-                    const room_data = row.new_val;
-                    const roomData: string = JSON.stringify(room_data);
-                    ws.send(roomData)
-
+                    console.log(row.new_val)
+                    ws.send(row.new_val)
                   }
-                });
-              });
+                })
+              })
+              // cursor.then((cursor) => {
+              //   cursor.each((error, row) => {
+              //     console.log(row)
+              //     if (error) 
+              //       throw error  
+              //     if (row.new_val) {
+              //       console.log(row.new_val, "wheereerereerree")
+              //       const room_data = row.new_val;
+              //       const roomData: string = JSON.stringify(room_data);
+              //       ws.send(roomData)
+
+              //     }
+              //   });
+              // });
               watchedRooms[room] = true;
               }
               // Return message history & Socket.io handle to get new messages
