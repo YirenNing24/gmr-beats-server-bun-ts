@@ -32,7 +32,7 @@ class ChatService {
                     const room_data: Message = row.new_val;
                     const roomData: string = JSON.stringify(room_data);
                     // Got a new message, send it to websocket
-                    ws.publish('message', room_data)
+                    ws.send(roomData)
                   }
                 });
               });
