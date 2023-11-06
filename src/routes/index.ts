@@ -14,18 +14,13 @@ import listenAll from '../chat.services/listeners'
 // This function is responsible for registering all the routes and services within the application.
 
 const routes = (app: Elysia): void => {
-    //@ts-ignore
+
     app.use(auth)
-    //@ts-ignore
     app.use(profile)
-    //@ts-ignore
     app.use(store)
-    //@ts-ignore
     app.use(inventory)
-    //@ts-ignore
     app.use(chat)
-    //@ts-ignore
-    // app.use(listenAll)
+
 }
 
 
