@@ -10,6 +10,7 @@ interface Message {
 }
 
 const listenAll = async (message: Message): Promise<void> => {
+  console.log(message)
   try {
     // Check if the message is not blank or null
     const connection: rt.Connection = await getRethinkDB();

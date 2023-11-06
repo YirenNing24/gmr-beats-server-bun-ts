@@ -8,11 +8,15 @@ interface Message {
     username: string
 }
 
+// {
+//     "message": "string",
+//     "roomdId": "string",
+//     "username": "string"
+// }
+
  const chat = (app: Elysia): void => {
 
-
-
-   app.ws('/api/chats/:room', { async open(ws, message) {
+   app.ws('/api/chats/:room', { async open(ws) {
     
         try {
             //@ts-ignore
@@ -28,12 +32,10 @@ interface Message {
             // const msg = message as Message
             // ws.send(message)
             // await listenAll(msg)
-            
             const room: string = ws.data.params.room
             const chatService: ChatService = new ChatService()
             chatService.chatRoom(room, ws)
 
-    
         } catch (error) {
             ws.send(error)
             ws.close()
@@ -56,11 +58,6 @@ interface Message {
             // const msg = message as Message
             // ws.send(message)
             // await listenAll(msg)
-            
-            const room: string = ws.data.params.room
-            const chatService: ChatService = new ChatService()
-            chatService.chatRoom(room, ws)
-
             const msg = message as Message
             listenAll(msg)
 
