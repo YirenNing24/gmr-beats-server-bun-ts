@@ -16,7 +16,7 @@ const routes = (app: Elysia): void => {
     app.use(store)
     app.use(inventory)
     app.use(chat)
-    listenAll()
+
 
 }
 

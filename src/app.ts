@@ -8,6 +8,7 @@ import { initDriver } from './db/memgraph';
 //* INITIALIZERS
 import { NEO4J_PASSWORD, NEO4J_URI, NEO4J_USERNAME } from './config/constants.js';
 import routes from "./routes/index";
+import listenAll from "./chat.services/listeners.js";
 
 
 const app: Elysia = new Elysia()
@@ -28,6 +29,7 @@ app.use(cors({
 }))
 //@ts-ignore
 .use(routes);
+listenAll()
 
 //@ts-ignore
 initDriver(NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD);
