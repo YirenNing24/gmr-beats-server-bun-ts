@@ -24,16 +24,17 @@ class ChatService {
              // Subscribe to new messages
              if (!watchedRooms[room]) {
               console.log('watched ba?1/1/1/1/')
-              query.changes().run(connection, (error, cursor) => {
-                if (error) throw error;
-                cursor.each((error, row) => {
-                  console.log(row)
-                  console.log(error)
+              const cursor: Promise<rt.Cursor> = query.changes().run(connection);
+              cursor.then((cursor) => {
+                cursor.each((err, row) => {
+                  if (err) {
+                    console.error(err);
+                    return;
+                  }
                   if (row.new_val) {
-                    console.log('row: ', row.new_val)
-                    const roomData: string = JSON.stringify(row.new_val);
-                    // Got a new message, send it to websocket
-                    ws.send(roomData)
+                    const room_data = row.new_val;
+                    ws.send(room_data)
+
                   }
                 });
               });
