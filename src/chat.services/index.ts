@@ -20,16 +20,15 @@ class ChatService {
     async chatRoom(room: string, ws: ElysiaWS<any>): Promise<void> {
         try{
             const connection: rt.Connection = await getRethinkDB();
+
             let query: rt.Sequence = rt.db('beats').table("chats").filter({ roomId: room });
-             // Subscribe to new messages
              if (!watchedRooms[room]) {
               const cursor: Promise<rt.Cursor> = query.changes().run(connection);
               cursor.then((cursor) => {
-                cursor.each((err, row) => {
-                  if (err) {
-                    console.error(err);
-                    return;
-                  }
+                cursor.each((error, row) => {
+                  console.log(row)
+                  if (error) 
+                    throw error  
                   if (row.new_val) {
                     console.log(row.new_val, "wheereerereerree")
                     const room_data = row.new_val;
