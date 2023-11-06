@@ -25,13 +25,15 @@ interface Message {
             // const jwtToken: string | null = authorizationHeader.substring(7);
             // // Verify the JWT token using 'jsonwebtoken' with options
             // const decodedToken = await ws.data.jwt.verify(jwtToken);
-            
+            const msg = message as Message
+            await listenAll(msg)
+
             const room: string = ws.data.params.room;
             const chatService: ChatService = new ChatService()
             chatService.chatRoom(room, ws)
 
-            const msg = message as Message
-            listenAll(msg)
+            
+            
 
             
 
