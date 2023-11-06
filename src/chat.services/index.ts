@@ -20,17 +20,19 @@ class ChatService {
         try{
             const connection: rt.Connection = await getRethinkDB();
             let query: rt.Sequence = rt.db('beats').table("chats").filter({ roomId: room });
-            
+             // Subscribe to new messages
              if (!watchedRooms[room]) {
+              console.log('watched ba?1/1/1/1/')
               query.changes().run(connection, (error, cursor) => {
                 if (error) throw error;
                 cursor.each((error, row) => {
+                  if (error) {throw error}
                   if (row.new_val) {
+                    console.log('row: ', row.new_val)
                     const room_data: Message = row.new_val;
                     const roomData: string = JSON.stringify(room_data);
-                    
-                    ws.subscribe(room)
-                    ws.publish(room, roomData)
+                    // Got a new message, send it to websocket
+                    ws.publish('message', room_data)
                   }
                 });
               });
