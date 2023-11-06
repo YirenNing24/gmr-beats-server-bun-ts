@@ -9,13 +9,11 @@ interface Message {
 }
 
 interface NewMessage {
-    
-        id: string
-        message: string
-        roomId: string
-        ts: number
-        username: string
-    
+    id: string
+    message: string
+    roomId: string
+    ts: number
+    username: string
 }
 // {
 //     "message": "string",
@@ -32,6 +30,7 @@ interface NewMessage {
         ws.subscribe(room)
 
         const newMessage = (message: NewMessage): void => {
+            console.log(message)
             ws.publish(room, message) 
         }
 
