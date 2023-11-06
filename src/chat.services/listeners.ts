@@ -11,7 +11,7 @@ interface Message {
     username: string
 }
 
-const listenAll = async (message: Message): Promise<void> => {
+const listenAll = async (): Promise<void> => {
   try {
     const webSocketServer = new WebSocketServer()
     webSocketServer.on("connection", (client) => {

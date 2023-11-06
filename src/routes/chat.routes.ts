@@ -29,11 +29,7 @@ interface Message {
             const chatService: ChatService = new ChatService()
             chatService.chatRoom(room, ws)
 
-            
-            
-
-            
-
+    
         } catch (error) {
             ws.send(error)
             ws.close()
