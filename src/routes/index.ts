@@ -13,7 +13,7 @@ import listenAll from '../chat.services/listeners'
 // Routes Registration Function
 // This function is responsible for registering all the routes and services within the application.
 
-const routes = (app: Elysia) => {
+const routes = (app: Elysia): void => {
     //@ts-ignore
     app.use(auth)
     //@ts-ignore

@@ -10,10 +10,7 @@ interface Message {
 }
 
 const listenAll = async (message: Message): Promise<void> => {
-    console.log(message, "listen allll")
   try {
-    // const parsedMessage = JSON.parse(message.toString());
-
     // Check if the message is not blank or null
     const connection: rt.Connection = await getRethinkDB();
     // Insert the parsed message into the "chats" table with a time
@@ -21,7 +18,6 @@ const listenAll = async (message: Message): Promise<void> => {
         .table("chats")
         .insert(Object.assign(message, { ts: Date.now()}))
         .run(connection);
-    
   } catch (error: any) {
     console.error("Error processing message:", error);
   }

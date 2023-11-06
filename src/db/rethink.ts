@@ -10,17 +10,17 @@ const rdbConnect = async (): Promise<rt.Connection> => {
       port: RDB_PORT,
     };
 
-    const conn: rt.Connection = await rt.connect(options);
+    const connection: rt.Connection = await rt.connect(options);
 
     // Handle close
-    conn.on('close', (error: any) => {
+    connection.on('close', (error: any) => {
       console.log('RDB connection closed: ', error);
       rdbConn = null;
     });
 
-    rdbConn = conn;
-    return conn;
-  } catch (error) {
+    rdbConn = connection;
+    return connection;
+  } catch (error: any) {
     throw error;
   }
 };
