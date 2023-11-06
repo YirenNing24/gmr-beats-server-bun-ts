@@ -13,7 +13,7 @@ interface Message {
 
 const listenAll = async (): Promise<void> => {
   try {
-    const webSocketServer = new WebSocketServer()
+    const webSocketServer = new WebSocketServer({host: 'http://192.168.4.117:8081'})
     webSocketServer.on("connection", (client) => {
       client.addEventListener("message", async (message) => {
         const parsedMessage = JSON.parse(message.toString());
