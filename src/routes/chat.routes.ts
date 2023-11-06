@@ -8,13 +8,9 @@ interface Message {
     username: string
 }
 
-
-
  const chat = (app: Elysia): void => {
    app.ws('/api/chats/:room', { async message(ws, message) {
         try {
-            
-            
             //@ts-ignore
             // const authorizationHeader: string | null = ws.data.headers.authorization;
             // if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
@@ -28,7 +24,7 @@ interface Message {
             const msg = message as Message
             await listenAll(msg)
 
-            const room: string = ws.data.params.room;
+            const room: string = ws.data.params.room
             const chatService: ChatService = new ChatService()
             chatService.chatRoom(room, ws)
 

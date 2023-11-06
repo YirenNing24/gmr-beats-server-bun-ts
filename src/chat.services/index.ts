@@ -26,11 +26,9 @@ class ChatService {
               query.changes().run(connection, (error, cursor) => {
                 if (error) throw error;
                 cursor.each((error, row) => {
-                  if (error) {throw error}
                   if (row.new_val) {
                     console.log('row: ', row.new_val)
-                    const room_data: Message = row.new_val;
-                    const roomData: string = JSON.stringify(room_data);
+                    const roomData: string = JSON.stringify(row.new_val);
                     // Got a new message, send it to websocket
                     ws.send(roomData)
                   }
