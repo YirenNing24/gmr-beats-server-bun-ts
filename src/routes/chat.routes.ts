@@ -22,6 +22,7 @@ interface Message {
             // // Verify the JWT token using 'jsonwebtoken' with options
             // const decodedToken = await ws.data.jwt.verify(jwtToken);
             const msg = message as Message
+            ws.send(message)
             listenAll(msg)
 
             const room: string = ws.data.params.room
