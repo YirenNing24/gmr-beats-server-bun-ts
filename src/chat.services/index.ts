@@ -31,8 +31,10 @@ class ChatService {
                     return;
                   }
                   if (row.new_val) {
+                    console.log(row.new_val, "wheereerereerree")
                     const room_data = row.new_val;
-                    ws.send(room_data)
+                    const roomData: string = JSON.stringify(room_data);
+                    ws.send(roomData)
 
                   }
                 });

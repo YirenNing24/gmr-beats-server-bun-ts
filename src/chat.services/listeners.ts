@@ -15,7 +15,7 @@ const listenAll = async (message: Message): Promise<void> => {
     // Check if the message is not blank or null
     const connection: rt.Connection = await getRethinkDB();
     // Insert the parsed message into the "chats" table with a time
-      await rt.db(RDB_DATABASE)
+      await rt.db('beats')
         .table("chats")
         .insert(Object.assign(message, { ts: Date.now()}))
         .run(connection);
