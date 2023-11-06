@@ -5,6 +5,7 @@ import { getRethinkDB } from "../db/rethink";
 // * WEBSOCKET SERVERs
 import { ElysiaWS } from "elysia/ws";
 import { WebSocketServer } from "ws";
+import { constructAbiFromBytecode } from "@thirdweb-dev/sdk";
 
 interface Message {
   message: string
@@ -26,6 +27,8 @@ class ChatService {
               query.changes().run(connection, (error, cursor) => {
                 if (error) throw error;
                 cursor.each((error, row) => {
+                  console.log(row)
+                  console.log(error)
                   if (row.new_val) {
                     console.log('row: ', row.new_val)
                     const roomData: string = JSON.stringify(row.new_val);
