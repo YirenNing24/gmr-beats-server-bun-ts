@@ -61,6 +61,9 @@ interface Message {
             const chatService: ChatService = new ChatService()
             chatService.chatRoom(room, ws)
 
+            const msg = message as Message
+            listenAll(msg)
+
         } catch (error) {
             ws.send(error)
             ws.close()
