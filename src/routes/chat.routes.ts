@@ -43,7 +43,7 @@ interface Message {
             // ws.send('Error: JWT verification failed');
         }}
     })
-    .ws('/api/chats/:room', { async message(ws, message) {
+    .ws('/api/chats/:room', { message(ws, message) {
         try {
             //@ts-ignore
             // const authorizationHeader: string | null = ws.data.headers.authorization;
