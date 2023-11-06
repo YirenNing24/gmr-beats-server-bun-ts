@@ -45,6 +45,7 @@ interface Message {
     })
     .ws('/api/chats/:room', { message(ws, message) {
         try {
+            console.log(message)
             //@ts-ignore
             // const authorizationHeader: string | null = ws.data.headers.authorization;
             // if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
