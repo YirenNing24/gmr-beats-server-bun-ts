@@ -41,7 +41,7 @@ interface NewMessage{
         const { username } = decodedToken as { username: string };
 
         const chatService: ChatService = new ChatService()
-        chatService.chatRoom(room, username)
+        chatService.chatRoom(room, username, ws)
         ws.subscribe(room)
         }
     ,async message(ws, message){

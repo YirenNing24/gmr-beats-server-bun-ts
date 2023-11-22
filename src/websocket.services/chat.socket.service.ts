@@ -7,6 +7,8 @@ import rt from "rethinkdb";
 import { getRethinkDB } from "../db/rethink";
 
 import { WebSocket } from "ws";
+import Elysia from "elysia";
+import { ElysiaWS } from "elysia/ws";
 
 
 
@@ -56,10 +58,8 @@ class ChatService {
     this.websocket = websocket;
   }
 
-  async chatRoom(room: string, username: string): Promise<void> {
+  async chatRoom(room: string, username: string, ws: ElysiaWS<any>): Promise<void> {
     try {
-      const ws: WebSocket | undefined = this.websocket
-
       const connection: rt.Connection = await getRethinkDB();
       let query: rt.Sequence = rt.db('beats').table("chats").filter({ roomId: room });
       if (!watchedRooms[room]) {
