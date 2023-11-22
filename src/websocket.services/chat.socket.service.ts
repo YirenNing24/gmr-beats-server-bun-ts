@@ -7,6 +7,7 @@ import rt from "rethinkdb";
 import { getRethinkDB } from "../db/rethink";
 import Elysia from "elysia";
 import { WebSocket } from "ws";
+import { ElysiaWS } from "elysia/ws";
 
 
 
@@ -19,6 +20,12 @@ interface Result {
   ts: number;
 }
 
+interface SenderData {
+  username: string
+  level: number
+  rank: string
+}
+
 interface NewMessage{
   id: string
   message: string
@@ -28,11 +35,6 @@ interface NewMessage{
   ts: number
 }
 
-interface SenderData {
-  username: string
-  level: number
-  rank: string
-}
 
 interface PrivateMessage{
   id: string
@@ -165,10 +167,13 @@ class ChatService {
 
 export default ChatService
 
-export const insertChat = async (app: Elysia, ws: WebSocket) => {
-  ws.addEventListener('message', async  (message: MessageEvent<string|Buffer>) =>{
-    try {
-    const newMessage: NewMessage = JSON.parse(message.toString())
+const sanitise = async (message: NewMessage): Promise<boolean> => {
+  return !!message && message.message !== null && message.message !== "";
+};
+
+export const insertChats = async (message: NewMessage): Promise<void> => {
+  try {
+    const newMessage: NewMessage = JSON.parse(message.toString());
     if (await sanitise(newMessage)) {
       const connection = await getRethinkDB();
 
@@ -178,21 +183,15 @@ export const insertChat = async (app: Elysia, ws: WebSocket) => {
     }
   } catch (error: any) {
     logError(error);
-    }
-  })
-}
-
-const sanitise = async (message: NewMessage): Promise<boolean> => {
-  return !!message && message.message !== null && message.message !== "";
+  }
 };
 
 const insertMessage = async (connection: any, newMessage: NewMessage, table: string = "chats"): Promise<void> => {
-  const timestamp: number = Date.now();
   await rt.db('beats')
     .table(table)
     .insert({
       ...newMessage,
-      ts: timestamp,
+      ts: Date.now(),
     })
     .run(connection);
 };

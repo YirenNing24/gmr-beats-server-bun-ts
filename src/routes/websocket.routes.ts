@@ -3,11 +3,32 @@ import jwt, { JwtPayload } from 'jsonwebtoken'
 
 import ChatService from "../websocket.services/chat.socket.service";
 import { JWT_SECRET } from "../config/constants";
+import { insertChats } from "../websocket.services/chat.socket.service";
 
+interface SenderData {
+    username: string
+    level: number
+    rank: string
+  }
+  
+interface NewMessage{
+    id: string
+    message: string
+    roomId: string
+    sender: SenderData
+    receiver: string
+    ts: number
+  }
+  
+// {
+//     "message": "string",
+//     "roomdId": "string",
+//     "username": "string"
+// }
 
  const chat = (app: Elysia): void => {
    app.ws('/api/chats/:room', { 
-    open(ws) {
+    async open(ws) {
         //@ts-ignore
         const room: string = ws.data.params.room
         const authorizationHeader: string = ws.data.headers.authorization || ""
@@ -22,7 +43,16 @@ import { JWT_SECRET } from "../config/constants";
         const chatService: ChatService = new ChatService()
         chatService.chatRoom(room, username)
         ws.subscribe(room)
-    }})
+        }
+    ,async message(ws, message){
+
+        const newMessage = message as NewMessage
+        insertChats(newMessage)
+
+
+    }
+    })
+
 
 };
 
