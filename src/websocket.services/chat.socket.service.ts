@@ -52,14 +52,15 @@ const watchedRooms: Record<string, boolean> = {};
 
 class ChatService {
 
-  websocket?: WebSocket;
+  websocket?: ElysiaWS<any>;
 
-  constructor(websocket?: WebSocket) {
+  constructor(websocket?: ElysiaWS<any>) {
     this.websocket = websocket;
   }
 
-  async chatRoom(room: string, username: string, ws: ElysiaWS<any>): Promise<void> {
+  async chatRoom(room: string, username: string): Promise<void> {
     try {
+      const ws = this.websocket
       const connection: rt.Connection = await getRethinkDB();
       let query: rt.Sequence = rt.db('beats').table("chats").filter({ roomId: room });
       if (!watchedRooms[room]) {

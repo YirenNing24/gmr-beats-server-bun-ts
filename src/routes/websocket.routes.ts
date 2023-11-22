@@ -40,8 +40,8 @@ interface NewMessage{
         const decodedToken: string |JwtPayload = jwt.verify(jwtToken, JWT_SECRET)
         const { username } = decodedToken as { username: string };
 
-        const chatService: ChatService = new ChatService()
-        chatService.chatRoom(room, username, ws)
+        const chatService: ChatService = new ChatService(ws)
+        chatService.chatRoom(room, username)
         ws.subscribe(room)
         }
     ,async message(ws, message){
