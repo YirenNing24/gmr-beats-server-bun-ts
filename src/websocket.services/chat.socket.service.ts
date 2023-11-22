@@ -173,6 +173,7 @@ const sanitise = async (message: NewMessage): Promise<boolean> => {
 
 export const insertChats = async (message: NewMessage): Promise<void> => {
   try {
+    console.log(message)
     const newMessage: NewMessage = JSON.parse(message.toString());
     if (await sanitise(newMessage)) {
       const connection = await getRethinkDB();
