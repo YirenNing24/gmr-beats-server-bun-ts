@@ -76,6 +76,27 @@ class ChatService {
         });
         watchedRooms[room] = true;
       }
+      let orderedQuery: rt.Sequence = query.orderBy(rt.desc("ts")).limit(4);
+      orderedQuery.run(connection, async (error, cursor) => {
+        if (error) {
+          console.error(error);
+          return;
+        }
+        const ws: WebSocket | undefined = this.websocket
+
+        try {
+          const result: Result[] = await cursor.toArray();
+          const room_data = {
+            data: result,
+            handle: room,
+          };
+          const roomData: string = JSON.stringify(room_data);
+          console.log(roomData)
+          ws?.send(roomData);
+        } catch (error: any) {
+          console.error("Error processing query result:", error);
+        }
+      });
       let query2: rt.Sequence = rt.db('beats').table("private").filter({ roomId: username });
       if (!watchedRooms[username]) {
         query2.changes().run(connection, (error, cursor) => {
@@ -108,26 +129,7 @@ class ChatService {
         });
         watchedRooms[room] = true;
       }
-      let orderedQuery: rt.Sequence = query.orderBy(rt.desc("ts")).limit(4);
-      orderedQuery.run(connection, async (error, cursor) => {
-        if (error) {
-          console.error(error);
-          return;
-        }
-        const ws: WebSocket | undefined = this.websocket
 
-        try {
-          const result: Result[] = await cursor.toArray();
-          const room_data = {
-            data: result,
-            handle: room,
-          };
-          const roomData: string = JSON.stringify(room_data);
-          ws?.send(roomData);
-        } catch (error: any) {
-          console.error("Error processing query result:", error);
-        }
-      });
     } catch (error: any) {
       console.error("Error in chatRoom function:", error);
     }
