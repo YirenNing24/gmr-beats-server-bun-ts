@@ -20,11 +20,6 @@ interface NewMessage{
     ts: number
   }
   
-// {
-//     "message": "string",
-//     "roomdId": "string",
-//     "username": "string"
-// }
 
  const chat = (app: Elysia): void => {
    app.ws('/api/chats/:room', { 
@@ -42,7 +37,7 @@ interface NewMessage{
 
         const chatService: ChatService = new ChatService(ws)
         chatService.chatRoom(room, username)
-        ws.subscribe(room)
+        ws.subscribe('all')
         }
     ,async message(ws, message){
 
