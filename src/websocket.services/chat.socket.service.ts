@@ -5,9 +5,9 @@ import app from "../app";
 //* RETHINK DB
 import rt from "rethinkdb";
 import { getRethinkDB } from "../db/rethink";
-import Elysia from "elysia";
+
 import { WebSocket } from "ws";
-import { ElysiaWS } from "elysia/ws";
+
 
 
 
@@ -82,7 +82,6 @@ class ChatService {
           console.error(error);
           return;
         }
-        const ws: WebSocket | undefined = this.websocket
 
         try {
           const result: Result[] = await cursor.toArray();
