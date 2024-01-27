@@ -48,11 +48,13 @@ const scores = (app: Elysia): void => {
             const scoreService: ScoreService = new ScoreService(driver)
             const output: ClassicScoreStats[] = await scoreService.getHighScoreClassic(userName)
 
-          return output
+          return output 
         } catch (error: any) {
           throw error
         }
     })
+
+    
 
 };
 

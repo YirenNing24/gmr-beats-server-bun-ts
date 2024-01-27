@@ -5,6 +5,8 @@ import { ClassicScoreStats } from "./game.services.interfaces";
 //* ERROR VALIDATION
 import ValidationError from "../errors/validation.error";
 
+//**TODO Weekly Highscore, Monthly HighScore, current system is only lifetime highscore */
+
 class ScoreService {
     /**
      * Memgraph driver instance for database interactions.
@@ -40,11 +42,16 @@ class ScoreService {
             }
     
             const statsScore: string = JSON.stringify(scoreStats);
-            const { highscore, score } = scoreStats as ClassicScoreStats;
-            const { songName } = scoreStats.finalStats;
+
             const session2: Session | undefined = this.driver?.session();
             const currentDate = new Date();
             const date: string = currentDate.toISOString().split('T')[0];
+
+            const { highscore, score, difficulty } = scoreStats as ClassicScoreStats;
+            const { songName } = scoreStats.finalStats;
+
+            const songNameCaps: string = songName.toUpperCase()
+            const difficultyCAps: string = difficulty.toUpperCase()
 
             await session2?.executeWrite(
                 async (tx: ManagedTransaction) => {
@@ -63,15 +70,17 @@ class ScoreService {
                             username: $username,
                             scoreStats: $statsScore,
                             score: $score,
-                            date: $date
+                            date: $date,
+                            difficulty: $difficulty
                         })
                         WITH s
                         MATCH (u:User {username: $username})
-                        CREATE (u)-[:${songName}]->(s)
+                        CREATE (u)-[:${songNameCaps}]->(s)
                         ${highscore ? 'CREATE (u)-[:HIGHSCORE]->(s)' : ''}
                         CREATE (u)-[:CLASSIC]->(s)
+                        CREATE (u)-[:${difficultyCAps}]->(s)
                     `;
-                    await tx.run(createScoreQuery, { username, statsScore, date, highscore, score });
+                await tx.run(createScoreQuery, { username, statsScore, date, highscore, score, difficulty });
                 }
             );
         } catch (error: any) {

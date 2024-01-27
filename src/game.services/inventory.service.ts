@@ -500,7 +500,7 @@ class InventoryService {
      */
     private async getWalletAddress(localWallet: string, localWalletKey: string): Promise<string> {
       const walletService: WalletService = new WalletService();
-      return await walletService.WalletAddress(localWallet, localWalletKey);
+      return await walletService.getWalletAddress(localWallet, localWalletKey);
       }
 
 

@@ -88,16 +88,16 @@ export default class WalletService {
     }
   }
 
-  public async WalletAddress(walletData: string, password: string): Promise<string> {
+  public async getWalletAddress(walletData: string, password: string): Promise<string> {
     try {
-      const localWallet = new LocalWalletNode({ chain: CHAIN });
+      const localWallet: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
       await localWallet.import({
         encryptedJson: walletData,
         password: password,
       });
 
       // Connect the smart wallet
-      const smartWallet = new SmartWallet(SMART_WALLET_CONFIG);
+      const smartWallet: SmartWallet = new SmartWallet(SMART_WALLET_CONFIG);
       await smartWallet.connect({
         personalWallet: localWallet,
       });

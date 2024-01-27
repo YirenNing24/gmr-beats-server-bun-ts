@@ -1,10 +1,9 @@
 //** MEMGRAPH DRIVER AND TYPES
-import { Driver, ManagedTransaction, QueryResult, RecordShape, Session } from "neo4j-driver";
+import { Driver, ManagedTransaction, QueryResult, Session } from "neo4j-driver";
 
 //** VALIDATION ERROR
-import ValidationError from "../errors/validation.error";
 import { ClassicScoreStats } from "./game.services.interfaces";
-import { start } from "repl";
+
 
 class LeaderboardService {
 	/**
@@ -27,39 +26,76 @@ class LeaderboardService {
 		this.driver = driver;
 	}
 
-    public async weeklyLeaderboard(gameMode: string, songName: string, period: string, difficulty: string): Promise<ClassicScoreStats[]> {
-        //* Weekly is from Monday to Sunday
-        try {
-            const currentDate: Date = new Date();
-            const startOfWeek: Date = new Date(currentDate);
-            startOfWeek.setDate(currentDate.getDate() - currentDate.getDay() + (currentDate.getDay() === 0 ? -6 : 1)); // Monday of the current week
-            const endOfWeek: Date = new Date(startOfWeek);
-            endOfWeek.setDate(startOfWeek.getDate() + 6); // Sunday of the current week
-    
-            const startDate: string = startOfWeek.toISOString().split('T')[0];
-            const endDate: string = endOfWeek.toISOString().split('T')[0];
-        
-            const session: Session | undefined = this.driver?.session();
-            const result: QueryResult | undefined = await session?.executeRead((tx: ManagedTransaction) =>
-                tx.run(`
-                    MATCH (s:Score)-[:HIGHSCORE]-(u:User)
-                    WHERE date(s.date) >= date($startDate) AND date(s.date) <= date($endDate)
-                    RETURN s
-                    ORDER BY s.score
-                    LIMIT 100`,
-                { startDate, endDate })
-            );
-            await session?.close();
-    
-            const classicScoreStats: ClassicScoreStats[] | undefined = result?.records.map(record => record.get('s').properties);
-    
-            return classicScoreStats as ClassicScoreStats[];
-        } catch (error: any) {
-            throw error;
-        }
-    }
-    
-
+	public async dailyLeaderboard(songName: string, difficulty: string): Promise<ClassicScoreStats[]> {
+		try {
+			const currentDate: Date = new Date();
+			const startOfDay: Date = new Date(currentDate);
+			startOfDay.setHours(0, 0, 0, 0); // Set to the beginning of the current day
+			const endOfDay: Date = new Date(startOfDay);
+			endOfDay.setHours(23, 59, 59, 999); // Set to the end of the current day
+	
+			const startDate: string = startOfDay.toISOString().split('T')[0];
+			const endDate: string = endOfDay.toISOString().split('T')[0];
+	
+			const songNameCaps: string = songName.toUpperCase();
+			const difficultyCaps: string = difficulty.toUpperCase();
+	
+			const session: Session | undefined = this.driver?.session();
+			const result: QueryResult | undefined = await session?.executeRead((tx: ManagedTransaction) =>
+				tx.run(`
+					MATCH (s:Score)-[:HIGHSCORE]-(u:User)-[:${songNameCaps}]->(s)<-[:${difficultyCaps}]-(u)
+					WHERE date(s.date) >= date($startDate) AND date(s.date) <= date($endDate)
+					RETURN s
+					ORDER BY s.score
+					LIMIT 100`,
+				{ startDate, endDate })
+			);
+			await session?.close();
+	
+			const classicScoreStats: ClassicScoreStats[] | undefined = result?.records.map(record => record.get('s').properties);
+	
+			return classicScoreStats as ClassicScoreStats[];
+		} catch (error: any) {
+			throw error;
+		}
+	}
+	
+	
+	public async weeklyLeaderboard(songName: string, difficulty: string): Promise<ClassicScoreStats[]> {
+		//* Weekly is from Monday to Sunday
+		try {
+			const currentDate: Date = new Date();
+			const startOfWeek: Date = new Date(currentDate);
+			startOfWeek.setDate(currentDate.getDate() - currentDate.getDay() + (currentDate.getDay() === 0 ? -6 : 1)); // Monday of the current week
+			const endOfWeek: Date = new Date(startOfWeek);
+			endOfWeek.setDate(startOfWeek.getDate() + 6); // Sunday of the current week
+	
+			const startDate: string = startOfWeek.toISOString().split('T')[0];
+			const endDate: string = endOfWeek.toISOString().split('T')[0];
+	
+			const songNameCaps: string = songName.toUpperCase();
+			const difficultyCaps: string = difficulty.toUpperCase();
+	
+			const session: Session | undefined = this.driver?.session();
+			const result: QueryResult | undefined = await session?.executeRead((tx: ManagedTransaction) =>
+			tx.run(`
+					MATCH (s:Score)-[:HIGHSCORE]-(u:User)-[:${songNameCaps}]->(s)<-[:${difficultyCaps}]-(u)
+					WHERE date(s.date) >= date($startDate) AND date(s.date) <= date($endDate)
+					RETURN s
+					ORDER BY s.score
+					LIMIT 100`,
+				{ startDate, endDate })
+			);
+			await session?.close();
+	
+			const classicScoreStats: ClassicScoreStats[] | undefined = result?.records.map(record => record.get('s').properties);
+	
+			return classicScoreStats as ClassicScoreStats[];
+		} catch (error: any) {
+			throw error;
+		}
+	}
+	
     public async monthlyLeaderboard(): Promise<ClassicScoreStats[]> {
 		// Monthly is from the 1st to the end of the month
 		try {
