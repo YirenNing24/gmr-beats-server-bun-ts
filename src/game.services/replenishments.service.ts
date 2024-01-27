@@ -12,7 +12,7 @@ export default class Replenishments {
     async getEnergy(userName: string, playerStats: any) {
       try {
         // Retrieve the serialized energy data from Redis
-        const serializedEnergy = await keydb.get(userName + "Energy");
+        const serializedEnergy = await keydb.get(userName + "Energy") as string
 
         const energy = JSON.parse(serializedEnergy)
         const stats = JSON.parse(playerStats)
@@ -32,7 +32,7 @@ export default class Replenishments {
           const replenishments = Math.floor(elapsedSeconds / replenishInterval);
     
           // Calculate the energy after replenishments
-          const newEnergy = playerEnergy.lastEnergy + replenishments * replenishRate;
+          const newEnergy: number = playerEnergy.lastEnergy + replenishments * replenishRate;
     
           // Calculate max energy based on player level
           const maxEnergy = 200 + (playerLevel - 1) * 5;
@@ -51,7 +51,7 @@ export default class Replenishments {
           // Handle the case where the key is not found in Redis
           throw new Error(`Energy data not found for user: ${userName}`);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.log(error)
         throw new Error(`Error while retrieving energy data: ${error.message}`);
       }
@@ -113,7 +113,7 @@ export default class Replenishments {
       await keydb.set(userName + "Energy", serializedEnergyData);
 
       return newEnergy;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error while setting or replenishing energy: ${error.message}`);
     }
   }

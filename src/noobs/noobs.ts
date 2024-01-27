@@ -1,17 +1,34 @@
-interface CardInventory {
+/**
+ * Represents a card inventory where the keys are strings and values are objects
+ * containing an 'Item' property.
+ * @interface
+ */
+export interface CardInventory {
   [key: string]: {
-    Item: string; // Change 'any' to the appropriate type for 'Item'
+    Item: null | string; // Change 'any' to the appropriate type for 'Item'
   };
-  };
+}
 
-interface PowerUpInventory {
+/**
+ * Represents a power-up inventory where the keys are strings and values are objects
+ * containing 'Item' and 'Stack' properties.
+ * @interface
+ */
+export interface PowerUpInventory {
   [key: string]: {
-    Item: string; // Change 'any' to the appropriate type for 'Item'
-    Stack: number; // Change 'any' to the appropriate type for 'Stack'
+    Item: null | string; // Change 'any' to the appropriate type for 'Item'
+    Stack: null| number; // Change 'any' to the appropriate type for 'Stack'
   };
-  };
+}
 
-interface PlayerStats {
+export type EquipInventory = Array<IveEquip>;
+
+/**
+ * Represents player statistics including level, experience, available stat points, rank,
+ * and saved stat points for various roles.
+ * @interface
+ */
+export interface PlayerStats {
   level: number;
   playerExp: number;
   availStatPoints: number;
@@ -25,9 +42,68 @@ interface PlayerStats {
     visual: number;
     leadRapper: number;
   };
+};
+
+/**
+ * Represents inventory equipment slot for members of the group IVE, including strings for each member.
+ * @interface
+ */
+export interface IveEquip {
+  IveEquip: {
+    [key: string]: Member;
   };
-    
-  export const cardInventory: CardInventory =  {
+}
+
+export interface Member{
+  Equipped: boolean;
+  Item: string | null;
+}
+
+export const iveEquip: IveEquip = {
+  "IveEquip":{
+     "Wonyoung":{
+        "Equipped": false,
+        "Item": "",
+
+     },
+     "Yujin":{
+        "Equipped": false,
+        "Item": "",
+
+     },
+     "Rei":{
+        "Equipped": false,
+        "Item": "",
+
+     },
+     "Liz":{
+        "Equipped": false,
+        "Item": "",
+
+     },
+     "Gaeul":{
+        "Equipped": false,
+        "Item": "",
+
+     },
+     "Leeseo":{
+        "Equipped": false,
+        "Item": "",
+     }
+  }
+}
+
+
+export const equipInventory: EquipInventory = [
+  iveEquip,
+]
+
+
+
+
+
+
+export const cardInventory: CardInventory =  {
     "Inv1": { "Item": null },
     "Inv2": { "Item": null },
     "Inv3": { "Item": null },
@@ -178,10 +254,10 @@ interface PlayerStats {
     "Inv148": { "Item": null },
     "Inv149": { "Item": null },
     "Inv150": { "Item": null }
-  };
+};
 
 
-  export const powerUpInventory: PowerUpInventory = {
+export const powerUpInventory: PowerUpInventory = {
     "Inv1": {
       "Item": null,
       "Stack": null
@@ -382,20 +458,19 @@ interface PlayerStats {
       "Item": null,
       "Stack": null
     }
-  };
+};
   
-  
-  export const playerStats: PlayerStats = {
-    "level": 1, "playerExp": 0, "availStatPoints": 7, "rank": "Debut",
-      "statPointsSaved": {
-        "mainVocalist":1,
-        "rapper":1,
-        "leadDancer":1,
-        "leadVocalist":1,
-        "mainDancer":1,
-        "visual":1,
-        "leadRapper":1}
-  };
+export const playerStats: PlayerStats = {
+  "level": 1, "playerExp": 0, "availStatPoints": 7, "rank": "Debut",
+    "statPointsSaved": {
+      "mainVocalist":1,
+      "rapper":1,
+      "leadDancer":1,
+      "leadVocalist":1,
+      "mainDancer":1,
+      "visual":1,
+      "leadRapper":1}
+};
 
 
   

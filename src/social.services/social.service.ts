@@ -1,40 +1,39 @@
-//* MEMGRAPH DRIVER AND TYPES
+//** MEMGRAPH DRIVER AND TYPES
 import { Driver, ManagedTransaction, QueryResult, Session } from "neo4j-driver";
 
-//* ERROR CODES
+//** RETHINK DB
+import rt from "rethinkdb";
+import { getRethinkDB } from "../db/rethink";
+
+//** ERROR CODES
 import ValidationError from "../errors/validation.error";
 
-
-//* TYPE INTERFACES
-interface FollowResponse {
-    status: string;
-  }
-
-interface ViewedUserData {
-  username: string
-  playerStats: string
-  }
-
-interface ViewProfileData {
-  username: string
-  playerStats: string
-  followsUser: boolean
-  followedByUser: boolean
-  }
-
-interface MutualData {
-    username: string;
-    playerStats: string;
-  }
-
+//** TYPE INTERFACE IMPORTS
+import { FollowResponse, ViewProfileData, ViewedUserData, MutualData, PlayerStatus, SetPlayerStatus } from "./social.services.interface";
 
 class SocialService {
-
+    /**
+   * Creates an instance of the SocialService class.
+   *
+   * @constructor
+   * @param {Driver} driver - The Neo4j driver for database interactions.
+   */
   private driver:Driver
   constructor(driver: Driver) {
-    this.driver = driver
-  };
-
+    /**
+     * The Neo4j driver for database interactions.
+     * @type {Driver}
+     */
+    this.driver = driver;
+  }
+  /**
+ * Follows a user.
+ *
+ * @param {string} follower - The username of the follower.
+ * @param {string} toFollow - The username of the user to follow.
+ * @returns {Promise<FollowResponse>} A promise that resolves to a FollowResponse indicating the follow status.
+ * @throws {Error} If the user to follow is not found.
+ */
   public async follow(follower: string, toFollow: string): Promise<FollowResponse> {
     try {
       const session: Session = this.driver.session();
@@ -68,9 +67,16 @@ class SocialService {
     }
   };
 
+  /**
+   * Unfollows a user.
+   *
+   * @param {string} follower - The username of the follower.
+   * @param {string} toUnfollow - The username of the user to unfollow.
+   * @returns {Promise<FollowResponse>} A promise that resolves to a FollowResponse indicating the unfollow status.
+   * @throws {Error} If the user to unfollow is not found.
+   */
   public async unfollow(follower: string, toUnfollow: string): Promise<FollowResponse> {
     try {
-      
       const session = this.driver.session();
       const result: QueryResult = await session.executeWrite((tx: ManagedTransaction) =>
         tx.run( 
@@ -84,7 +90,7 @@ class SocialService {
           { follower, toUnfollow }
         ));
       await session.close();
-  
+
       if (result.records.length === 0) {
         throw new Error("User to unfollow not found");
       } else {
@@ -95,9 +101,25 @@ class SocialService {
       throw error;
     }
   };
-  
+
+  /**
+   * Retrieves profile information for a user's view of another user's profile.
+   *
+   * @param {string} userName - The username of the user making the request.
+   * @param {string} viewUsername - The username of the user whose profile is being viewed.
+   * @returns {Promise<ViewProfileData>} A promise that resolves to ViewProfileData containing profile information.
+   * @throws {ValidationError} If the user with the specified viewUsername is not found.
+   */
   public async viewProfile(userName: string, viewUsername: string): Promise<ViewProfileData> {
-    const session:Session = this.driver.session();
+    /**
+     * @typedef {Object} ViewProfileData
+     * @property {string} username - The username of the viewed user.
+     * @property {PlayerStats} playerStats - The player statistics of the viewed user.
+     * @property {boolean} followsUser - Indicates if the user making the request follows the viewed user.
+     * @property {boolean} followedByUser - Indicates if the viewed user follows the user making the request.
+     */
+
+    const session: Session = this.driver.session();
     try {
       const result = await session.executeRead(async (tx: ManagedTransaction) => {
         const [userQuery, followQuery, followedByQuery] = await Promise.all([
@@ -112,23 +134,22 @@ class SocialService {
             RETURN COUNT(u) > 0 AS followedByUser`,
             { userName, viewUsername }),
         ]);
-  
+
         if (userQuery.records.length === 0) {
           throw new ValidationError(`User with username '${viewUsername}' not found.`, "");
         }
-  
+
         const user = userQuery.records[0].get('u');
         const { username, playerStats } = user.properties as ViewedUserData;
-  
+
         const followsUser: boolean = followQuery.records[0].get('followsUser');
         const followedByUser: boolean = followedByQuery.records[0].get('followedByUser');
-  
+
         return { username, playerStats, followsUser, followedByUser };
       });
-  
+
       return result;
     } catch (error: any) {
-      console.error("Something went wrong: ", error);
       throw error;
     } finally {
       if (session) {
@@ -137,7 +158,21 @@ class SocialService {
     }
   };
 
+
+  /**
+   * Retrieves a list of users who are mutual followers with the specified user.
+   *
+   * @param {string} username - The username of the user for whom mutual followers are to be retrieved.
+   * @returns {Promise<MutualData[]>} A promise that resolves to an array of MutualData representing mutual followers.
+   * @throws {Error} If an error occurs during the retrieval process.
+   */
   public async mutual(username: string): Promise<MutualData[]> {
+    /**
+     * @typedef {Object} MutualData
+     * @property {string} username - The username of a mutual follower.
+     * @property {string} playerStats - The player statistics of the mutual follower.
+     */
+
     try {
       const session: Session = this.driver.session();
       const result: QueryResult = await session.executeRead((tx: ManagedTransaction) =>
@@ -150,19 +185,115 @@ class SocialService {
           { username }
         ));
       await session.close();
-  
-      const users: { username: string, playerStats: string }[] = result.records.map(record => ({
+
+      const users: MutualData[] = result.records.map(record => ({
         username: record.get("username") || "", // Ensure a default value if property is undefined
         playerStats: record.get("playerStats") || "" // Ensure a default value if property is undefined
-    })) as MutualData[];
-    
-  
+      })) as MutualData[];
+
+
+      console.log(users)
       return users as MutualData[];
     } catch (error: any) {
       console.error("Something went wrong: ", error);
       throw error;
     }
   };
+
+
+  /**
+   * Retrieves the online status of mutual followers for the specified user.
+   *
+   * @param {string} username - The username of the user for whom mutual followers' status is to be retrieved.
+   * @returns {Promise<PlayerStatus[]>} A promise that resolves to an array of PlayerStatus representing online status of mutual followers.
+   * @throws {Error} If an error occurs during the retrieval process.
+   */
+  public async mutualStatus(username: string): Promise<PlayerStatus[]> {
+    /**
+     * @typedef {Object} PlayerStatus
+     * @property {string} username - The username of a mutual follower.
+     * @property {number} lastOnline - The timestamp representing the last online time of the mutual follower.
+     * @property {string} status - The online status of the mutual follower.
+     */
+
+    try {
+      const session: Session = this.driver.session();
+      const result: QueryResult = await session.executeRead((tx: ManagedTransaction) =>
+        tx.run(
+          `
+          MATCH (u1:User {username: $username})-[:FOLLOW]->(u2),
+                (u2)-[:FOLLOW]->(u1)
+          RETURN COLLECT(u2.username) AS mutualFollowers
+          `,
+          { username }
+        )
+      );
+
+      const mutualFollowers: string[] = result.records[0].get('mutualFollowers');
+
+      // Close the Neo4j session
+      await session.close();
+
+      // RethinkDB query using the mutual followers' usernames
+      const connection: rt.Connection = await getRethinkDB();
+      const onlineMutuals: rt.Cursor = await rt
+        .db('beats')
+        .table('status')
+        .getAll(...mutualFollowers)
+        .limit(1)
+        .orderBy(rt.desc('lastOnline'))
+        .run(connection);
+
+      const mutualsOnline = await onlineMutuals.toArray() as PlayerStatus[];
+      return mutualsOnline;
+    } catch (error: any) {
+      throw error;
+    }
+  }
+
+/**
+   * Sets the online status for a user in the system.
+   *
+   * @param {string} username - The username of the user for whom the online status is to be set.
+   * @param {string} activity - The activity description of the user.
+   * @param {string} userAgent - The user agent string representing the user's browser.
+   * @param {string} osName - The name of the operating system used by the user.
+   * @param {string} ipAddress - The IP address from which the user is accessing the system.
+   * @returns {Promise<void>} A promise that resolves once the online status is successfully set.
+   * @throws {Error} If an error occurs during the status setting process.
+   */
+  public async setStatusOnline(username: string, activity: string, userAgent: string, osName: string, ipAddress: string): Promise<void> {
+    /**
+     * @typedef {Object} SetPlayerStatus
+     * @property {string} username - The username of the user.
+     * @property {boolean} status - The online status of the user (true for online, false for offline).
+     * @property {string} activity - The activity description of the user.
+     * @property {number} lastOnline - The timestamp representing the last online time of the user.
+     * @property {string} userAgent - The user agent string representing the user's browser.
+     * @property {string} osName - The name of the operating system used by the user.
+     * @property {string} ipAddress - The IP address from which the user is accessing the system.
+     */
+    try {
+      const playerStatus: SetPlayerStatus = {
+        username,
+        status: true,
+        activity,
+        lastOnline: Date.now(),
+        userAgent,
+        osName,
+        ipAddress,
+      };
+
+      const connection: rt.Connection = await getRethinkDB();
+      await rt
+        .db('beats')
+        .table('status')
+        .insert(playerStatus)
+        .run(connection);
+    } catch (error: any) {
+      throw error;
+    }
+  }
   
 };
 

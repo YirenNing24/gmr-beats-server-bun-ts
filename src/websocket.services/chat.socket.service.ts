@@ -91,7 +91,7 @@ class ChatService {
             handle: room,
           };
           const roomData: string = JSON.stringify(room_data);
-          console.log(roomData)
+
           ws?.send(roomData);
         } catch (error: any) {
           console.error("Error processing query result:", error);

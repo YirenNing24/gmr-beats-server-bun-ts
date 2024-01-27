@@ -1,55 +1,77 @@
+//** JWT MODULE, AND CONFIGS IMPORTS
 import { JWT_SECRET, SALT_ROUNDS } from '../config/constants'
+import jwt from 'jsonwebtoken'
+
+//** BCRYPT IMPORT
 import { hash, compare } from 'bcrypt-ts'
 
+//** ERROR CODES
 import ValidationError from '../errors/validation.error'
-import { cardInventory, playerStats, powerUpInventory } from '../noobs/noobs'
 
+//** NEW ACCOUNT DEFAULT VALUES
+import { cardInventory, playerStats, powerUpInventory, iveEquip } from '../noobs/noobs'
+
+//**  IMPORTED SERVICES
 import WalletService from './wallet.service'
 import Replenishments from '../game.services/replenishments.service.js'
 import ProfileService from '../game.services/profile.service'
-//** UUID GENERATOR */
+
+//** UUID GENERATOR
 import { nanoid } from "nanoid/async";
-import { Driver, QueryResult, Session } from 'neo4j-driver-core'
-import jwt from 'jsonwebtoken'
+import { Driver, QueryResult, Session,  ManagedTransaction } from 'neo4j-driver-core'
 
+//** TYPE INTERFACES
+import { LocalWallet, WalletData, UserData, ValidateSessionReturn, AuthenticateReturn } from './user.service.interface'
 
+/**
+ * Service for handling authentication-related operations.
+ * 
+ * @class
+ * @name AuthService
+ */
 class AuthService {
   /**
-   * @type {neo4j.Driver}
+   * The Neo4j driver used for database interactions.
+   * @type {Driver}
+   * @memberof AuthService
+   * @instance
    */
-  private driver: Driver;
-
-  /**
-   * The constructor expects an instance of the Neo4j Driver, which will be
-   * used to interact with Neo4j.
-   *
-   * @param {neo4j.Driver} driver
-   */
+  driver:Driver
   constructor(driver: Driver) {
-      this.driver = driver;
-  }
-
-  async register(anon: boolean, email: string, password: string, userName: string, firstName: string, lastName: string) {
-    const walletService = new WalletService();
-    const replenishService = new Replenishments()
+    this.driver = driver
+    }
+    /**
+   * Registers a new user.
+   *
+   * @method
+   * @memberof AuthService
+   * @instance
+   * @param {string} username - The username of the new user.
+   * @param {string} password - The password of the new user.
+   * @returns {Promise<void>} A Promise that resolves when the registration is successful.
+   */
+  public async register(anon: boolean, email: string, password: string, userName: string, firstName: string, lastName: string): Promise<void> {
+    const walletService: WalletService = new WalletService();
+    const replenishService: Replenishments = new Replenishments()
 
     const userId: string = await nanoid()
     const inventoryCard: string = JSON.stringify(cardInventory);
     const statsPlayer: string = JSON.stringify(playerStats)
     const inventoryPowerUp: string = JSON.stringify(powerUpInventory)
+    const equipIve: string = JSON.stringify(iveEquip)
     
     const encrypted: string = await hash(password, parseInt(SALT_ROUNDS))
     const locKey: string = await hash(userName, parseInt(SALT_ROUNDS))
 
-    const localWallet = await walletService.createWallet(locKey)
+    const localWallet = await walletService.createWallet(locKey) as LocalWallet
     // Open a new session
     const session: Session = this.driver.session()
     try {
       // Create the User node in a write transaction
-       const res: QueryResult = await session.executeWrite(
-         tx => tx.run(
+       await session.executeWrite(
+        (tx: ManagedTransaction) => tx.run(
            `
-             CREATE (u:User {
+             CREATE (u:User { 
                userId: $userId,
                anon: $anon,
                email: $email,
@@ -60,28 +82,24 @@ class AuthService {
                localWallet: $localWallet, 
                localWalletKey: $locKey,
                cardInventory: $inventoryCard,
+               iveEquip: $equipIve
                playerStats: $statsPlayer,
                powerUpInventory: $inventoryPowerUp,
                profilePics: $profilePics
              })
              RETURN u
            `,
-           { userId, anon, email, userName, encrypted, firstName, lastName, localWallet, locKey, inventoryCard, statsPlayer, inventoryPowerUp, profilePics: [] }
+           { userId, anon, email, userName, encrypted, firstName, lastName, localWallet, locKey, inventoryCard, equipIve, statsPlayer, inventoryPowerUp, profilePics: [] }
          ) 
        )
-      // Extract the user from the result
-      const [ first ] = res.records
-      const node: any = first.get('u')
 
-      const { password, ...safeProperties } = node.properties
       // Close the session
       await session.close()
 
       // Set energy for new users to 200
-      const currentTime = Math.floor(Date.now() / 1000);
+      const currentTime: number = Math.floor(Date.now() / 1000);
       await replenishService.setEnergy(userName, currentTime, 200, 1)
 
-      return { ...safeProperties }
     } catch (error: any) {
       // Handle unique constraints in the database
       if (error.code === 'Neo.ClientError.Schema.ConstraintValidationFailed') {
@@ -94,119 +112,124 @@ class AuthService {
           throw new ValidationError(
             `An account already exists with the username ${userName}`,
               'Username already taken',
-          )
+            )
+          }
         }
+        throw error
+      } finally {
+        await session.close()
       }
-      // Non-neo4j error
-      throw error
-    } finally {
-      // Close the session
-      await session.close()
-    }
-  }
+    };
 
-  async authenticate(userName: string, unencryptedPassword: string) {
-    const walletService = new WalletService();
-    const replenishService = new Replenishments();
-
-    //@ts-ignore
-    const profileService = new ProfileService();
-
+/**
+ * Authenticates a user by verifying their username and password.
+ *
+ * @method
+ * @memberof AuthService
+ * @instance
+ * @param {string} userName - The username of the user to authenticate.
+ * @param {string} unencryptedPassword - The unencrypted password of the user.
+ * @returns {Promise<AuthenticateReturn>} A promise that resolves with authentication details.
+ * @throws {ValidationError} Throws a validation error if authentication fails.
+ */
+  public async authenticate(userName: string, unencryptedPassword: string): Promise<AuthenticateReturn> {
+    const walletService: WalletService = new WalletService();
+    const profileService: ProfileService = new ProfileService();
+    const replenishService: Replenishments = new Replenishments();
+    
     try {
-      // Open a new session
-      const session:Session = this.driver.session();
-  
+      const session: Session = this.driver.session();
       // Find the user node within a Read Transaction
-      const res:QueryResult = await session.executeRead(tx =>
+      const result: QueryResult = await session.executeRead(tx =>
         tx.run('MATCH (u:User {username: $userName}) RETURN u', { userName })
       );
-      // Close the session
+
       await session.close();
       // Verify the user exists
-      if (res.records.length === 0) {
-        //@ts-ignore
-        throw new ValidationError(`User with username '${userName}' not found.`, {});
+      if (result.records.length === 0) {
+        throw new ValidationError(`User with username '${userName}' not found.`, "");
       }
 
       // Compare Passwords
-      const user = res.records[0].get('u');
+      const user: UserData = result.records[0].get('u');
       const encryptedPassword: string = user.properties.password;
       const correct: boolean = await compare(unencryptedPassword, encryptedPassword);
       if (!correct) {
-        //@ts-ignore
-        throw new ValidationError('Incorrect password.', {});  
+        throw new ValidationError('Incorrect password.', "");  
       }
       // Return User Details
-      const { password, localWallet, localWalletKey, smartWallet, playerStats, username, userId, ...safeProperties  } = user.properties;
+      const { password, localWallet, localWalletKey, playerStats, userId, username, cardInventory, powerUpInventory, ...safeProperties } =  user.properties
   
-      const walletPromise = walletService.importWallet(localWallet, localWalletKey);
-      const energyPromise = replenishService.getEnergy(userName, playerStats);
+      const walletPromise: Promise<WalletData> = walletService.importWallet(localWallet, localWalletKey);
+      const energyPromise: Promise<number> = replenishService.getEnergy(userName, playerStats);
       const statsPromise = profileService.getStats(userName)
       const [wallet, energy, stats] = await Promise.all([walletPromise, energyPromise, statsPromise ]);
       
+      const token: string = jwt.sign({ userName }, JWT_SECRET)
       return {
-        energy, wallet, playerStats: stats, username,
-        ...safeProperties,
-        uuid: user.properties.userId,
-        token: jwt.sign({ username }, JWT_SECRET, {expiresIn: "1h"}),
-      };
-    } catch (error) {
+        username,
+        energy, 
+        wallet, 
+        playerStats: stats, 
+        safeProperties,
+        uuid: userId,
+        token: token
+      } as AuthenticateReturn
+    } catch (error: any) {
       throw error;
     }
-  }
+    };
+  /**
+   * Validates a user's session using JWT
+   * @method
+   * @memberof AuthService
+   * @instance
+   * @param {string} username - The username of the user whose session is to be validated.
+   * @returns {Promise<ValidateSessionReturn>} A promise that resolves with session validation details.
+   * @throws {ValidationError} Throws a validation error if the user is not found.
+   */
+  public async validateSession(userName: string): Promise<ValidateSessionReturn>  {
+    try {
+      // Create a new instance of the WalletService class
+      const walletService = new WalletService();
+      const replenishService = new Replenishments();
 
-async validateSession(username: string) {
-  try {
-    // Create a new instance of the WalletService class
-    const walletService = new WalletService();
-    const replenishService = new Replenishments();
+      // Open a new session
+      const session:Session = this.driver.session();
+      const result :QueryResult = await session.executeRead(tx =>
+        tx.run(`MATCH (u:User {username: $userName}) RETURN u`, { userName })
+      );
 
-    //@ts-ignore
-    // const profileService = new ProfileService();
+      // Close the session
+      await session.close();
+      // Verify the user exists
+      if (result.records.length === 0) {
+        throw new ValidationError(`User with username '${userName}' not found.`, "");
+      }
+      
+      const userData: UserData = result.records[0].get('u');
+      const { localWallet, localWalletKey, playerStats, password, cardInventory, powerUpInventory, username, ...safeProperties } = userData.properties;
+      
+      // Import the user's smart wallet using the WalletService class
+      const walletPromise: Promise<WalletData> = walletService.importWallet(localWallet, localWalletKey);
+      const energyPromise: Promise<number> = replenishService.getEnergy(username, playerStats) ;
 
-    // Open a new session
-    const session: Session = this.driver.session();
-    const res: QueryResult = await session.executeRead(tx =>
-      tx.run('MATCH (u:User {username: $username}) RETURN u', { username })
-    );
+      // const statsPromise = profileService.getStats(username);
+      const [walletSmart, energy ] = await Promise.all([walletPromise, energyPromise ]);
 
-    // Close the session
-    await session.close();
-    // Verify the user exists
-    if (res.records.length === 0) {
-
-      //@ts-ignore
-      throw new ValidationError(`User with username '${username}' not found.`, {});
+      // Return an object containing the user's smart wallet, safe properties, success message, and JWT token
+      return {
+        username,
+        energy,
+        wallet: walletSmart,
+        playerStats,
+        safeProperties, 
+        success: "OK", } as ValidateSessionReturn
+    } catch (error: any) {
+      throw error;
     }
-    
-    const userData = res.records[0].get('u');
-    const { localWallet, localWalletKey, playerStats, password, ...safeProperties } = userData.properties;
-    
-    // Import the user's smart wallet using the WalletService class
-    const walletPromise = walletService.importWallet(localWallet, localWalletKey);
-    const energyPromise = replenishService.getEnergy(username, playerStats) ;
-    // const statsPromise = profileService.getStats(username);
-    const [walletSmart, energy ] = await Promise.all([walletPromise, energyPromise ]);
-    // Return an object containing the user's smart wallet, safe properties, success message, and JWT token
-    return {
-      wallet: walletSmart,
-      username, ...safeProperties, 
-      playerStats,
-      success: "OK", energy };
-  } catch (error) {
-    console.log(error)
-    throw error;
-  }
-  }
+    };
 
-
-
-async resetPassword(username: string, email: string) {
-
-}
-
-
-}
-
+};
 
 export default AuthService

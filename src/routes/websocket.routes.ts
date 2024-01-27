@@ -35,6 +35,7 @@ interface NewMessage{
         const decodedToken: string |JwtPayload = jwt.verify(jwtToken, JWT_SECRET)
         const { username } = decodedToken as { username: string };
 
+        //@ts-ignore
         const chatService: ChatService = new ChatService(ws)
         chatService.chatRoom(room, username)
         ws.subscribe('all')

@@ -9,7 +9,7 @@ export const API_KEY: string | undefined = process.env.API_KEY;
 export const API_ID: string | undefined = process.env.API_ID;
 export const HOST: string = process.env.HOST || 'localhost';
 export const JWT_SECRET: string = process.env.JWT_SECRET || 'a secret key';
-export const SALT_ROUNDS: string | undefined = process.env.SALT_ROUNDS;
+export const SALT_ROUNDS: string | "" = process.env.SALT_ROUNDS || ""
 export const IP_ADDRESS: string = ip.address()
 export const SERVER_ID: string = `${IP_ADDRESS}:${APP_PORT}`;
 

@@ -6,17 +6,20 @@ import AuthService from '../user.services/auth.service';
 
 import { Driver } from 'neo4j-driver';
 import { JWT_SECRET } from '../config/constants';
+import { AuthenticateReturn, ValidateSessionReturn } from '../user.services/user.service.interface';
 
 
 
-const auth = (app: Elysia) => {
+const auth = (app: Elysia): void => {
+  
   app.post("api/login/beats", async (context: Context) => {
     try {
       const { username, password } = context.body as { username: string; password: string };
       const driver: Driver = getDriver();
       const authService: AuthService = new AuthService(driver);
-      const output = await authService.authenticate(username, password);
+      const output: AuthenticateReturn = await authService.authenticate(username, password);
       const { token, uuid, ...userProperties } = output;
+
       const response = {
         user: userProperties,
         validator: token,
@@ -38,13 +41,13 @@ const auth = (app: Elysia) => {
         throw new Error('Bearer token not found in Authorization header');
       }
       const jwtToken: string = authorizationHeader.substring(7);
-      // Verify the JWT token using 'jsonwebtoken' with options
-      const decodedToken = jwt.verify(jwtToken, JWT_SECRET)
-      const { username } = decodedToken as { username: string };
+      const decodedToken: string | jwt.JwtPayload = jwt.verify(jwtToken, JWT_SECRET)
+      const { userName } = decodedToken as { userName: string };
+
       const driver: Driver = getDriver();
       const authService: AuthService = new AuthService(driver);
-      const output = await authService.validateSession(username);
-      return output;
+      return await authService.validateSession(userName) as ValidateSessionReturn
+
     } catch (error: any) {
       console.error(`Session validation error: ${error.message}`);
       return { error: error.message };
@@ -83,17 +86,6 @@ const auth = (app: Elysia) => {
       return(error);
     }
   })
-  .post('/api/reset_password', async (context: Context) => {
-    try {
-      const { username, email } = context.body as {username: string, email: string}
-      const driver: Driver = getDriver();
-      const authService = new AuthService(driver);
-      const output = await authService.resetPassword(username, email)
-      return(output);
-    } catch (error: any) {
-      return(error)
-    }
-  });
 };
 
 export default auth;
