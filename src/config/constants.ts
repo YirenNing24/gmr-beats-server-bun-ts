@@ -27,6 +27,11 @@ export const KEYDB_PASSWORD: string | undefined = process.env.KEYDB_PASSWORD;
 export const KEYDB_PORT: string | undefined = process.env.KEYDB_PORT;
 export const KEYDB_HOST: string | undefined = process.env.KEYDB_HOST;
 
+export const INFLUXDB_TOKEN: string | undefined = process.env.INFLUXDB_TOKEN
+export const INFLUXDB_ORG: string = `GMR Test`
+export const INFLUXDB_BUCKET: string = `Chat`
+
+
 export const KDB: { host: string | undefined; port: string | number; password: string | undefined } = {
   host: process.env.KEYDB_HOST,
   port: process.env.KEYDB_PORT || 6379,

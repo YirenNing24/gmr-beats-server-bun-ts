@@ -88,7 +88,6 @@ class InventoryService {
           const inventoryCard: CardInventory = JSON.parse(cardInventory);
           const cards: CardNFT[] = await this.getOwnedCardNFTs(walletAddress);
           
-          console.log(inventoryCard)
           // Create a new object to store cards with URI as main key and metadata as value
           const cardsData: Record<string, CardsData['uri']> = {};
       
@@ -111,7 +110,7 @@ class InventoryService {
 
               // If URI is not in both inventory and equipment slot, add it to any null slot in the inventory
               const equipmentSlotExists: boolean = await this.checkEquipmentSlot(userName, equipmentSlot, uri, slot, group);
-              console.log("what's wrong?", equipmentSlotExists)
+
               if (!equipmentSlotExists) {
                 const emptySlot: string | undefined = Object.keys(inventoryCard).find((slot) => inventoryCard[slot]?.Item === null);
                 if (emptySlot) {
@@ -143,7 +142,6 @@ class InventoryService {
             const { slotEquipment, inventoryCard } = inventoryCardData;
             const session1: Session | undefined = this.driver?.session();
 
-            console.log(inventoryCard)
             // Use a Read Transaction and only return the necessary properties
             const result: QueryResult<RecordShape> | undefined = await session1?.executeRead(
                 (tx: ManagedTransaction) =>

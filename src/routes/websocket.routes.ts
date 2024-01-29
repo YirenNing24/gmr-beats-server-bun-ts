@@ -33,19 +33,17 @@ interface NewMessage{
 
         const jwtToken: string = authorizationHeader.substring(7);
         const decodedToken: string |JwtPayload = jwt.verify(jwtToken, JWT_SECRET)
-        const { username } = decodedToken as { username: string };
+        const { userName } = decodedToken as { userName: string };
 
         //@ts-ignore
         const chatService: ChatService = new ChatService(ws)
-        chatService.chatRoom(room, username)
+        chatService.chatRoom(room, userName)
         ws.subscribe('all')
         }
     ,async message(ws, message){
 
         const newMessage = message as NewMessage
-        insertChats(newMessage)
-
-
+        await insertChats(newMessage)
     }
     })
 

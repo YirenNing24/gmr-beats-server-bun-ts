@@ -177,10 +177,11 @@ export const insertChats = async (newMessage: NewMessage): Promise<void> => {
   try {
 
     if (await sanitise(newMessage)) {
-      const connection = await getRethinkDB();
+      const connection: rt.Connection = await getRethinkDB();
 
       // Check if message.receiver has a value, if it has then the message is a private message
       const table: string = newMessage.receiver ? "private" : "chats";
+      console.log(table, newMessage)
       await insertMessage(connection, newMessage, table);
     }
   } catch (error: any) {

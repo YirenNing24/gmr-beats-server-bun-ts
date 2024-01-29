@@ -1,6 +1,6 @@
 //** IMPORTED TYPES
 import { Driver, QueryResult, RecordShape, Session } from "neo4j-driver";
-import { UpdatedStats, UpdateStatsFailed, PlayerStats } from "./game.services.interfaces";
+import { UpdateStatsFailed, PlayerStats } from "./game.services.interfaces";
 
 //** ERROR VALIDATION
 import ValidationError from "../errors/validation.error";
@@ -16,7 +16,7 @@ class ProfileService {
     this.driver = driver;
   }
 
-  async updateStats(statPoints: any): Promise<UpdatedStats | UpdateStatsFailed>{
+  async updateStats(statPoints: any): Promise<any | UpdateStatsFailed>{
     try {
         const username: string = statPoints.statPointsSaved.username;
         const session: Session | undefined = this.driver?.session();
@@ -99,7 +99,7 @@ class ProfileService {
           console.log(error)
           throw error
         }
-        return { success: true, message: 'Stats updated successfully.', updatedPlayerStats } as UpdatedStats;
+        return { success: true, message: 'Stats updated successfully.', updatedPlayerStats };
       } catch (error: any) {
         return { success: false, message: 'Error updating stats.' } as UpdateStatsFailed;
       }

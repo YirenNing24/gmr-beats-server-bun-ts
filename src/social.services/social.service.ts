@@ -191,8 +191,6 @@ class SocialService {
         playerStats: record.get("playerStats") || "" // Ensure a default value if property is undefined
       })) as MutualData[];
 
-
-      console.log(users)
       return users as MutualData[];
     } catch (error: any) {
       console.error("Something went wrong: ", error);
