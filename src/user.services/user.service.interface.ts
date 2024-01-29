@@ -219,3 +219,13 @@ export interface LocalWallet {
       mac: string;
     };
   }
+
+export interface User {
+  anon: boolean;
+  email: string;
+  userName: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  time: string;
+}

@@ -1,52 +1,14 @@
-//* FASTIFY
+//** ELYSIA IMPORTS
 import app from "../app";
+import { ElysiaWS } from "elysia/ws";
 
-
-//* RETHINK DB
+//** RETHINK DB
 import rt from "rethinkdb";
 import { getRethinkDB } from "../db/rethink";
 
-import { WebSocket } from "ws";
-import Elysia from "elysia";
-import { ElysiaWS } from "elysia/ws";
+//** TYPE INTERFACE
+import { PrivateMessage, NewMessage, Result } from "./websocket.interface";
 
-
-
-
-
-//* TYPE INTERFACES
-interface Result {
-  id: string;
-  message: string;
-  roomId: string;
-  ts: number;
-}
-
-interface SenderData {
-  username: string
-  level: number
-  rank: string
-}
-
-interface NewMessage{
-  id: string
-  message: string
-  roomId: string
-  sender: SenderData
-  receiver: string
-  ts: number
-}
-
-
-interface PrivateMessage{
-  id: string
-  message: string
-  receiver: string
-  roomId: string
-  seen: boolean
-  sender: SenderData
-  ts: number
-}
 
 const watchedRooms: Record<string, boolean> = {};
 
@@ -181,8 +143,7 @@ export const insertChats = async (newMessage: NewMessage): Promise<void> => {
 
       // Check if message.receiver has a value, if it has then the message is a private message
       const table: string = newMessage.receiver ? "private" : "chats";
-      console.log(table, newMessage)
-      await insertMessage(connection, newMessage, table);
+      insertMessage(connection, newMessage, table);
     }
   } catch (error: any) {
     logError(error);

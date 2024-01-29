@@ -50,7 +50,7 @@ class AuthService {
    * @param {string} password - The password of the new user.
    * @returns {Promise<void>} A Promise that resolves when the registration is successful.
    */
-  public async register(anon: boolean, email: string, password: string, userName: string, firstName: string, lastName: string): Promise<void> {
+  public async register(anon: boolean, email: string, password: string, userName: string, firstName: string, lastName: string, time: string): Promise<void> {
     const walletService: WalletService = new WalletService();
     const replenishService: Replenishments = new Replenishments()
 
@@ -64,6 +64,7 @@ class AuthService {
     const locKey: string = await hash(userName, parseInt(SALT_ROUNDS))
 
     const localWallet = await walletService.createWallet(locKey) as LocalWallet
+    const timeZone: string = await this.getTimezone(time)
     // Open a new session
     const session: Session = this.driver.session()
     try {
@@ -85,11 +86,12 @@ class AuthService {
                iveEquip: $equipIve
                playerStats: $statsPlayer,
                powerUpInventory: $inventoryPowerUp,
-               profilePics: $profilePics
+               profilePics: $profilePics,
+               timeZone: $timeZone
              })
              RETURN u
            `,
-           { userId, anon, email, userName, encrypted, firstName, lastName, localWallet, locKey, inventoryCard, equipIve, statsPlayer, inventoryPowerUp, profilePics: [] }
+           { userId, anon, email, userName, encrypted, firstName, lastName, localWallet, locKey, inventoryCard, equipIve, statsPlayer, inventoryPowerUp, profilePics: [], timeZone }
          ) 
        )
 
@@ -228,6 +230,13 @@ class AuthService {
     } catch (error: any) {
       throw error;
     }
+    };
+
+  private async getTimezone(dateTime: string) {
+    const dateObject: Date = new Date(dateTime);
+    const offsetMinutes: number = dateObject.getTimezoneOffset();
+    const timezone: string = `UTC${offsetMinutes >= 0 ? '-' : '+'}${Math.abs(offsetMinutes / 60)}`;
+    return timezone as string;
     };
 
 };

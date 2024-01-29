@@ -1,13 +1,21 @@
-import Elysia, { Context } from 'elysia';
+//** ELYSIA IMPORT
+import Elysia, { Context } from 'elysia'
+
+//** JWT IMPORT
 import jwt from 'jsonwebtoken'
 
-import { getDriver } from '../db/memgraph';
-import AuthService from '../user.services/auth.service';
+//** SERVICE IMPORT
+import AuthService from '../user.services/auth.service'
 
-import { Driver } from 'neo4j-driver';
-import { JWT_SECRET } from '../config/constants';
-import { AuthenticateReturn, ValidateSessionReturn } from '../user.services/user.service.interface';
+//** MEMGRAPGH IMPORTS
+import { Driver } from 'neo4j-driver'
+import { getDriver } from '../db/memgraph'
 
+//** CONFIG IMPORT
+import { JWT_SECRET } from '../config/constants'
+
+//** TYPE INTERFACES
+import { AuthenticateReturn, User, ValidateSessionReturn } from '../user.services/user.service.interface';
 
 
 const auth = (app: Elysia): void => {
@@ -36,7 +44,7 @@ const auth = (app: Elysia): void => {
   })
   .post('/api/validate_session/beats', async (context: Context) => {
     try {
-      const authorizationHeader = context.headers.authorization;
+      const authorizationHeader: string | null = context.headers.authorization;
       if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
         throw new Error('Bearer token not found in Authorization header');
       }
@@ -49,11 +57,10 @@ const auth = (app: Elysia): void => {
       return await authService.validateSession(userName) as ValidateSessionReturn
 
     } catch (error: any) {
-      console.error(`Session validation error: ${error.message}`);
       return { error: error.message };
     }
   })
-  .post('/api/version-check/beats', async (context) => {
+  .post('/api/version-check/beats', async (context: Context) => {
     const currentVersion = {
       apiKey: '1',
       apiId: 'Hello World',
@@ -76,16 +83,17 @@ const auth = (app: Elysia): void => {
   })
   .post('/api/register/beats', async (context: Context) => {
     try {
-        const { anon, email, userName, password, firstName, lastName } = context.body as 
-        { anon: boolean, email: string, userName: string, password: string, firstName: string, lastName: string };
+      const { anon, email, userName, password, firstName, lastName, time } = context.body as User
+
       const driver: Driver = getDriver();
-      const authService = new AuthService(driver);
-      const output = await authService.register(anon, email, password, userName, firstName, lastName);
-      return(output);
+      const authService: AuthService = new AuthService(driver);
+      await authService.register(anon, email, password, userName, firstName, lastName, time);
+
     } catch (error: any) {
-      return(error);
+      throw error
     }
   })
+  
 };
 
 export default auth;
