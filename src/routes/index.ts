@@ -11,7 +11,7 @@ import scores from './scores.routes'
 import social from './social.routes'
 import store from './store.routes'
 
-import chat from './websocket.routes'
+import chat from './chat.routes'
 
 
 const routes = (app: Elysia): void => {

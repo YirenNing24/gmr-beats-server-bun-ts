@@ -5,7 +5,6 @@ import { ClassicScoreStats } from "./game.services.interfaces";
 //* ERROR VALIDATION
 import ValidationError from "../errors/validation.error";
 
-//**TODO Weekly Highscore, Monthly HighScore, current system is only lifetime highscore */
 
 class ScoreService {
     /**

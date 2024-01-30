@@ -7,7 +7,7 @@ import rt from "rethinkdb";
 import { getRethinkDB } from "../db/rethink";
 
 //** TYPE INTERFACE
-import { PrivateMessage, NewMessage, Result } from "./websocket.interface";
+import { PrivateMessage, NewMessage, Result } from "./chat.interface";
 
 
 const watchedRooms: Record<string, boolean> = {};
@@ -20,7 +20,7 @@ class ChatService {
     this.websocket = websocket;
   }
 
-  async chatRoom(room: string, username: string): Promise<void> {
+  public async chatRoom(room: string, username: string): Promise<void> {
     try {
       const ws = this.websocket
       const connection: rt.Connection = await getRethinkDB();
@@ -97,7 +97,7 @@ class ChatService {
     }
   };
 
-  async privateInboxData(clientUsername: string, conversingUsername: string): Promise<PrivateMessage[]> {
+  public async privateInboxData(clientUsername: string, conversingUsername: string): Promise<PrivateMessage[]> {
     try {
       const connection: rt.Connection = await getRethinkDB();
       

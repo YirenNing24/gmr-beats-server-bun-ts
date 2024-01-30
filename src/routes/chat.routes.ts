@@ -1,9 +1,9 @@
 import Elysia from "elysia";
 import jwt, { JwtPayload } from 'jsonwebtoken'
 
-import ChatService from "../websocket.services/chat.socket.service";
+import ChatService from "../chat.services/chat.socket.service";
 import { JWT_SECRET } from "../config/constants";
-import { insertChats } from "../websocket.services/chat.socket.service";
+import { insertChats } from "../chat.services/chat.socket.service";
 
 interface SenderData {
     username: string

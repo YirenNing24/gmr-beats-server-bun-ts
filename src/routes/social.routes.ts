@@ -11,7 +11,7 @@ import { getDriver } from '../db/memgraph';
 
 //* SOCIAL & CHAT SERVICE
 import SocialService from '../social.services/social.service';
-import ChatService from '../websocket.services/chat.socket.service';
+import ChatService from '../chat.services/chat.socket.service';
 
 
 //* TYPES IMPORTS
