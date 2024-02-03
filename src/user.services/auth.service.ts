@@ -167,7 +167,7 @@ class AuthService {
       const statsPromise = profileService.getStats(userName)
       const [wallet, energy, stats] = await Promise.all([walletPromise, energyPromise, statsPromise ]);
       
-      const token: string = jwt.sign({ userName }, JWT_SECRET)
+      const token: string = jwt.sign({ userName }, JWT_SECRET, {expiresIn: '3h'})
       return {
         username,
         energy, 

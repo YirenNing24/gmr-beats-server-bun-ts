@@ -3,6 +3,10 @@ import { RouteSchema } from "elysia";
 import { ElysiaWS } from "elysia/ws";
 
 
+interface MapProps {
+  songName: string
+  difficutly: string
+}
 
 
 const watchedRooms: Record<string, boolean> = {};
@@ -15,9 +19,9 @@ class ClassicMode {
     this.websocket = websocket;
   }
 
-  public async classicConnect(username: string): Promise<void> {
+  public async classicConnect(username: string, mapProps: any): Promise<void> {
     try {
-        const ws: ElysiaWS<any, RouteSchema, { request: {}; store: {}; }> | undefined= this.websocket
+        const ws: ElysiaWS<any, RouteSchema, { request: {}; store: {}; }> | undefined = this.websocket
 
 
 
