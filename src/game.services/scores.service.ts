@@ -3,7 +3,7 @@ import { Driver, ManagedTransaction, QueryResult, RecordShape, Session } from "n
 import { ClassicScoreStats } from "./game.services.interfaces";
 
 //* ERROR VALIDATION
-import ValidationError from "../errors/validation.error";
+import ValidationError from "../outputs/validation.error";
 
 
 class ScoreService {

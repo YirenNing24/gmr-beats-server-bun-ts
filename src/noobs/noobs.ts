@@ -471,6 +471,3 @@ export const playerStats: PlayerStats = {
       "visual":1,
       "leadRapper":1}
 };
-
-
-  

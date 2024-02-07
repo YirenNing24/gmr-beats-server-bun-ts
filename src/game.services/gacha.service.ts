@@ -9,7 +9,7 @@ import { SmartWallet } from "@thirdweb-dev/wallets";
 
 
 //** VALIDATION ERROR
-import ValidationError from "../errors/validation.error";
+import ValidationError from "../outputs/validation.error";
 
 //** IMPORTED SERVICES
 import { PACK_ADDRESS, SECRET_KEY, CHAIN, SMART_WALLET_CONFIG } from "../config/constants";

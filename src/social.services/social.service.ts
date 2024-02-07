@@ -6,7 +6,7 @@ import rt from "rethinkdb";
 import { getRethinkDB } from "../db/rethink";
 
 //** ERROR CODES
-import ValidationError from "../errors/validation.error";
+import ValidationError from "../outputs/validation.error";
 
 //** TYPE INTERFACE IMPORTS
 import { FollowResponse, ViewProfileData, ViewedUserData, MutualData, PlayerStatus, SetPlayerStatus } from "./social.services.interface";

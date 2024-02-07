@@ -304,9 +304,15 @@ export interface PlayerStats {
   };
 }
 
-
-
 export interface LevelUpResult {
   currentLevel: number;
   currentExperience: number;
+}
+
+export interface ProfilePicture {
+  userName: string
+  fileFormat: string
+  profilePicture: Buffer
+  createdAt: number
+  fileSize: number
 }

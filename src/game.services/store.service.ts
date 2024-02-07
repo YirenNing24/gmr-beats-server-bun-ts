@@ -1,5 +1,5 @@
 import app from "../app";
-import ValidationError from "../errors/validation.error";
+import ValidationError from "../outputs/validation.error";
 import { ThirdwebSDK } from "@thirdweb-dev/sdk";
 import { LocalWalletNode } from "@thirdweb-dev/wallets/evm/wallets/local-wallet-node";
 import { CHAIN, SMART_WALLET_CONFIG } from "../config/constants";

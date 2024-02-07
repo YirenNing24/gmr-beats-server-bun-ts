@@ -23,6 +23,7 @@ const auth = (app: Elysia): void => {
   app.post("api/login/beats", async (context: Context) => {
     try {
       const { username, password } = context.body as { username: string; password: string };
+
       const driver: Driver = getDriver();
       const authService: AuthService = new AuthService(driver);
       const output: AuthenticateReturn = await authService.authenticate(username, password);
@@ -36,9 +37,9 @@ const auth = (app: Elysia): void => {
         success: 'OK',
         token: token
       };
+
       return(response);
     } catch (error: any) {
-      console.log(`Login error: ${error.message}`);
       return error
     }
   })

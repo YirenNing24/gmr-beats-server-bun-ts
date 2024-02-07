@@ -95,7 +95,7 @@ const social = (app: Elysia) => {
           const decodedToken: string | jwt.JwtPayload = jwt.verify(jwtToken, JWT_SECRET)
           const { userName } = decodedToken as { userName: string };
 
-          const { follower, toFollow } = context.body as {follower: string, toFollow: string}
+          const { follower, toFollow } = context.body as { follower: string, toFollow: string }
           if (userName !== follower) {
             throw new Error("Unauthorized")
           }

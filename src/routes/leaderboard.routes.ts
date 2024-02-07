@@ -1,17 +1,17 @@
 //** ELYSIA AND JWT MODULE IMPORT
 import Elysia from 'elysia'
 import jwt from 'jsonwebtoken'
-;
+
 
 //** MEMGRAPH DRIVER AND TYPES
-import { Driver } from 'neo4j-driver';
-import { getDriver } from '../db/memgraph';
+import { Driver } from 'neo4j-driver'
+import { getDriver } from '../db/memgraph'
 
-//** SERVICES
-import LeaderboardService from '../game.services/leaderboard.services';
+//** SERVICES IMPORT
+import LeaderboardService from '../game.services/leaderboard.services'
 
 //** TYPES IMPORTS
-import { ClassicLeaderboardRequest, ClassicScoreStats } from '../game.services/game.services.interfaces';
+import { ClassicLeaderboardRequest, ClassicScoreStats } from '../game.services/game.services.interfaces'
 
 
 const leaderboards = (app: Elysia): void => {

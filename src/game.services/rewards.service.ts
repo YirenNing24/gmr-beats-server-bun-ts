@@ -2,7 +2,7 @@
 import { Driver, ManagedTransaction, QueryResult, RecordShape, Session } from "neo4j-driver";
 
 //** ERROR CODES
-import ValidationError from '../errors/validation.error'
+import ValidationError from '../outputs/validation.error'
 
 //** IMPORTED SERVICES
 import WalletService from "../user.services/wallet.service";

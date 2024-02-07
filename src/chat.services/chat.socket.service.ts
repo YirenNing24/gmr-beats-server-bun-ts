@@ -49,7 +49,7 @@ class ChatService {
         try {
           const result: Result[] = await cursor.toArray();
           const room_data = {
-            data: result,
+            chat: result,
             handle: room,
           };
           const roomData: string = JSON.stringify(room_data);

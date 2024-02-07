@@ -6,7 +6,7 @@ import jwt from 'jsonwebtoken'
 import { hash, compare } from 'bcrypt-ts'
 
 //** ERROR CODES
-import ValidationError from '../errors/validation.error'
+import ValidationError from '../outputs/validation.error'
 
 //** NEW ACCOUNT DEFAULT VALUES
 import { cardInventory, playerStats, powerUpInventory, iveEquip } from '../noobs/noobs'
@@ -83,7 +83,7 @@ class AuthService {
                localWallet: $localWallet, 
                localWalletKey: $locKey,
                cardInventory: $inventoryCard,
-               iveEquip: $equipIve
+               iveEquip: $equipIve,
                playerStats: $statsPlayer,
                powerUpInventory: $inventoryPowerUp,
                profilePics: $profilePics,
@@ -135,6 +135,7 @@ class AuthService {
  * @throws {ValidationError} Throws a validation error if authentication fails.
  */
   public async authenticate(userName: string, unencryptedPassword: string): Promise<AuthenticateReturn> {
+
     const walletService: WalletService = new WalletService();
     const profileService: ProfileService = new ProfileService();
     const replenishService: Replenishments = new Replenishments();
@@ -161,12 +162,12 @@ class AuthService {
       }
       // Return User Details
       const { password, localWallet, localWalletKey, playerStats, userId, username, cardInventory, powerUpInventory, ...safeProperties } =  user.properties
-  
+
       const walletPromise: Promise<WalletData> = walletService.importWallet(localWallet, localWalletKey);
       const energyPromise: Promise<number> = replenishService.getEnergy(userName, playerStats);
       const statsPromise = profileService.getStats(userName)
       const [wallet, energy, stats] = await Promise.all([walletPromise, energyPromise, statsPromise ]);
-      
+
       const token: string = jwt.sign({ userName }, JWT_SECRET, {expiresIn: '3h'})
       return {
         username,

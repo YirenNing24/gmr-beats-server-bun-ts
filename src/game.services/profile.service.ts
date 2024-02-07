@@ -1,12 +1,18 @@
 //** IMPORTED TYPES
 import { Driver, QueryResult, RecordShape, Session } from "neo4j-driver";
-import { UpdateStatsFailed, PlayerStats } from "./game.services.interfaces";
-
-//** ERROR VALIDATION
-import ValidationError from "../errors/validation.error";
-
-//**
+import { UpdateStatsFailed, PlayerStats, ProfilePicture } from "./game.services.interfaces";
 import { getDriver } from '../db/memgraph';
+
+//** RETHINK DB
+import rt from "rethinkdb";
+import { getRethinkDB } from "../db/rethink";
+
+//** SHARP IMPORT
+import sharp from "sharp";
+
+//** OUTPUT IMPORTS
+import ValidationError from "../outputs/validation.error";
+import { SuccessMessage } from "../outputs/success.message";
 
 
 class ProfileService {
@@ -133,75 +139,39 @@ class ProfileService {
       }
     };
 
-  // async uploadProfilePic(bufferData, userId) {
-  //   // Parse the packed-byte array image data from the JSON input.
-  //   const dataBuffer = JSON.parse(bufferData);
-  //   const imageBuffer = Buffer.from(dataBuffer);
+    async uploadProfilePic(bufferData: Buffer, userName: string): Promise<SuccessMessage>{
+      try {
+        // Process the image using the sharp library.
+        const outputBuffer: Buffer = await sharp(bufferData)
+          .resize({
+            width: 200,
+            height: 200,
+            fit: sharp.fit.inside,
+          })
+          .toBuffer();
 
-  //   try {
-  //     // Process the image using the sharp library.
-  //     const outputBuffer = await sharp(imageBuffer)
-  //       .resize({
-  //         width: 200,
-  //         height: 200,
-  //         fit: sharp.fit.inside,
-  //       })
-  //       .toBuffer();
+        const createdAt: number = Date.now()
+        const fileFormat: string = 'png'
+        const fileSize: number = 100
+        const profilePicture: ProfilePicture = { profilePicture: outputBuffer, userName, createdAt, fileFormat, fileSize }
+        const connection: rt.Connection = await getRethinkDB();
 
-  //     // Upload the processed image to the storage service.
-  //     const storage = new ThirdwebStorage({ contentType: "image/png" });
-  //     const imageURI = await storage.upload(outputBuffer);
-  //     const profilePicURL = imageURI;
-  //     console.log(imageURI);
+        // Store the username along with the profile picture data
+        await rt
+          .db('beats')
+          .table('profilepic')
+          .insert(profilePicture)
+          .run(connection);
+          
 
-  //     if (!profilePicURL) {
-  //       // Return early if the profilePicURL is not available.
-  //       return;
-  //     }
-  //     // Update the user node in the database with the new profilePicURL.
-  //     const session = this.driver.session();
-  //     const res = await session.executeWrite((tx) =>
-  //       tx.run(
-  //         `MATCH (u:User {userId: $userId})
-  //         SET u.profilePics = coalesce(u.profilePics, []) + $profilePicURL
-  //         RETURN u
-  //         `,
-  //         { userId, profilePicURL }
-  //       )
-  //     );
-  //     await session.close();
 
-  //     if (res.records.length === 0) {
-  //       throw new Error("User not found.");
-  //     }
-
-  //     const user = res.records[0].get('u').properties;
-  //     const profilePics  = user.profilePics
-
-  //     const base64Promises = profilePics.map(async (url) => {
-  //       const temporary = url.replace("ipfs://", "");
-  //       try {
-  //         const image = await axios.get(`https://gateway.moralisipfs.com/ipfs/${temporary}`, {
-  //           responseType: 'arraybuffer'
-  //         });
-  //         const base64Data = Buffer.from(image.data).toString('base64');
-  //         return base64Data;
-  //       } catch (error) {
-  //         console.error(`Error fetching image from URL: ${url}`, error);
-  //         return null; // Return null for failed requests
-  //       }
-  //     });
-  
-  //     // Wait for all promises to resolve
-  //     const base64Array = await Promise.all(base64Promises);
-  //     console.log(base64Array)
-
-  //     return base64Array; // Return the URL of the uploaded profile picture.
-  //   } catch (error) {
-  //     console.error(error);
-  //     throw new Error("Error processing the image.");
-  //   }
-  // }
+        return new SuccessMessage("Profile picture upload successful");
+      } catch (error) {
+        console.error(error);
+        throw new Error("Error processing the image.");
+      }
+    }
+    
 }
 
 export default ProfileService

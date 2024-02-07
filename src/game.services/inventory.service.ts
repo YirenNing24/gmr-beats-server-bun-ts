@@ -5,7 +5,7 @@ import { Driver, ManagedTransaction, QueryResult, RecordShape, Session } from "n
 import { Edition, NFT, Pack, ThirdwebSDK } from "@thirdweb-dev/sdk";
 
 //** VALIDATION ERROR
-import ValidationError from "../errors/validation.error";
+import ValidationError from "../outputs/validation.error";
 
 //** IMPORTED SERVICES
 import WalletService from "../user.services/wallet.service";

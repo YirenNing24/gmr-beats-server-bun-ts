@@ -1,31 +1,29 @@
+//** ELYSIA IMPORT
 import Elysia from "elysia";
+
+//** JWT IMPORT
 import jwt, { JwtPayload } from 'jsonwebtoken'
 
+//** CHAT SERVICE IMPORT
 import ChatService from "../chat.services/chat.socket.service";
-import { JWT_SECRET } from "../config/constants";
 import { insertChats } from "../chat.services/chat.socket.service";
+import { NewMessage } from "../chat.services/chat.interface";
 
-interface SenderData {
-    username: string
-    level: number
-    rank: string
-  }
-  
-interface NewMessage{
-    id: string
-    message: string
-    roomId: string
-    sender: SenderData
-    receiver: string
-    ts: number
-  }
+//** SERVER TIME SERVICE IMPORT
+import TimeService from "../game.services/time.service";
+
+//** CONFIG IMPORT
+import { JWT_SECRET } from "../config/constants";
+
+
+
   
 
  const chat = (app: Elysia): void => {
-   app.ws('/api/chats/:room', { 
+   app.ws('/api/ws', { 
     async open(ws) {
         //@ts-ignore
-        const room: string = ws.data.params.room
+        const room: string = 'all'
         const authorizationHeader: string = ws.data.headers.authorization || ""
         if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
           throw new Error('Bearer token not found in Authorization header');
@@ -39,11 +37,17 @@ interface NewMessage{
         const chatService: ChatService = new ChatService(ws)
         chatService.chatRoom(room, userName)
         ws.subscribe('all')
-        }
-    ,async message(ws, message){
+        },
+    async message(ws, message){
 
-        const newMessage = message as NewMessage
-        await insertChats(newMessage)
+      const newMessage: any = message as NewMessage
+
+      console.log(newMessage)
+      newMessage?.roomId && await insertChats(newMessage);
+
+      //@ts-ignore
+      const timeService: TimeService = new TimeService(ws)
+      newMessage?.timestamp && await timeService.getServerDateTime(newMessage)
     }
     })
 
