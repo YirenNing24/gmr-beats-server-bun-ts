@@ -93,7 +93,7 @@ class ChatService {
       }
 
     } catch (error: any) {
-      console.error("Error in chatRoom function:", error);
+      throw error
     }
   };
 
@@ -119,10 +119,9 @@ class ChatService {
   
       const messageData = await query.toArray() as PrivateMessage[]
 
-      return messageData;
+      return messageData as PrivateMessage[]
     } catch (error: any) {
-      console.error('Error in privateInboxdata function:', error);
-      throw error; // Make sure to rethrow the error so the caller can handle it
+      throw error;
     }
   }
   

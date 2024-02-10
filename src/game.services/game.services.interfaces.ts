@@ -312,7 +312,7 @@ export interface LevelUpResult {
 export interface ProfilePicture {
   userName: string
   fileFormat: string
-  profilePicture: Buffer
-  createdAt: number
+  profilePicture: ArrayBuffer
+  uploadedAt: number
   fileSize: number
 }

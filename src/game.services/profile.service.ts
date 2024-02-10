@@ -10,9 +10,13 @@ import { getRethinkDB } from "../db/rethink";
 //** SHARP IMPORT
 import sharp from "sharp";
 
+//** NANOID IMPORT
+import { nanoid } from "nanoid";
+
 //** OUTPUT IMPORTS
 import ValidationError from "../outputs/validation.error";
 import { SuccessMessage } from "../outputs/success.message";
+
 
 
 class ProfileService {
@@ -22,7 +26,7 @@ class ProfileService {
     this.driver = driver;
   }
 
-  async updateStats(statPoints: any): Promise<any | UpdateStatsFailed>{
+  public async updateStats(statPoints: any): Promise<any | UpdateStatsFailed>{
     try {
         const username: string = statPoints.statPointsSaved.username;
         const session: Session | undefined = this.driver?.session();
@@ -111,7 +115,7 @@ class ProfileService {
       }
     };
 
-  async getStats(username: string): Promise<PlayerStats> {
+  public async getStats(username: string): Promise<PlayerStats> {
     try {
         // Get the Neo4j driver instance
         const driver: Driver = getDriver();
@@ -139,38 +143,100 @@ class ProfileService {
       }
     };
 
-    async uploadProfilePic(bufferData: Buffer, userName: string): Promise<SuccessMessage>{
+   public async uploadProfilePic(bufferData: ArrayBuffer, userName: string): Promise<SuccessMessage> {
       try {
-        // Process the image using the sharp library.
-        const outputBuffer: Buffer = await sharp(bufferData)
-          .resize({
-            width: 200,
-            height: 200,
-            fit: sharp.fit.inside,
-          })
-          .toBuffer();
+        const session: Session | undefined = this.driver?.session();
+    
+        // Find the user node within a Read Transaction
+        const result: QueryResult | undefined = await session?.executeRead(tx =>
+          tx.run('MATCH (u:User {username: $userName}) RETURN u', { userName })
+        );
+    
+        await session?.close();
+    
+        // Verify the user exists
+        if (result?.records.length === 0) {
+          throw new ValidationError(`User with username '${userName}' not found.`, "");
+        }
+    
+        // Check the number of existing profile pictures for the user
+        const existingProfilePicsCount: number = await this.getProfilePicsCount(userName);
+    
+        if (existingProfilePicsCount >= 5) {
+          throw new ValidationError(`You already have 5 profile pictures.`, "");
+        }
+    
+        const uploadedAt: number = Date.now();
+        const fileFormat: string = 'png';
+        const fileSize: number = 100;
 
-        const createdAt: number = Date.now()
-        const fileFormat: string = 'png'
-        const fileSize: number = 100
-        const profilePicture: ProfilePicture = { profilePicture: outputBuffer, userName, createdAt, fileFormat, fileSize }
+        const profilePicture: ProfilePicture = { profilePicture: bufferData, userName, uploadedAt, fileFormat, fileSize };
+    
         const connection: rt.Connection = await getRethinkDB();
-
+        
         // Store the username along with the profile picture data
         await rt
           .db('beats')
           .table('profilepic')
           .insert(profilePicture)
-          .run(connection);
-          
-
-
+          .run(connection)
+    
         return new SuccessMessage("Profile picture upload successful");
       } catch (error) {
         console.error(error);
         throw new Error("Error processing the image.");
       }
-    }
+    };
+
+   public async getProfilePic(userName: string): Promise<ProfilePicture[]> {
+      try {
+        const session: Session | undefined = this.driver?.session();
+    
+        // Find the user node within a Read Transaction
+        const result: QueryResult | undefined = await session?.executeRead(tx =>
+          tx.run('MATCH (u:User {username: $userName}) RETURN u', { userName })
+        );
+    
+        await session?.close();
+    
+        // Verify the user exists
+        if (result?.records.length === 0) {
+          throw new ValidationError(`User with username '${userName}' not found.`, "");
+        }
+
+        const connection: rt.Connection = await getRethinkDB();
+        const query: rt.Cursor = await rt
+        .db('beats')
+        .table('profilepic')
+        .orderBy(rt.desc('uploadedAt'))
+        .limit(10)
+        .run(connection);
+    
+        const profilePictures = await query.toArray() as ProfilePicture[]
+    
+        return profilePictures as ProfilePicture[]
+      } catch (error: any) {
+        throw new ValidationError(`Error processing the image ${error.message}.`, "");
+      }
+    };
+
+    
+    private async getProfilePicsCount(userName: string): Promise<number> {
+      const connection: rt.Connection = await getRethinkDB();
+      try {
+        // Count the number of profile pictures for the user
+        const countResult: number = await rt
+          .db('beats')
+          .table('profilepic')
+          .getAll(userName)
+          .count()
+          .run(connection);
+    
+        return countResult;
+      } catch (error: any) {
+        throw new ValidationError(`Get profile pic error.`, "");
+      }
+    };
     
 }
 

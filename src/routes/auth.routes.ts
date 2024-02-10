@@ -43,7 +43,8 @@ const auth = (app: Elysia): void => {
       return error
     }
   })
-  .post('/api/validate_session/beats', async (context: Context) => {
+
+  .post('/api/validate_session/beats', async (context: Context): Promise<ValidateSessionReturn | Error > => {
     try {
       const authorizationHeader: string | null = context.headers.authorization;
       if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
@@ -58,9 +59,10 @@ const auth = (app: Elysia): void => {
       return await authService.validateSession(userName) as ValidateSessionReturn
 
     } catch (error: any) {
-      return { error: error.message };
+      throw error
     }
   })
+
   .post('/api/version-check/beats', async (context: Context) => {
     const currentVersion = {
       apiKey: '1',
@@ -82,6 +84,7 @@ const auth = (app: Elysia): void => {
       return('Please update your app');
     }
   })
+
   .post('/api/register/beats', async (context: Context) => {
     try {
       const { anon, email, userName, password, firstName, lastName, time } = context.body as User
@@ -91,7 +94,7 @@ const auth = (app: Elysia): void => {
       await authService.register(anon, email, password, userName, firstName, lastName, time);
 
     } catch (error: any) {
-      throw error
+      return error
     }
   })
   

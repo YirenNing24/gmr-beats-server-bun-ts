@@ -1,23 +1,20 @@
 //** ELYSIA IMPORT
-import Elysia from "elysia";
+import Elysia from "elysia"
 
 //** JWT IMPORT
 import jwt, { JwtPayload } from 'jsonwebtoken'
 
 //** CHAT SERVICE IMPORT
-import ChatService from "../chat.services/chat.socket.service";
-import { insertChats } from "../chat.services/chat.socket.service";
-import { NewMessage } from "../chat.services/chat.interface";
+import ChatService from "../chat.services/chat.socket.service"
+import { insertChats } from "../chat.services/chat.socket.service"
+import { NewMessage } from "../chat.services/chat.interface"
 
 //** SERVER TIME SERVICE IMPORT
-import TimeService from "../game.services/time.service";
+import TimeService from "../game.services/time.service"
 
 //** CONFIG IMPORT
-import { JWT_SECRET } from "../config/constants";
+import { JWT_SECRET } from "../config/constants"
 
-
-
-  
 
  const chat = (app: Elysia): void => {
    app.ws('/api/ws', { 
@@ -38,20 +35,15 @@ import { JWT_SECRET } from "../config/constants";
         chatService.chatRoom(room, userName)
         ws.subscribe('all')
         },
-    async message(ws, message){
-
+    async message(ws, message) {
       const newMessage: any = message as NewMessage
-
-      console.log(newMessage)
+      
       newMessage?.roomId && await insertChats(newMessage);
-
       //@ts-ignore
       const timeService: TimeService = new TimeService(ws)
       newMessage?.timestamp && await timeService.getServerDateTime(newMessage)
     }
     })
-
-
 };
 
  export default chat;

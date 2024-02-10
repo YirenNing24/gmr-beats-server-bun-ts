@@ -1,7 +1,8 @@
 //** THIRDWEB IMPORT * TYPES
 import { ThirdwebSDK } from "@thirdweb-dev/sdk";
 import { LocalWalletNode } from "@thirdweb-dev/wallets/evm/wallets/local-wallet-node";
-import { SmartWallet } from "@thirdweb-dev/wallets";
+import { AuthResult, SmartWallet } from "@thirdweb-dev/wallets";
+
 
 // * CONFIGS
 import { CHAIN, BEATS_TOKEN, KMR_TOKEN, THUMP_TOKEN, SECRET_KEY, SMART_WALLET_CONFIG } from "../config/constants";
@@ -44,7 +45,6 @@ export default class WalletService {
  * @returns {Object} An object containing the local wallet's 0x address and balance information.
  */
   public async importWallet(walletData: string, password: string): Promise<WalletData> {
-    
     try {
       const localWallet = new LocalWalletNode({ chain: CHAIN });
       await localWallet.import({
