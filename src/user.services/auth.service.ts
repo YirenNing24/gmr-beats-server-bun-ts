@@ -1,3 +1,7 @@
+//**TODO SPACE IN LAST NAME SHOULD BE ALLOWED */
+
+
+
 //** JWT MODULE, AND CONFIGS IMPORTS
 import { JWT_SECRET, SALT_ROUNDS } from '../config/constants'
 import jwt from 'jsonwebtoken'

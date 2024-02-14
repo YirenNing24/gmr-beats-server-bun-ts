@@ -23,7 +23,7 @@ import { JWT_SECRET } from "../config/constants"
         const room: string = 'all'
         const authorizationHeader: string = ws.data.headers.authorization || ""
         if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
-          throw new Error('Bearer token not found in Authorization header');
+          // ws?.close()
         }
 
         const jwtToken: string = authorizationHeader.substring(7);
@@ -33,7 +33,7 @@ import { JWT_SECRET } from "../config/constants"
         //@ts-ignore
         const chatService: ChatService = new ChatService(ws)
         chatService.chatRoom(room, userName)
-        ws.subscribe('all')
+        ws?.subscribe('all')
         },
     async message(ws, message) {
       const newMessage: any = message as NewMessage

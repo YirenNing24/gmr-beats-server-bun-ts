@@ -23,6 +23,7 @@ const auth = (app: Elysia): void => {
   app.post("api/login/beats", async (context: Context) => {
     try {
       const { username, password } = context.body as { username: string; password: string };
+      console.log(context.body)
 
       const driver: Driver = getDriver();
       const authService: AuthService = new AuthService(driver);
@@ -47,8 +48,10 @@ const auth = (app: Elysia): void => {
   .post('/api/validate_session/beats', async (context: Context): Promise<ValidateSessionReturn | Error > => {
     try {
       const authorizationHeader: string | null = context.headers.authorization;
+      
       if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
         throw new Error('Bearer token not found in Authorization header');
+
       }
       const jwtToken: string = authorizationHeader.substring(7);
       const decodedToken: string | jwt.JwtPayload = jwt.verify(jwtToken, JWT_SECRET)
@@ -89,6 +92,7 @@ const auth = (app: Elysia): void => {
     try {
       const { anon, email, userName, password, firstName, lastName, time } = context.body as User
 
+      console.log(context.body)
       const driver: Driver = getDriver();
       const authService: AuthService = new AuthService(driver);
       await authService.register(anon, email, password, userName, firstName, lastName, time);

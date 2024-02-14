@@ -7,17 +7,9 @@ import { getDriver } from '../db/memgraph';
 import rt from "rethinkdb";
 import { getRethinkDB } from "../db/rethink";
 
-//** SHARP IMPORT
-import sharp from "sharp";
-
-//** NANOID IMPORT
-import { nanoid } from "nanoid";
-
 //** OUTPUT IMPORTS
 import ValidationError from "../outputs/validation.error";
 import { SuccessMessage } from "../outputs/success.message";
-
-
 
 class ProfileService {
 
@@ -143,7 +135,7 @@ class ProfileService {
       }
     };
 
-   public async uploadProfilePic(bufferData: ArrayBuffer, userName: string): Promise<SuccessMessage> {
+  public async uploadProfilePic(bufferData: ArrayBuffer, userName: string): Promise<SuccessMessage> {
       try {
         const session: Session | undefined = this.driver?.session();
     
@@ -188,7 +180,7 @@ class ProfileService {
       }
     };
 
-   public async getProfilePic(userName: string): Promise<ProfilePicture[]> {
+  public async getProfilePic(userName: string): Promise<ProfilePicture[]> {
       try {
         const session: Session | undefined = this.driver?.session();
     
@@ -203,25 +195,51 @@ class ProfileService {
         if (result?.records.length === 0) {
           throw new ValidationError(`User with username '${userName}' not found.`, "");
         }
-
+    
         const connection: rt.Connection = await getRethinkDB();
         const query: rt.Cursor = await rt
-        .db('beats')
-        .table('profilepic')
-        .orderBy(rt.desc('uploadedAt'))
-        .limit(10)
-        .run(connection);
+          .db('beats')
+          .table('profilepic')
+          .filter({ userName })  // Filter by userName
+          .orderBy(rt.desc('uploadedAt'))
+          .limit(10)
+          .run(connection);
     
-        const profilePictures = await query.toArray() as ProfilePicture[]
+        const profilePictures = await query.toArray() as ProfilePicture[];
     
-        return profilePictures as ProfilePicture[]
+        return profilePictures as ProfilePicture[];
       } catch (error: any) {
         throw new ValidationError(`Error processing the image ${error.message}.`, "");
       }
     };
-
     
-    private async getProfilePicsCount(userName: string): Promise<number> {
+  public async getDisplayPic(userNames: string[]) {
+      try {
+        const connection: rt.Connection = await getRethinkDB();
+        
+        const query: rt.Cursor = await rt
+        .db('beats')
+        .table('profilepic')
+        .getAll(...userNames)
+        .orderBy(rt.desc('uploadedAt'))
+        .limit(10)  // Limit to the latest 10 for each user
+        .run(connection);
+  
+        // Map the result to an array of objects with username and profilePicture
+        const profilePictures: { userName: string, profilePicture: ProfilePicture }[] = await query.toArray().then(rows => 
+          rows.map(row => ({ 
+            userName: row('group'), 
+            profilePicture: row('reduction') 
+          }))
+        );
+    
+        return profilePictures;
+      } catch (error: any) {
+        throw new ValidationError(`Error retrieving the image ${error.message}.`, "");
+      }
+    };
+        
+  private async getProfilePicsCount(userName: string): Promise<number> {
       const connection: rt.Connection = await getRethinkDB();
       try {
         // Count the number of profile pictures for the user

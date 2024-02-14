@@ -1,7 +1,7 @@
 //** THIRDWEB IMPORT * TYPES
 import { ThirdwebSDK } from "@thirdweb-dev/sdk";
 import { LocalWalletNode } from "@thirdweb-dev/wallets/evm/wallets/local-wallet-node";
-import { AuthResult, SmartWallet } from "@thirdweb-dev/wallets";
+import { SmartWallet } from "@thirdweb-dev/wallets";
 
 
 // * CONFIGS
