@@ -24,7 +24,7 @@ import ValidationError from "../outputs/validation.error"
         const room: string = 'all'
         const authorizationHeader: string = ws.data.headers.authorization || ""
         if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
-          ws?.close()
+          throw new ValidationError('jwt issue', '')
         }
 
         const jwtToken: string = authorizationHeader.substring(7);
