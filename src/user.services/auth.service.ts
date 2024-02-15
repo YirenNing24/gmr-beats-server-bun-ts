@@ -1,7 +1,5 @@
 //**TODO SPACE IN LAST NAME SHOULD BE ALLOWED */
 
-
-
 //** JWT MODULE, AND CONFIGS IMPORTS
 import { JWT_SECRET, SALT_ROUNDS } from '../config/constants'
 import jwt from 'jsonwebtoken'
@@ -22,6 +20,8 @@ import ProfileService from '../game.services/profile.service'
 
 //** UUID GENERATOR
 import { nanoid } from "nanoid/async";
+
+//** MEMGRAPH DRIVER
 import { Driver, QueryResult, Session,  ManagedTransaction } from 'neo4j-driver-core'
 
 //** TYPE INTERFACES
@@ -40,7 +40,7 @@ class AuthService {
    * @memberof AuthService
    * @instance
    */
-  driver:Driver
+  driver: Driver
   constructor(driver: Driver) {
     this.driver = driver
     }

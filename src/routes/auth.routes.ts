@@ -58,6 +58,8 @@ const auth = (app: Elysia): void => {
       const { userName } = decodedToken as { userName: string };
 
       const driver: Driver = getDriver();
+
+      console.log(driver)
       const authService: AuthService = new AuthService(driver);
       return await authService.validateSession(userName) as ValidateSessionReturn
 
@@ -92,7 +94,6 @@ const auth = (app: Elysia): void => {
     try {
       const { anon, email, userName, password, firstName, lastName, time } = context.body as User
 
-      console.log(context.body)
       const driver: Driver = getDriver();
       const authService: AuthService = new AuthService(driver);
       await authService.register(anon, email, password, userName, firstName, lastName, time);

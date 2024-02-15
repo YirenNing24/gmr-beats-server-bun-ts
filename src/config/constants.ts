@@ -14,7 +14,7 @@ export const IP_ADDRESS: string = ip.address()
 export const SERVER_ID: string = `${IP_ADDRESS}:${APP_PORT}`;
 
 // Neo4j Database Configuration
-export const NEO4J_URI: string | undefined = process.env.NEO4J_URI;
+export const NEO4J_URI: string = process.env.NEO4J_URI || ""
 export const NEO4J_USERNAME: string  = process.env.NEO4J_USERNAME || ""
 export const NEO4J_PASSWORD: string = process.env.NEO4J_PASSWORD || ""
 

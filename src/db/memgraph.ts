@@ -2,7 +2,7 @@ import neo4j, { Driver } from 'neo4j-driver';
 
 let driver: Driver
 
-export async function initDriver(uri: string, username: string, password: string): Promise<Driver> {
+export async function initDriver(uri: string , username: string, password: string): Promise<Driver> {
   driver = neo4j.driver(
     uri,
     neo4j.auth.basic(
