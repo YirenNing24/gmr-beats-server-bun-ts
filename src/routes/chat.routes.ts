@@ -14,6 +14,7 @@ import TimeService from "../game.services/time.service"
 
 //** CONFIG IMPORT
 import { JWT_SECRET } from "../config/constants"
+import ValidationError from "../outputs/validation.error"
 
 
  const chat = (app: Elysia): void => {
@@ -23,7 +24,9 @@ import { JWT_SECRET } from "../config/constants"
         const room: string = 'all'
         const authorizationHeader: string = ws.data.headers.authorization || ""
         if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
-          // ws?.close()
+          ws?.close()
+          throw new ValidationError('jwt issue', '')
+          
         }
 
         const jwtToken: string = authorizationHeader.substring(7);
