@@ -58,8 +58,6 @@ const auth = (app: Elysia): void => {
       const { userName } = decodedToken as { userName: string };
 
       const driver: Driver = getDriver();
-
-      console.log(driver)
       const authService: AuthService = new AuthService(driver);
       return await authService.validateSession(userName) as ValidateSessionReturn
 
