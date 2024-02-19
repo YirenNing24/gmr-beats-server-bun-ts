@@ -25,10 +25,8 @@ const router = (app: Elysia) => {
         return([]);
       }
     }
-  );
-
-
-  app.post('/api/store/cards/buy', async (context) => {
+  )
+  .post('/api/store/cards/buy', async (context) => {
       try {
         // Extract the "tokenId", and "username" from the request body
         const { tokenId, cardName, username } = context.body as { tokenId: number, cardName: string, username: string }
@@ -49,10 +47,8 @@ const router = (app: Elysia) => {
         return(error);
       }
     }
-  );
-
-
-  app.post('/api/store/bundles/get', async (context) => {
+  )
+  .post('/api/store/bundles/get', async (context) => {
     try {
       // Extract the "tokenId", and "username" from the request body
       const { tokenId, cardName, username } = 

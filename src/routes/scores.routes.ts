@@ -1,5 +1,5 @@
 //** ELYSIA AND JWT MODULE IMPORT
-import Elysia from 'elysia'
+import Elysia, { Context } from 'elysia'
 import jwt from 'jsonwebtoken'
 
 //** MEMGRAPH DRIVER AND TYPES
@@ -12,9 +12,9 @@ import { ClassicScoreStats } from '../game.services/game.services.interfaces';
 
 
 const scores = (app: Elysia): void => {
-    app.post('/api/save/score/classic', async (context) => {
+    app.post('/api/save/score/classic', async (context: Context) => {
         try {
-            const authorizationHeader = context.headers.authorization;
+            const authorizationHeader: string | null = context.headers.authorization;
             if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
                 throw new Error('Bearer token not found in Authorization header');
             }

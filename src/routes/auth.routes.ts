@@ -66,6 +66,31 @@ const auth = (app: Elysia): void => {
     }
   })
 
+  .post("api/login/google", async (context: Context) => {
+    try {
+      console.log(context)
+
+
+      // const driver: Driver = getDriver();
+      // const authService: AuthService = new AuthService(driver);
+      // const output: AuthenticateReturn = await authService.authenticate(username, password);
+      // const { token, uuid, ...userProperties } = output;
+
+      // const response = {
+      //   user: userProperties,
+      //   validator: token,
+      //   lookup: uuid,
+      //   message: 'You are now logged in',
+      //   success: 'OK',
+      //   token: token
+      // };
+
+      // return(response);
+    } catch (error: any) {
+      return error
+    }
+  })
+
   .post('/api/version-check/beats', async (context: Context) => {
     const currentVersion = {
       apiKey: '1',
