@@ -22,6 +22,7 @@ class TokenService {
 
             return { refreshToken, accessToken, username } as TokenScheme;
         } catch (error) {
+            console.log(error)
             throw new Error('Failed to generate refresh token');
         }
     }
