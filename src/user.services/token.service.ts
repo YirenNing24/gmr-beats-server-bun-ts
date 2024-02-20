@@ -14,14 +14,15 @@ const REFRESH_TOKEN_EXPIRY = '2d'; // Set your desired refresh token expiry time
 
 class TokenService {
     public async generateTokens(username: string): Promise<TokenScheme> {
+        console.log(username)
         try {
             const signSync = createSigner({ key: JWT_SECRET, expiresIn: REFRESH_TOKEN_EXPIRY });
-            const refreshToken: string = signSync({userName: username});
+            const refreshToken: string = signSync({ userName: username });
 
             const accessToken: string = await this.generateAccessToken(username, refreshToken);
 
             return { refreshToken, accessToken, username } as TokenScheme;
-        } catch (error) {
+        } catch (error : any) {
             console.log(error)
             throw new Error('Failed to generate refresh token');
         }
@@ -30,7 +31,7 @@ class TokenService {
     private async generateAccessToken(username: string, refreshToken: string): Promise<string> {
         try {
             const signSync = createSigner({ key: refreshToken, expiresIn: ACCESS_TOKEN_EXPIRY });
-            const accessToken: string = signSync({userName: username});
+            const accessToken: string = signSync({ userName: username });
 
             return accessToken as string
         } catch (error : any) {
@@ -38,40 +39,40 @@ class TokenService {
         }
     }
 
-    public async verifyToken(accessToken: string, refreshToken: string): Promise<TokenScheme | string> {
-        try {
-            const verifyAccessTokenSync = createVerifier({ key: refreshToken });
-            verifyAccessTokenSync(accessToken);
+    // public async verifyToken(accessToken: string, refreshToken: string): Promise<TokenScheme | string> {
+    //     try {
+    //         const verifyAccessTokenSync = createVerifier({ key: refreshToken });
+    //         verifyAccessTokenSync(accessToken);
     
-            // Access token is verified successfully
-            const verifyRefreshTokenSync = createVerifier({ key: refreshToken });
-            const decodedToken = verifyRefreshTokenSync(accessToken);
+    //         // Access token is verified successfully
+    //         const verifyRefreshTokenSync = createVerifier({ key: refreshToken });
+    //         const decodedToken = verifyRefreshTokenSync(accessToken);
     
-            const { userName } = decodedToken as { userName: string };
+    //         const { userName } = decodedToken as { userName: string };
     
-            return userName as string
-        } catch (error: any) {
-            if (error.message === 'FAST_JWT_EXPIRED') {
-                // Token is expired, but we don't know if it's the access token or refresh token
-                // We'll try to verify the access token again, if it throws an error, it means the access token is expired
-                try {
-                    createVerifier({ key: refreshToken })(accessToken);
-                } catch (accessTokenError) {
-                    // Access token is expired, generate a new pair of tokens
-                    const decodedToken = createVerifier({ key: refreshToken })(accessToken);
-                    const { userName } = decodedToken as { userName: string };
-                    const newTokenScheme: TokenScheme = await this.generateTokens(userName);
+    //         return userName as string
+    //     } catch (error: any) {
+    //         if (error.message === 'FAST_JWT_EXPIRED') {
+    //             // Token is expired, but we don't know if it's the access token or refresh token
+    //             // We'll try to verify the access token again, if it throws an error, it means the access token is expired
+    //             try {
+    //                 createVerifier({ key: refreshToken })(accessToken);
+    //             } catch (accessTokenError) {
+    //                 // Access token is expired, generate a new pair of tokens
+    //                 const decodedToken = createVerifier({ key: refreshToken })(accessToken);
+    //                 const { userName } = decodedToken as { userName: string };
+    //                 const newTokenScheme: TokenScheme = await this.generateTokens(userName);
     
-                    return newTokenScheme as TokenScheme
-                }
+    //                 return newTokenScheme as TokenScheme
+    //             }
     
-                // If the above try-catch block does not throw an error, it means the refresh token is expired
-                throw new Error('Session is expired');
-            } else {
-                throw new Error('Session verification failed');
-            }
-        }
-    }
+    //             // If the above try-catch block does not throw an error, it means the refresh token is expired
+    //             throw new Error('Session is expired');
+    //         } else {
+    //             throw new Error('Session verification failed');
+    //         }
+    //     }
+    // }
     
 }
 
