@@ -8,7 +8,7 @@ import { JWT_SECRET } from '../config/constants';
 import { TokenScheme } from './user.service.interface';
 
 const ACCESS_TOKEN_EXPIRY = '1m'; // Set your desired access token expiry time
-const REFRESH_TOKEN_EXPIRY = '2d'; // Set your desired refresh token expiry time
+const REFRESH_TOKEN_EXPIRY = '2m'; // Set your desired refresh token expiry time
 
 
 
