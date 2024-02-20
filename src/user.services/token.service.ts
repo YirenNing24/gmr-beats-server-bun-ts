@@ -32,7 +32,7 @@ class TokenService {
             const signSync = createSigner({ key: refreshToken, expiresIn: ACCESS_TOKEN_EXPIRY });
             const accessToken: string = signSync({userName: username});
 
-            return accessToken;
+            return accessToken as string
         } catch (error : any) {
             throw new Error('Failed to generate access token');
         }
@@ -49,7 +49,7 @@ class TokenService {
     
             const { userName } = decodedToken as { userName: string };
     
-            return userName;
+            return userName as string
         } catch (error: any) {
             if (error.message === 'FAST_JWT_EXPIRED') {
                 // Token is expired, but we don't know if it's the access token or refresh token
@@ -62,7 +62,7 @@ class TokenService {
                     const { userName } = decodedToken as { userName: string };
                     const newTokenScheme: TokenScheme = await this.generateTokens(userName);
     
-                    return newTokenScheme;
+                    return newTokenScheme as TokenScheme
                 }
     
                 // If the above try-catch block does not throw an error, it means the refresh token is expired
