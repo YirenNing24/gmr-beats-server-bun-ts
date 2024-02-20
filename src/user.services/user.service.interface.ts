@@ -28,8 +28,8 @@ export interface ValidateSessionReturn {
  * @property {PlayerStats} playerStats - Player statistics.
  * @property {number} energy - User energy level.
  * @property {string} uuid - Unique identifier for the user.
- * @property {string} validator - Validator token for the user session.
- * @property {string} lookup - Lookup token for the user session.
+ * @property {string} validator - refreshToken token for the user session.
+ * @property {string} lookup - AccessToken token for the user session.
  * @property {string} message - A message indicating the result of the authentication.
  * @property {string} success - A string indicating the success status of the authentication.
  */
@@ -40,8 +40,8 @@ export interface AuthenticateReturn {
   playerStats: PlayerStats;
   energy: number;
   uuid: string;
-  validator: string;
-  lookup: string;
+  refreshToken: string;
+  accessToken: string;
   message: string;
   success: string;
 }

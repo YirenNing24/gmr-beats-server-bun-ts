@@ -8,8 +8,8 @@ import jwt from 'jsonwebtoken'
 import AuthService from '../user.services/auth.service'
 
 //** MEMGRAPGH IMPORTS
-import { Driver } from 'neo4j-driver'
 import { getDriver } from '../db/memgraph'
+import { Driver } from 'neo4j-driver'
 
 //** CONFIG IMPORT
 import { JWT_SECRET } from '../config/constants'
@@ -22,8 +22,6 @@ const auth = (app: Elysia): void => {
   app.post("api/login/beats", async (context: Context) => {
     try {
       const { username, password } = context.body as { username: string; password: string };
-      console.log(context.body)
-
       const driver: Driver = getDriver();
       const authService: AuthService = new AuthService(driver);
       const output: AuthenticateReturn = await authService.authenticate(username, password);

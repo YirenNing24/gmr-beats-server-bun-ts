@@ -182,8 +182,8 @@ public async authenticate(userName: string, unencryptedPassword: string): Promis
           playerStats: stats,
           energy,
           uuid: userId,
-          validator: tokens.refreshToken,
-          lookup: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          accessToken: tokens.accessToken,
           message: 'You are now logged in',
           success: 'OK',
 
