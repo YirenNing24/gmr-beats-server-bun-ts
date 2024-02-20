@@ -173,8 +173,8 @@ public async authenticate(userName: string, unencryptedPassword: string): Promis
       const statsPromise: Promise<PlayerStats> = profileService.getStats(userName)
       const [ wallet, energy, stats ] = await Promise.all([walletPromise, energyPromise, statsPromise]);
 
-      const tokens: TokenScheme = await tokenService.generateRefreshToken(userName);
-
+      const tokens: TokenScheme = await tokenService.generateTokens(userName);
+      const { refreshToken, accessToken } = tokens as TokenScheme
       return {
           username,
           wallet,
@@ -182,8 +182,8 @@ public async authenticate(userName: string, unencryptedPassword: string): Promis
           playerStats: stats,
           energy,
           uuid: userId,
-          refreshToken: tokens.refreshToken,
-          accessToken: tokens.accessToken,
+          refreshToken,
+          accessToken,
           message: 'You are now logged in',
           success: 'OK',
 

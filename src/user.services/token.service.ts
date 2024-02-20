@@ -13,7 +13,7 @@ const REFRESH_TOKEN_EXPIRY = '2d'; // Set your desired refresh token expiry time
 
 
 class TokenService {
-    public async generateRefreshToken(username: string): Promise<TokenScheme> {
+    public async generateTokens(username: string): Promise<TokenScheme> {
         try {
             const signSync = createSigner({ key: JWT_SECRET, expiresIn: REFRESH_TOKEN_EXPIRY });
             const refreshToken: string = signSync(username);
@@ -59,7 +59,7 @@ class TokenService {
                     // Access token is expired, generate a new pair of tokens
                     const decodedToken = createVerifier({ key: refreshToken })(accessToken);
                     const { userName } = decodedToken as { userName: string };
-                    const newTokenScheme: TokenScheme = await this.generateRefreshToken(userName);
+                    const newTokenScheme: TokenScheme = await this.generateTokens(userName);
     
                     return newTokenScheme;
                 }
