@@ -18,28 +18,34 @@ export interface ValidateSessionReturn {
     energy: number;
   }
   
-  /**
-   * Represents the return data structure for authenticating a user.
-   *
-   * @interface AuthenticateReturn
-   * @property {WalletData} wallet - User wallet information.
-   * @property {SafeProperties} safeProperties - Safe user properties.
-   * @property {PlayerStats} playerStats - Player statistics.
-   * @property {number} energy - User energy level.
-   * @property {string} uuid - Unique identifier for the user.
-   * @property {string} token - Authentication token for the user session.
-   */
-  export interface AuthenticateReturn {
-    username: string;
-    wallet: WalletData;
-    safeProperties: SafeProperties;
-    playerStats: PlayerStats;
-    energy: number;
-    uuid: string;
-    token: string;
-    [key: string]: any; // Index signature for additional properties
-  }
-  
+/**
+ * Represents the return data structure for authenticating a user.
+ *
+ * @interface AuthenticateReturn
+ * @property {string} username - The username of the authenticated user.
+ * @property {WalletData} wallet - User wallet information.
+ * @property {SafeProperties} safeProperties - Safe user properties.
+ * @property {PlayerStats} playerStats - Player statistics.
+ * @property {number} energy - User energy level.
+ * @property {string} uuid - Unique identifier for the user.
+ * @property {string} validator - Validator token for the user session.
+ * @property {string} lookup - Lookup token for the user session.
+ * @property {string} message - A message indicating the result of the authentication.
+ * @property {string} success - A string indicating the success status of the authentication.
+ */
+export interface AuthenticateReturn {
+  username: string;
+  wallet: WalletData;
+  safeProperties: SafeProperties;
+  playerStats: PlayerStats;
+  energy: number;
+  uuid: string;
+  validator: string;
+  lookup: string;
+  message: string;
+  success: string;
+}
+
   
   /**
    * Represents an item within a card inventory.
@@ -220,6 +226,18 @@ export interface LocalWallet {
     };
   }
 
+/**
+ * Represents a user in the system.
+ *
+ * @interface User
+ * @property {boolean} anon - Indicates whether the user is anonymous.
+ * @property {string} email - The email address of the user.
+ * @property {string} userName - The username of the user.
+ * @property {string} password - The password of the user.
+ * @property {string} firstName - The first name of the user.
+ * @property {string} lastName - The last name of the user.
+ * @property {string} time - A string representing the time associated with the user.
+ */
 export interface User {
   anon: boolean;
   email: string;
@@ -228,4 +246,18 @@ export interface User {
   firstName: string;
   lastName: string;
   time: string;
+}
+
+/**
+ * Represents the token scheme containing both a refresh token and an access token.
+ *
+ * @interface TokenScheme
+ * @property {string} refreshToken - The refresh token used for obtaining a new access token.
+ * @property {string} accessToken - The access token used for authentication and authorization.
+ * @property {string} username - The username associated with the tokens.
+ */
+export interface TokenScheme {
+  refreshToken: string;
+  accessToken: string;
+  username: string;
 }

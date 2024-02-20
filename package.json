@@ -29,6 +29,7 @@
     "elysia": "^0.7.21",
     "elysia-ip": "^0.0.6",
     "ethers": "^5.7.0",
+    "fast-jwt": "^4.0.0",
     "install": "^0.13.0",
     "ip": "^1.1.8",
     "jsonwebtoken": "^9.0.2",

@@ -19,7 +19,6 @@ import { AuthenticateReturn, User, ValidateSessionReturn } from '../user.service
 
 
 const auth = (app: Elysia): void => {
-  
   app.post("api/login/beats", async (context: Context) => {
     try {
       const { username, password } = context.body as { username: string; password: string };
@@ -28,18 +27,8 @@ const auth = (app: Elysia): void => {
       const driver: Driver = getDriver();
       const authService: AuthService = new AuthService(driver);
       const output: AuthenticateReturn = await authService.authenticate(username, password);
-      const { token, uuid, ...userProperties } = output;
 
-      const response = {
-        user: userProperties,
-        validator: token,
-        lookup: uuid,
-        message: 'You are now logged in',
-        success: 'OK',
-        token: token
-      };
-
-      return(response);
+      return output;
     } catch (error: any) {
       return error
     }
@@ -48,13 +37,13 @@ const auth = (app: Elysia): void => {
   .post('/api/validate_session/beats', async (context: Context): Promise<ValidateSessionReturn | Error > => {
     try {
       const authorizationHeader: string | null = context.headers.authorization;
-      
       if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
         throw new Error('Bearer token not found in Authorization header');
-
       }
+
       const jwtToken: string = authorizationHeader.substring(7);
       const decodedToken: string | jwt.JwtPayload = jwt.verify(jwtToken, JWT_SECRET)
+      
       const { userName } = decodedToken as { userName: string };
 
       const driver: Driver = getDriver();

@@ -17,6 +17,7 @@ import { cardInventory, playerStats, powerUpInventory, iveEquip } from '../noobs
 import WalletService from './wallet.service'
 import Replenishments from '../game.services/replenishments.service.js'
 import ProfileService from '../game.services/profile.service'
+import TokenService from './token.service.js'
 
 //** UUID GENERATOR
 import { nanoid } from "nanoid/async";
@@ -25,7 +26,7 @@ import { nanoid } from "nanoid/async";
 import { Driver, QueryResult, Session,  ManagedTransaction } from 'neo4j-driver-core'
 
 //** TYPE INTERFACES
-import { LocalWallet, WalletData, UserData, ValidateSessionReturn, AuthenticateReturn } from './user.service.interface'
+import { LocalWallet, WalletData, UserData, ValidateSessionReturn, AuthenticateReturn, PlayerStats, TokenScheme } from './user.service.interface'
 
 /**
  * Service for handling authentication-related operations.
@@ -138,23 +139,23 @@ class AuthService {
  * @returns {Promise<AuthenticateReturn>} A promise that resolves with authentication details.
  * @throws {ValidationError} Throws a validation error if authentication fails.
  */
-  public async authenticate(userName: string, unencryptedPassword: string): Promise<AuthenticateReturn> {
+public async authenticate(userName: string, unencryptedPassword: string): Promise<AuthenticateReturn> {
+  const walletService: WalletService = new WalletService();
+  const profileService: ProfileService = new ProfileService();
+  const replenishService: Replenishments = new Replenishments();
+  const tokenService: TokenService = new TokenService();
 
-    const walletService: WalletService = new WalletService();
-    const profileService: ProfileService = new ProfileService();
-    const replenishService: Replenishments = new Replenishments();
-    
-    try {
+  try {
       const session: Session = this.driver.session();
       // Find the user node within a Read Transaction
       const result: QueryResult = await session.executeRead(tx =>
-        tx.run('MATCH (u:User {username: $userName}) RETURN u', { userName })
+          tx.run('MATCH (u:User {username: $userName}) RETURN u', { userName })
       );
 
       await session.close();
       // Verify the user exists
       if (result.records.length === 0) {
-        throw new ValidationError(`User with username '${userName}' not found.`, "");
+          throw new ValidationError(`User with username '${userName}' not found.`, "");
       }
 
       // Compare Passwords
@@ -162,30 +163,36 @@ class AuthService {
       const encryptedPassword: string = user.properties.password;
       const correct: boolean = await compare(unencryptedPassword, encryptedPassword);
       if (!correct) {
-        throw new ValidationError('Incorrect password.', "");  
+          throw new ValidationError('Incorrect password.', "");
       }
       // Return User Details
-      const { password, localWallet, localWalletKey, playerStats, userId, username, cardInventory, powerUpInventory, ...safeProperties } =  user.properties
+      const { password, localWallet, localWalletKey, playerStats, userId, username, cardInventory, powerUpInventory, ...safeProperties } = user.properties
 
       const walletPromise: Promise<WalletData> = walletService.importWallet(localWallet, localWalletKey);
       const energyPromise: Promise<number> = replenishService.getEnergy(userName, playerStats);
-      const statsPromise = profileService.getStats(userName)
-      const [wallet, energy, stats] = await Promise.all([walletPromise, energyPromise, statsPromise ]);
+      const statsPromise: Promise<PlayerStats> = profileService.getStats(userName)
+      const [ wallet, energy, stats ] = await Promise.all([walletPromise, energyPromise, statsPromise]);
 
-      const token: string = jwt.sign({ userName }, JWT_SECRET, {expiresIn: '3h'})
+      const tokens: TokenScheme = await tokenService.generateRefreshToken(userName);
+
       return {
-        username,
-        energy, 
-        wallet, 
-        playerStats: stats, 
-        safeProperties,
-        uuid: userId,
-        token: token
+          username,
+          wallet,
+          safeProperties,
+          playerStats: stats,
+          energy,
+          uuid: userId,
+          validator: tokens.refreshToken,
+          lookup: tokens.accessToken,
+          message: 'You are now logged in',
+          success: 'OK',
+
       } as AuthenticateReturn
-    } catch (error: any) {
+  } catch (error: any) {
       throw error;
-    }
-    };
+  }
+};
+
   /**
    * Validates a user's session using JWT
    * @method
@@ -232,9 +239,9 @@ class AuthService {
         playerStats,
         safeProperties, 
         success: "OK", } as ValidateSessionReturn
-    } catch (error: any) {
-      throw error;
-    }
+      } catch (error: any) {
+        throw error;
+      }
     };
 
   private async getTimezone(dateTime: string) {
