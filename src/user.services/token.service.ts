@@ -16,7 +16,7 @@ class TokenService {
     public async generateTokens(username: string): Promise<TokenScheme> {
         try {
             const signSync = createSigner({ key: JWT_SECRET, expiresIn: REFRESH_TOKEN_EXPIRY });
-            const refreshToken: string = signSync(username);
+            const refreshToken: string = signSync({userName: username});
 
             const accessToken: string = await this.generateAccessToken(username, refreshToken);
 
@@ -30,7 +30,7 @@ class TokenService {
     private async generateAccessToken(username: string, refreshToken: string): Promise<string> {
         try {
             const signSync = createSigner({ key: refreshToken, expiresIn: ACCESS_TOKEN_EXPIRY });
-            const accessToken: string = signSync(username);
+            const accessToken: string = signSync({userName: username});
 
             return accessToken;
         } catch (error : any) {
