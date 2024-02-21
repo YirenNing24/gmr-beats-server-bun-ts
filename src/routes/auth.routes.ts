@@ -21,6 +21,8 @@ const auth = (app: Elysia): void => {
       const authService: AuthService = new AuthService(driver);
       const output: AuthenticateReturn = await authService.authenticate(username, password);
 
+
+      console.log(context.body)
       return output;
     } catch (error: any) {
       return error
