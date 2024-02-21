@@ -31,6 +31,8 @@ import { Driver, QueryResult, Session,  ManagedTransaction } from 'neo4j-driver-
 //** TYPE INTERFACES
 import { LocalWallet, WalletData, UserData, ValidateSessionReturn, AuthenticateReturn, PlayerStats, TokenScheme, AccessRefresh } from './user.service.interface'
 
+import { edenFetch } from '@elysiajs/eden'
+import app from '../app.js'
 /**
  * Service for handling authentication-related operations.
  * 
@@ -198,27 +200,34 @@ class AuthService {
 
   public async googleServer(token: string) {
     try {
+      
+      
       const oAuth2Client = new OAuth2Client(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
       const { tokens } = await oAuth2Client.getToken(token);
   
       // endpoint: https://games.googleapis.com
+      const fetch = edenFetch<typeof app>('http://localhost:8085') 
+
       const apiUrl: string = 'https://games.googleapis.com/games/v1/players/me';
-      const response: Response = await fetch(apiUrl, {
+
+      //@ts-ignore
+      const response = await fetch(apiUrl, {
         method: 'GET',
-        headers: { Authorization: `Bearer ${tokens.access_token}` },
-      });
+        
+        body: {
+            id: 1895,
+            name: 'Skadi'
+        }
+    })
+
+      // const response: Response = await fetch(apiUrl, {
+      //   method: 'GET',
+      //   headers: { Authorization: `Bearer ${tokens.access_token}` },
+      // });
   
-      console.log(response.status);
-  
-      if (response.ok) {
-        const playerInfo: any = await response.json();
-        console.log('Player Info:', playerInfo);
-        return playerInfo.displayName; // Adjust accordingly based on the API response structure
-      } else {
-        console.error('Error:', response.statusText);
-        return null; // or handle the error accordingly
-      }
-    } catch (error) {
+      console.log(response);
+
+    } catch (error: any) {
       console.error('An error occurred:', error);
       return null; // or handle the error accordingly
     }
