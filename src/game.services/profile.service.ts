@@ -114,10 +114,9 @@ class ProfileService {
       }
     };
 
-  public async getStats(token: string): Promise<PlayerStats> {
+  public async getStats(username: string): Promise<PlayerStats> {
     try {
-        const tokenService: TokenService = new TokenService();
-        const username: string = await tokenService.verifyAccessToken(token);
+
         // Get the Neo4j driver instance
         const driver: Driver = getDriver();
         const session: Session = driver.session();
