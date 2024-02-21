@@ -213,11 +213,7 @@ class AuthService {
       //@ts-ignore
       const response = await fetch(apiUrl, {
         method: 'GET',
-        
-        body: {
-            id: 1895,
-            name: 'Skadi'
-        }
+        headers: { Authorization: `Bearer ${tokens.access_token}` }
     })
 
       // const response: Response = await fetch(apiUrl, {
