@@ -206,7 +206,7 @@ class AuthService {
 
       const { tokens } = await oAuth2Client.getToken(token);
 
-
+      console.log("tae: ", tokens)
 
   
       // endpoint: https://games.googleapis.com
