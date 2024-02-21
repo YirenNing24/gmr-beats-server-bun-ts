@@ -209,24 +209,24 @@ class AuthService {
       console.log("tae: ", tokens)
 
        // endpoint: https://games.googleapis.com
-       const fetch = edenFetch<typeof app>('http://localhost:8085') 
+      // const fetch = edenFetch<typeof app>('http://localhost:8085') 
 
-       const apiUrl: string = 'https://games.googleapis.com/games/v1/players/me';
+      const apiUrl: string = 'https://games.googleapis.com/games/v1/players/me';
 
        //@ts-ignore
-       const response = await fetch(apiUrl, {
-         method: 'GET',
-         headers: { Authorization: `Bearer ${tokens.access_token}` }
-     })
+    //    const response = await fetch(apiUrl, {
+    //      method: 'GET',
+    //      headers: { Authorization: `Bearer ${tokens.access_token}` }
+    //  })
 
-     console.log(response)
+    //  console.log(response)
 
-       // const response: Response = await fetch(apiUrl, {
-       //   method: 'GET',
-       //   headers: { Authorization: `Bearer ${tokens.access_token}` },
-       // });
+      const response: Response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${tokens.access_token}` },
+      });
   
-    //   console.log(response);
+      console.log(response);
 
     } catch (error: any) {
       console.error('An error occurred:', error);
