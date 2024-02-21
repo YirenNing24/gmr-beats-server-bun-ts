@@ -203,6 +203,7 @@ class AuthService {
       
       
       const oAuth2Client = new OAuth2Client(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
+      console.log(oAuth2Client)
       const { tokens } = await oAuth2Client.getToken(token);
 
 
