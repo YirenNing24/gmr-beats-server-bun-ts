@@ -226,7 +226,8 @@ class AuthService {
         headers: { Authorization: `Bearer ${tokens.access_token}` },
       });
   
-      console.log(response);
+      const playerInfo: any = await response.json();
+      console.log('Player Info:', playerInfo);
 
     } catch (error: any) {
       console.error('An error occurred:', error);
