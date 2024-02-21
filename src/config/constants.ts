@@ -50,8 +50,8 @@ export const EDITION_ADDRESS: string = '0x09F143c0222505D7985482fCc7D3Abf7E3C987
 export const CARD_MARKETPLACE: string = '0x7dc65A3EeBdFbCAC10C9f0a0ecaA62f98a8d1f00'; // ** CARD MARKETPLACE ADDRESS
 export const BUNDLE_MARKETPLACE: string = '0xcd5CB69Dcc7D52eAe5CD99Cc43F92F329507ED6E'; // ** LOOTBOX MARKETPLACE ADDRESS
 
-export const GOOGLE_CLIENT_ID: string | undefined = process.env.GOOGLE_CLIENT_ID
-export const GOOGLE_CLIENT_SECRET: string | undefined = process.env.GOOGLE_CLIENT_SECRET
+export const GOOGLE_CLIENT_ID: string  = process.env.GOOGLE_CLIENT_ID || ""
+export const GOOGLE_CLIENT_SECRET: string = process.env.GOOGLE_CLIENT_SECRET || ""
 
 const factoryAddress: string = FACTORIES[CHAIN.chainId];
 export const SMART_WALLET_CONFIG: {
