@@ -35,7 +35,7 @@ const auth = (app: Elysia): void => {
       }
       const jwtToken: string = authorizationHeader.substring(7);
 
-
+      console.log(authorizationHeader)
       const driver: Driver = getDriver();
       const authService: AuthService = new AuthService(driver);
       return await authService.validateSession(jwtToken) as ValidateSessionReturn
@@ -47,11 +47,11 @@ const auth = (app: Elysia): void => {
 
   .post("api/login/google", async (context: Context) => {
     try {
-      const token: string = context.body as string
-
+        const token: any = context.body
+        const { serverToken } = token as { serverToken: string }
        const driver: Driver = getDriver();
        const authService: AuthService = new AuthService(driver);
-       const output = await authService.googleServer(token);
+       const output = await authService.googleServer(serverToken);
 
        return output
     } catch (error: any) {
