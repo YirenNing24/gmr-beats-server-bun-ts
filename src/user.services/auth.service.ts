@@ -1,8 +1,8 @@
 //**TODO SPACE IN LAST NAME SHOULD BE ALLOWED */
+//**TODO SERVER VALIDATE REGISTRATION */
 
 //** JWT MODULE, AND CONFIGS IMPORTS
-import { JWT_SECRET, SALT_ROUNDS } from '../config/constants'
-import jwt from 'jsonwebtoken'
+import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SALT_ROUNDS } from '../config/constants'
 
 //** BCRYPT IMPORT
 import { hash, compare } from 'bcrypt-ts'
@@ -19,6 +19,9 @@ import Replenishments from '../game.services/replenishments.service.js'
 import ProfileService from '../game.services/profile.service'
 import TokenService from './token.service.js'
 
+//** GOOGLE AUTH IMPORTS
+import { OAuth2Client } from 'google-auth-library'
+
 //** UUID GENERATOR
 import { nanoid } from "nanoid/async";
 
@@ -26,7 +29,7 @@ import { nanoid } from "nanoid/async";
 import { Driver, QueryResult, Session,  ManagedTransaction } from 'neo4j-driver-core'
 
 //** TYPE INTERFACES
-import { LocalWallet, WalletData, UserData, ValidateSessionReturn, AuthenticateReturn, PlayerStats, TokenScheme } from './user.service.interface'
+import { LocalWallet, WalletData, UserData, ValidateSessionReturn, AuthenticateReturn, PlayerStats, TokenScheme, AccessRefresh } from './user.service.interface'
 
 /**
  * Service for handling authentication-related operations.
@@ -139,59 +142,87 @@ class AuthService {
  * @returns {Promise<AuthenticateReturn>} A promise that resolves with authentication details.
  * @throws {ValidationError} Throws a validation error if authentication fails.
  */
-public async authenticate(userName: string, unencryptedPassword: string): Promise<AuthenticateReturn> {
-  const walletService: WalletService = new WalletService();
-  const profileService: ProfileService = new ProfileService();
-  const replenishService: Replenishments = new Replenishments();
-  const tokenService: TokenService = new TokenService();
+  public async authenticate(userName: string, unencryptedPassword: string): Promise<AuthenticateReturn> {
+    const walletService: WalletService = new WalletService();
+    const profileService: ProfileService = new ProfileService();
+    const replenishService: Replenishments = new Replenishments();
+    const tokenService: TokenService = new TokenService();
 
-  try {
-      const session: Session = this.driver.session();
-      // Find the user node within a Read Transaction
-      const result: QueryResult = await session.executeRead(tx =>
-          tx.run('MATCH (u:User {username: $userName}) RETURN u', { userName })
-      );
+    try {
+        const session: Session = this.driver.session();
+        // Find the user node within a Read Transaction
+        const result: QueryResult = await session.executeRead(tx =>
+            tx.run('MATCH (u:User {username: $userName}) RETURN u', { userName })
+        );
 
-      await session.close();
-      // Verify the user exists
-      if (result.records.length === 0) {
-          throw new ValidationError(`User with username '${userName}' not found.`, "");
+        await session.close();
+        // Verify the user exists
+        if (result.records.length === 0) {
+            throw new ValidationError(`User with username '${userName}' not found.`, "");
+        }
+
+        // Compare Passwords
+        const user: UserData = result.records[0].get('u');
+        const encryptedPassword: string = user.properties.password;
+        const correct: boolean = await compare(unencryptedPassword, encryptedPassword);
+        if (!correct) {
+            throw new ValidationError('Incorrect password.', "");
+        }
+        // Return User Details
+        const { password, localWallet, localWalletKey, playerStats, userId, username, cardInventory, powerUpInventory, ...safeProperties } = user.properties
+
+        const walletPromise: Promise<WalletData> = walletService.importWallet(localWallet, localWalletKey);
+        const energyPromise: Promise<number> = replenishService.getEnergy(userName, playerStats);
+        const statsPromise: Promise<PlayerStats> = profileService.getStats(userName)
+        const [ wallet, energy, stats ] = await Promise.all([walletPromise, energyPromise, statsPromise]);
+
+        const tokens: TokenScheme = await tokenService.generateTokens(userName);
+        const { refreshToken, accessToken } = tokens as TokenScheme
+        return {
+            username,
+            wallet,
+            safeProperties,
+            playerStats: stats,
+            energy,
+            uuid: userId,
+            refreshToken,
+            accessToken,
+            message: 'You are now logged in',
+            success: 'OK',
+
+        } as AuthenticateReturn
+    } catch (error: any) {
+        throw error;
+    }
+  };
+
+  public async googleServer(token: string) {
+    try {
+      const oAuth2Client = new OAuth2Client(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
+      const { tokens } = await oAuth2Client.getToken(token);
+  
+      // endpoint: https://games.googleapis.com
+      const apiUrl: string = 'https://games.googleapis.com/games/v1/players/me';
+      const response: Response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${tokens.access_token}` },
+      });
+  
+      console.log(response.status);
+  
+      if (response.ok) {
+        const playerInfo: any = await response.json();
+        console.log('Player Info:', playerInfo);
+        return playerInfo.displayName; // Adjust accordingly based on the API response structure
+      } else {
+        console.error('Error:', response.statusText);
+        return null; // or handle the error accordingly
       }
-
-      // Compare Passwords
-      const user: UserData = result.records[0].get('u');
-      const encryptedPassword: string = user.properties.password;
-      const correct: boolean = await compare(unencryptedPassword, encryptedPassword);
-      if (!correct) {
-          throw new ValidationError('Incorrect password.', "");
-      }
-      // Return User Details
-      const { password, localWallet, localWalletKey, playerStats, userId, username, cardInventory, powerUpInventory, ...safeProperties } = user.properties
-
-      const walletPromise: Promise<WalletData> = walletService.importWallet(localWallet, localWalletKey);
-      const energyPromise: Promise<number> = replenishService.getEnergy(userName, playerStats);
-      const statsPromise: Promise<PlayerStats> = profileService.getStats(userName)
-      const [ wallet, energy, stats ] = await Promise.all([walletPromise, energyPromise, statsPromise]);
-
-      const tokens: TokenScheme = await tokenService.generateTokens(userName);
-      const { refreshToken, accessToken } = tokens as TokenScheme
-      return {
-          username,
-          wallet,
-          safeProperties,
-          playerStats: stats,
-          energy,
-          uuid: userId,
-          refreshToken,
-          accessToken,
-          message: 'You are now logged in',
-          success: 'OK',
-
-      } as AuthenticateReturn
-  } catch (error: any) {
-      throw error;
+    } catch (error) {
+      console.error('An error occurred:', error);
+      return null; // or handle the error accordingly
+    }
   }
-};
 
   /**
    * Validates a user's session using JWT
@@ -202,11 +233,15 @@ public async authenticate(userName: string, unencryptedPassword: string): Promis
    * @returns {Promise<ValidateSessionReturn>} A promise that resolves with session validation details.
    * @throws {ValidationError} Throws a validation error if the user is not found.
    */
-  public async validateSession(userName: string): Promise<ValidateSessionReturn>  {
+  public async validateSession(token: string): Promise<ValidateSessionReturn>  {
     try {
-      // Create a new instance of the WalletService class
-      const walletService = new WalletService();
-      const replenishService = new Replenishments();
+      // Create a new instance of the needed services class
+      const walletService: WalletService = new WalletService();
+      const replenishService: Replenishments = new Replenishments();
+      const tokenService: TokenService = new TokenService();
+
+      const accessRefresh: AccessRefresh = await tokenService.verifyRefreshToken(token)
+      const { userName, accessToken } = accessRefresh as AccessRefresh
 
       // Open a new session
       const session:Session = this.driver.session();
@@ -222,7 +257,7 @@ public async authenticate(userName: string, unencryptedPassword: string): Promis
       }
       
       const userData: UserData = result.records[0].get('u');
-      const { localWallet, localWalletKey, playerStats, password, cardInventory, powerUpInventory, username, ...safeProperties } = userData.properties;
+      const { localWallet, localWalletKey, playerStats, password, userId, cardInventory, powerUpInventory, username, ...safeProperties } = userData.properties;
       
       // Import the user's smart wallet using the WalletService class
       const walletPromise: Promise<WalletData> = walletService.importWallet(localWallet, localWalletKey);
@@ -234,15 +269,19 @@ public async authenticate(userName: string, unencryptedPassword: string): Promis
       // Return an object containing the user's smart wallet, safe properties, success message, and JWT token
       return {
         username,
-        energy,
         wallet: walletSmart,
+        safeProperties,
         playerStats,
-        safeProperties, 
+        energy,
+        uuid: userId,
+        accessToken,
+        message: "You are now logged-in",
         success: "OK", } as ValidateSessionReturn
       } catch (error: any) {
         throw error;
       }
     };
+
 
   private async getTimezone(dateTime: string) {
     const dateObject: Date = new Date(dateTime);

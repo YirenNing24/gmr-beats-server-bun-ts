@@ -9,12 +9,14 @@ import ValidationError from "../outputs/validation.error";
 
 //** IMPORTED SERVICES
 import WalletService from "../user.services/wallet.service";
+import TokenService from "../user.services/token.service";
+
+//** CONFIG IMPORTS
 import { EDITION_ADDRESS, PACK_ADDRESS, SECRET_KEY } from "../config/constants";
 
 //** TYPE INTERFACES
 import { CardNFT, CardInventoryOpen, EquipmentSlots, CardMetaData, CardsData, InventoryCardData } from "./game.services.interfaces";
 import { CardInventory, CardInventoryItem } from "../user.services/user.service.interface";
-
 
 /**
  * Service for handling user inventory-related operations.
@@ -56,8 +58,10 @@ class InventoryService {
 
     //** CARD INVENTORY */
 
-    public async cardInventoryOpen(userName: string): Promise<InventoryCardData> {
+    public async cardInventoryOpen(token: string): Promise<InventoryCardData> {
         try {
+          const tokenService: TokenService = new TokenService();
+          const userName: string = await tokenService.verifyAccessToken(token);
           const session: Session | undefined = this.driver?.session();
       
           // Use a Read Transaction and only return the necessary properties

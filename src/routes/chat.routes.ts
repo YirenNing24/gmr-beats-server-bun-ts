@@ -13,28 +13,22 @@ import { NewMessage } from "../chat.services/chat.interface"
 import TimeService from "../game.services/time.service"
 
 //** CONFIG IMPORT
-import { JWT_SECRET } from "../config/constants"
 import ValidationError from "../outputs/validation.error"
 
 const chat = (app: Elysia): void => {
   app.ws('/api/ws', {
     async open(ws) {
       try {
-        //@ts-ignore
         const room: string = 'all'
         const authorizationHeader: string = ws.data.headers.authorization || ""
-        
         if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
           throw new ValidationError('jwt issue', '')
         }
-
         const jwtToken: string = authorizationHeader.substring(7);
-        const decodedToken: string | JwtPayload = jwt.verify(jwtToken, JWT_SECRET)
-        const { userName } = decodedToken as { userName: string };
 
         //@ts-ignore
         const chatService: ChatService = new ChatService(ws)
-        chatService.chatRoom(room, userName)
+        chatService.chatRoom(room, jwtToken)
         ws?.subscribe('all');
       } catch (error: any) {
         return error

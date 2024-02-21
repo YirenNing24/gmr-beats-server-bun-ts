@@ -6,6 +6,7 @@ import { CHAIN, SMART_WALLET_CONFIG } from "../config/constants";
 import { SmartWallet } from "@thirdweb-dev/wallets";
 import { CARD_MARKETPLACE } from "../config/constants";
 import { Driver } from "neo4j-driver-core";
+import TokenService from "../user.services/token.service";
 
 export default class StoreService {
   driver: Driver;
@@ -14,8 +15,13 @@ export default class StoreService {
     this.driver = driver;
   }
 
-  async getCards(itemType: string): Promise<any[]> {
+  async getCards(itemType: string, token: string): Promise<any[]> {
     try {
+
+      const tokenService: TokenService = new TokenService();
+      await tokenService.verifyAccessToken(token);
+
+
       if (itemType === "cards") {
         const tx = await app.redis.get("cardStore");
         if (tx === null) {
@@ -31,8 +37,12 @@ export default class StoreService {
     }
   }
 
-  async buyCard(tokenId: number, cardName: string, username: string): Promise<any> {
+  async buyCard(tokenId: number, cardName: string, token: string): Promise<any> {
     try {
+
+      const tokenService: TokenService = new TokenService();
+      const username: string = await tokenService.verifyAccessToken(token);
+
       const session = this.driver.session();
       const res = await session.executeRead((tx) =>
         tx.run("MATCH (u:User {username: $username}) RETURN u", { username })
@@ -40,7 +50,7 @@ export default class StoreService {
       await session.close();
 
       if (res.records.length === 0) {
-        throw new ValidationError(`User with username '${username}' not found.`, {});
+        throw new ValidationError(`User with username '${username}' not found.`, '');
       }
 
       const userData = res.records[0].get("u");
@@ -67,8 +77,12 @@ export default class StoreService {
     }
   }
 
-  async getBundles(itemType: string): Promise<any[]> {
+  async getBundles(itemType: string, token: string): Promise<any[]> {
     try {
+
+      const tokenService: TokenService = new TokenService();
+      await tokenService.verifyAccessToken(token);
+
       if (itemType === "bundles") {
         const tx = await app.redis.get("bundleStore");
         if (tx === null) {

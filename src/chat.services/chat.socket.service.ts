@@ -8,6 +8,7 @@ import { getRethinkDB } from "../db/rethink";
 
 //** TYPE INTERFACE
 import { PrivateMessage, NewMessage, Result } from "./chat.interface";
+import TokenService from "../user.services/token.service";
 
 
 const watchedRooms: Record<string, boolean> = {};
@@ -20,8 +21,11 @@ class ChatService {
     this.websocket = websocket;
   }
 
-  public async chatRoom(room: string, username: string): Promise<void> {
+  public async chatRoom(room: string, token: string): Promise<void> {
     try {
+      const tokenService: TokenService = new TokenService();
+      const username: string = await tokenService.verifyAccessToken(token)
+
       const ws = this.websocket
       const connection: rt.Connection = await getRethinkDB();
       let query: rt.Sequence = rt.db('beats').table("chats").filter({ roomId: room });
@@ -97,8 +101,12 @@ class ChatService {
     }
   };
 
-  public async privateInboxData(clientUsername: string, conversingUsername: string): Promise<PrivateMessage[]> {
+  public async privateInboxData(token: string, conversingUsername: string): Promise<PrivateMessage[]> {
     try {
+
+      const tokenService:  TokenService = new TokenService();
+      const clientUsername: string = await tokenService.verifyAccessToken(token);
+
       const connection: rt.Connection = await getRethinkDB();
       
       const query: rt.Cursor = await rt

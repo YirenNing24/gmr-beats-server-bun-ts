@@ -17,21 +17,17 @@ import { ClassicLeaderboardRequest, ClassicScoreStats } from '../game.services/g
 const leaderboards = (app: Elysia): void => {
   app.get('/api/leaderboard/weekly', async (context) => {
     try {
-      const authorizationHeader = context.headers.authorization;
-      if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
-          throw new Error('Bearer token not found in Authorization header');
-      }
-      const jwtToken: string = authorizationHeader.substring(7);
-      jwt.decode(jwtToken)  
-        
-        //@ts-ignore
-        const { gameMode, songName, period, difficulty } = context.query as ClassicLeaderboardRequest
+w
 
-        const driver: Driver = getDriver();
-        const leaderboardService: LeaderboardService = new LeaderboardService(driver)
-        const output: ClassicScoreStats[] = await leaderboardService.weeklyLeaderboard(gameMode, songName, period, difficulty);
+      //@ts-ignore
+      const { gameMode, songName, period, difficulty } = context.query as ClassicLeaderboardRequest
 
-        return output
+      const driver: Driver = getDriver();
+      const leaderboardService: LeaderboardService = new LeaderboardService(driver)
+      const output: ClassicScoreStats[] = await leaderboardService.weeklyLeaderboard(gameMode, songName, period, difficulty, jwtToken);
+
+      return output as ClassicScoreStats[]
+
     } catch (error: any) {
       throw error;
     }

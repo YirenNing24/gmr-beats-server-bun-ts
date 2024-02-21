@@ -11,6 +11,9 @@ import ValidationError from "../outputs/validation.error";
 //** TYPE INTERFACE IMPORTS
 import { FollowResponse, ViewProfileData, ViewedUserData, MutualData, PlayerStatus, SetPlayerStatus } from "./social.services.interface";
 
+//** IMPORTED SERVICES 
+import TokenService from "../user.services/token.service";
+
 class SocialService {
     /**
    * Creates an instance of the SocialService class.
@@ -34,8 +37,16 @@ class SocialService {
  * @returns {Promise<FollowResponse>} A promise that resolves to a FollowResponse indicating the follow status.
  * @throws {Error} If the user to follow is not found.
  */
-  public async follow(follower: string, toFollow: string): Promise<FollowResponse> {
+  public async follow(follower: string, toFollow: string, token: string): Promise<FollowResponse> {
     try {
+
+      const tokenService: TokenService = new TokenService();
+      const userName: string = await tokenService.verifyAccessToken(token);
+
+
+      if (userName !== follower) {
+        throw new Error("Unauthorized")
+      }
       const session: Session = this.driver.session();
       const result: QueryResult = await session.executeWrite((tx: ManagedTransaction) =>
         tx.run( 
@@ -75,8 +86,16 @@ class SocialService {
    * @returns {Promise<FollowResponse>} A promise that resolves to a FollowResponse indicating the unfollow status.
    * @throws {Error} If the user to unfollow is not found.
    */
-  public async unfollow(follower: string, toUnfollow: string): Promise<FollowResponse> {
+  public async unfollow(follower: string, toUnfollow: string, token: string): Promise<FollowResponse> {
     try {
+
+      const tokenService: TokenService = new TokenService();
+      const userName: string = await tokenService.verifyAccessToken(token);
+
+      if (userName !== follower) {
+        throw new Error("Unauthorized")
+      }
+
       const session = this.driver.session();
       const result: QueryResult = await session.executeWrite((tx: ManagedTransaction) =>
         tx.run( 
@@ -110,7 +129,7 @@ class SocialService {
    * @returns {Promise<ViewProfileData>} A promise that resolves to ViewProfileData containing profile information.
    * @throws {ValidationError} If the user with the specified viewUsername is not found.
    */
-  public async viewProfile(userName: string, viewUsername: string): Promise<ViewProfileData> {
+  public async viewProfile(viewUsername: string, token: string): Promise<ViewProfileData> {
     /**
      * @typedef {Object} ViewProfileData
      * @property {string} username - The username of the viewed user.
@@ -118,6 +137,9 @@ class SocialService {
      * @property {boolean} followsUser - Indicates if the user making the request follows the viewed user.
      * @property {boolean} followedByUser - Indicates if the viewed user follows the user making the request.
      */
+
+    const tokenService:  TokenService = new TokenService();
+    const userName: string = await tokenService.verifyAccessToken(token);
 
     const session: Session = this.driver.session();
     try {
@@ -166,7 +188,7 @@ class SocialService {
    * @returns {Promise<MutualData[]>} A promise that resolves to an array of MutualData representing mutual followers.
    * @throws {Error} If an error occurs during the retrieval process.
    */
-  public async mutual(username: string): Promise<MutualData[]> {
+  public async mutual(token: string): Promise<MutualData[]> {
     /**
      * @typedef {Object} MutualData
      * @property {string} username - The username of a mutual follower.
@@ -174,6 +196,9 @@ class SocialService {
      */
 
     try {
+      const tokenService:  TokenService = new TokenService();
+      const username: string = await tokenService.verifyAccessToken(token);
+      
       const session: Session = this.driver.session();
       const result: QueryResult = await session.executeRead((tx: ManagedTransaction) =>
         tx.run(

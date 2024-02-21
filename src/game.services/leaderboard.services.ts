@@ -3,6 +3,7 @@ import { Driver, ManagedTransaction, QueryResult, Session } from "neo4j-driver";
 
 //** VALIDATION ERROR
 import { ClassicScoreStats } from "./game.services.interfaces";
+import TokenService from "../user.services/token.service";
 
 
 class LeaderboardService {
@@ -26,8 +27,12 @@ class LeaderboardService {
 		this.driver = driver;
 	}
 
-	public async dailyLeaderboard(songName: string, difficulty: string): Promise<ClassicScoreStats[]> {
+	public async dailyLeaderboard(songName: string, difficulty: string, token: string): Promise<ClassicScoreStats[]> {
 		try {
+
+			const tokenService: TokenService = new TokenService();
+			await tokenService.verifyAccessToken(token);
+
 			const currentDate: Date = new Date();
 			const startOfDay: Date = new Date(currentDate);
 			startOfDay.setHours(0, 0, 0, 0); // Set to the beginning of the current day
@@ -60,10 +65,13 @@ class LeaderboardService {
 		}
 	}
 	
-	
-	public async weeklyLeaderboard(songName: string, difficulty: string): Promise<ClassicScoreStats[]> {
+	 
+	public async weeklyLeaderboard(gameMode: string, songName: string, period: string, difficulty: string, token: string): Promise<ClassicScoreStats[]> {
 		//* Weekly is from Monday to Sunday
 		try {
+			const tokenService: TokenService = new TokenService();
+			await tokenService.verifyAccessToken(token);
+
 			const currentDate: Date = new Date();
 			const startOfWeek: Date = new Date(currentDate);
 			startOfWeek.setDate(currentDate.getDate() - currentDate.getDay() + (currentDate.getDay() === 0 ? -6 : 1)); // Monday of the current week
@@ -96,9 +104,13 @@ class LeaderboardService {
 		}
 	}
 	
-    public async monthlyLeaderboard(): Promise<ClassicScoreStats[]> {
+    public async monthlyLeaderboard(token: string): Promise<ClassicScoreStats[]> {
 		// Monthly is from the 1st to the end of the month
 		try {
+
+			const tokenService: TokenService = new TokenService();
+			await tokenService.verifyAccessToken(token);
+
 			const currentDate: Date = new Date();
 			const startOfMonth: Date = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1); // 1st day of the current month
 			const endOfMonth: Date = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0); // Last day of the current month

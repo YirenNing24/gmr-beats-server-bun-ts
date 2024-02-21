@@ -23,14 +23,13 @@ const gacha = (app: Elysia): void => {
               throw new Error('Bearer token not found in Authorization header');
             }
             const jwtToken: string = authorizationHeader.substring(7);
-            const decodedToken: string | jwt.JwtPayload = jwt.verify(jwtToken, JWT_SECRET)
-            const { userName } = decodedToken as { userName: string };
+
             
             const { bundleId, amount } = context.body as { bundleId: number, amount: number }
 
             const driver: Driver = getDriver();
             const gachaService: GachaService = new GachaService(driver)
-            const output: BundleRewards = await gachaService.redeemBundle(userName, bundleId, amount)
+            const output: BundleRewards = await gachaService.redeemBundle(bundleId, amount, jwtToken)
 
             return output
         } catch (error: any) {

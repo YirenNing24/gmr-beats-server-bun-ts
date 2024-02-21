@@ -7,17 +7,15 @@ import { Pack, ThirdwebSDK } from "@thirdweb-dev/sdk";
 import { LocalWalletNode } from "@thirdweb-dev/wallets/evm/wallets/local-wallet-node";
 import { SmartWallet } from "@thirdweb-dev/wallets";
 
-
 //** VALIDATION ERROR
 import ValidationError from "../outputs/validation.error";
 
 //** IMPORTED SERVICES
 import { PACK_ADDRESS, SECRET_KEY, CHAIN, SMART_WALLET_CONFIG } from "../config/constants";
+import TokenService from "../user.services/token.service";
 
 //** TYPE INTERFACES
 import { BundleRewards, CardInventoryOpen } from "./game.services.interfaces";
-
-
 
 
 class GachaService {
@@ -41,11 +39,12 @@ class GachaService {
         this.driver = driver;
     }
 
-
-    public async redeemBundle(userName: string, bundleId: number, amount: number = 1): Promise<BundleRewards> {
+    public async redeemBundle(bundleId: number, amount: number = 1, token: string): Promise<BundleRewards> {
         try {
+            const tokenService: TokenService = new TokenService();
+            const userName: string = await tokenService.verifyAccessToken(token);
+
             const session: Session | undefined = this.driver?.session();
-      
             // Use a Read Transaction and only return the necessary properties
             const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
               (tx: ManagedTransaction) =>

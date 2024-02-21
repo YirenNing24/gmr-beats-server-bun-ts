@@ -11,6 +11,10 @@ import { getRethinkDB } from "../db/rethink";
 import ValidationError from "../outputs/validation.error";
 import { SuccessMessage } from "../outputs/success.message";
 
+//** IMPORTED SERVICES
+import TokenService from "../user.services/token.service";
+
+
 class ProfileService {
 
   driver?: Driver;
@@ -18,9 +22,12 @@ class ProfileService {
     this.driver = driver;
   }
 
-  public async updateStats(statPoints: any): Promise<any | UpdateStatsFailed>{
+  public async updateStats(statPoints: any, token: string): Promise<any | UpdateStatsFailed>{
     try {
-        const username: string = statPoints.statPointsSaved.username;
+
+        const tokenService: TokenService = new TokenService();
+        const username: string = await tokenService.verifyAccessToken(token);
+
         const session: Session | undefined = this.driver?.session();
         const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
             tx => tx.run(
@@ -107,8 +114,10 @@ class ProfileService {
       }
     };
 
-  public async getStats(username: string): Promise<PlayerStats> {
+  public async getStats(token: string): Promise<PlayerStats> {
     try {
+        const tokenService: TokenService = new TokenService();
+        const username: string = await tokenService.verifyAccessToken(token);
         // Get the Neo4j driver instance
         const driver: Driver = getDriver();
         const session: Session = driver.session();
@@ -135,8 +144,12 @@ class ProfileService {
       }
     };
 
-  public async uploadProfilePic(bufferData: ArrayBuffer, userName: string): Promise<SuccessMessage> {
+  public async uploadProfilePic(bufferData: ArrayBuffer, token: string): Promise<SuccessMessage> {
       try {
+
+        const tokenService: TokenService = new TokenService();
+        const userName: string = await tokenService.verifyAccessToken(token);
+
         const session: Session | undefined = this.driver?.session();
     
         // Find the user node within a Read Transaction
@@ -180,8 +193,12 @@ class ProfileService {
       }
     };
 
-  public async getProfilePic(userName: string): Promise<ProfilePicture[]> {
+  public async getProfilePic(token: string): Promise<ProfilePicture[]> {
       try {
+
+        const tokenService: TokenService = new TokenService();
+        const userName: string = await tokenService.verifyAccessToken(token);
+
         const session: Session | undefined = this.driver?.session();
     
         // Find the user node within a Read Transaction

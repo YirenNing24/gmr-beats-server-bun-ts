@@ -316,3 +316,46 @@ export interface ProfilePicture {
   uploadedAt: number
   fileSize: number
 }
+
+//* TYPE INTERFACES
+export interface ViewProfileData {
+  username: string
+  playerStats: string
+  followsUser: boolean
+  followedByUser: boolean
+  }
+
+export interface FollowResponse {
+    status: string;
+  }
+
+export interface MutualData {
+    username: string;
+    playerStats: string;
+  }
+
+export interface PrivateMessage {
+    message: string
+    roomId: string
+    sender: SenderData
+    receiver: string
+    seen: boolean
+    ts: number
+  }
+
+export interface SenderData {
+    username: string
+    level: number
+    rank: string
+  }
+
+export interface PlayerStatus {
+    username: string
+    status: boolean
+    activity: string
+    lastOnline: number
+    userAgent: string
+    osName: string
+    ipAddress: string
+    id: string
+  }

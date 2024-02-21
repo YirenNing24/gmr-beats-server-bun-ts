@@ -1,9 +1,12 @@
-//* IMPORTED TYPES
-import { Driver, ManagedTransaction, QueryResult, RecordShape, Session } from "neo4j-driver";
+//** IMPORTED TYPES
+import { Driver, ManagedTransaction, QueryResult, Session } from "neo4j-driver";
 import { ClassicScoreStats } from "./game.services.interfaces";
 
-//* ERROR VALIDATION
+//** ERROR VALIDATION
 import ValidationError from "../outputs/validation.error";
+
+//** IMPORTED SERVICES
+import TokenService from "../user.services/token.service";
 
 
 class ScoreService {
@@ -28,8 +31,11 @@ class ScoreService {
     }
 
     //* CLASSIC GAME MODE SAVE FUNCTION
-    public async saveScoreClassic(username: string, scoreStats: ClassicScoreStats): Promise<void> {
+    public async saveScoreClassic(scoreStats: ClassicScoreStats, token: string): Promise<void> {
         try {
+            const tokenService: TokenService = new TokenService();
+            const username: string = await tokenService.verifyAccessToken(token);
+
             const session: Session | undefined = this.driver?.session();
             const res: QueryResult | undefined = await session?.executeRead((tx: ManagedTransaction) =>
                 tx.run("MATCH (u:User {username: $username}) RETURN u", { username })
@@ -88,8 +94,12 @@ class ScoreService {
     }
     
     //* CLASSIC GAME MODE RETRIEVE SCORE FUNCTION
-    public async getHighScoreClassic(username: string): Promise<ClassicScoreStats[]> {
+    public async getHighScoreClassic(token: string): Promise<ClassicScoreStats[]> {
         try {
+
+            const tokenService: TokenService = new TokenService();
+            const username: string = await tokenService.verifyAccessToken(token);
+            
             const session: Session | undefined = this.driver?.session();
             const result: QueryResult | undefined = await session?.executeRead((tx: ManagedTransaction) =>
                 tx.run(`

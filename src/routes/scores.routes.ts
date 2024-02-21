@@ -19,13 +19,12 @@ const scores = (app: Elysia): void => {
                 throw new Error('Bearer token not found in Authorization header');
             }
             const jwtToken: string = authorizationHeader.substring(7);
-            const decodedToken = jwt.decode(jwtToken)  
-            const { userName } = decodedToken as { userName: string };
+
             const classicScoreStats: ClassicScoreStats = context.body as ClassicScoreStats
 
             const driver: Driver = getDriver();
             const scoreService:  ScoreService = new ScoreService(driver)
-            const output: void = await scoreService.saveScoreClassic(userName, classicScoreStats)
+            const output: void = await scoreService.saveScoreClassic(classicScoreStats, jwtToken)
 
           return output
         } catch (error: any) {
@@ -41,14 +40,12 @@ const scores = (app: Elysia): void => {
                 throw new Error('Bearer token not found in Authorization header');
             }
             const jwtToken: string = authorizationHeader.substring(7);
-            const decodedToken = jwt.decode(jwtToken)  
-            const { userName } = decodedToken as { userName: string };
-      
+
             const driver: Driver = getDriver();
             const scoreService: ScoreService = new ScoreService(driver)
-            const output: ClassicScoreStats[] = await scoreService.getHighScoreClassic(userName)
+            const output: ClassicScoreStats[] = await scoreService.getHighScoreClassic(jwtToken)
 
-          return output 
+          return output as ClassicScoreStats[]
         } catch (error: any) {
           throw error
         }

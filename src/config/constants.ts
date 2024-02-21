@@ -1,4 +1,4 @@
-import ip from 'ip'
+
 import { Mumbai } from "@thirdweb-dev/chains";
 
 
@@ -10,8 +10,6 @@ export const API_ID: string | undefined = process.env.API_ID;
 export const HOST: string = process.env.HOST || 'localhost';
 export const JWT_SECRET: string = process.env.JWT_SECRET || 'a secret key';
 export const SALT_ROUNDS: string | "" = process.env.SALT_ROUNDS || ""
-export const IP_ADDRESS: string = ip.address()
-export const SERVER_ID: string = `${IP_ADDRESS}:${APP_PORT}`;
 
 // Neo4j Database Configuration
 export const NEO4J_URI: string = process.env.NEO4J_URI || ""
@@ -30,7 +28,6 @@ export const KEYDB_HOST: string | undefined = process.env.KEYDB_HOST;
 export const INFLUXDB_TOKEN: string | undefined = process.env.INFLUXDB_TOKEN
 export const INFLUXDB_ORG: string = `GMR Test`
 export const INFLUXDB_BUCKET: string = `Chat`
-
 
 export const KDB: { host: string | undefined; port: string | number; password: string | undefined } = {
   host: process.env.KEYDB_HOST,
@@ -53,6 +50,8 @@ export const EDITION_ADDRESS: string = '0x09F143c0222505D7985482fCc7D3Abf7E3C987
 export const CARD_MARKETPLACE: string = '0x7dc65A3EeBdFbCAC10C9f0a0ecaA62f98a8d1f00'; // ** CARD MARKETPLACE ADDRESS
 export const BUNDLE_MARKETPLACE: string = '0xcd5CB69Dcc7D52eAe5CD99Cc43F92F329507ED6E'; // ** LOOTBOX MARKETPLACE ADDRESS
 
+export const GOOGLE_CLIENT_ID: string | undefined = process.env.GOOGLE_CLIENT_ID
+export const GOOGLE_CLIENT_SECRET: string | undefined = process.env.GOOGLE_CLIENT_SECRET
 
 const factoryAddress: string = FACTORIES[CHAIN.chainId];
 export const SMART_WALLET_CONFIG: {

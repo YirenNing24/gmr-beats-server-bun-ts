@@ -4,20 +4,27 @@
  * Represents the return data structure for validating a user session.
  *
  * @interface ValidateSessionReturn
+ * @property {string} username - The username of the validated user session.
  * @property {WalletData} wallet - User wallet information.
  * @property {SafeProperties} safeProperties - Safe user properties.
  * @property {PlayerStats} playerStats - Player statistics.
- * @property {string} success - Indicates the success status.
  * @property {number} energy - User energy level.
+ * @property {string} uuid - Unique identifier for the user.
+ * @property {string} accessToken - The access token associated with the user session.
+ * @property {string} message - A message indicating the result of the session validation.
+ * @property {string} success - A string indicating the success status of the session validation.
  */
 export interface ValidateSessionReturn {
-    wallet: WalletData;
-    safeProperties: SafeProperties;
-    playerStats: PlayerStats;
-    success: string;
-    energy: number;
-  }
-  
+  username: string;
+  wallet: WalletData;
+  safeProperties: SafeProperties;
+  playerStats: PlayerStats;
+  energy: number;
+  uuid: string;
+  accessToken: string;
+  message: string;
+  success: string;
+}
 /**
  * Represents the return data structure for authenticating a user.
  *
@@ -260,4 +267,9 @@ export interface TokenScheme {
   refreshToken: string;
   accessToken: string;
   username: string;
+}
+
+export interface AccessRefresh {
+  accessToken: string
+  userName: string
 }

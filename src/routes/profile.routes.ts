@@ -21,10 +21,19 @@ import { SuccessMessage } from '../outputs/success.message'
 const router = (app: Elysia) => {
   app.post('/api/update/statpoints', async (context): Promise<any | UpdateStatsFailed | Error > => {
     try {
+
+      const authorizationHeader = context.headers.authorization;
+      if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+          throw new Error('Bearer token not found in Authorization header');
+      }
+      const jwtToken: string = authorizationHeader.substring(7);
+
       const statPoints = context.body;
       const driver: Driver = getDriver();
+
       const profileService = new ProfileService(driver);
-      const output: any | UpdateStatsFailed = await profileService.updateStats(statPoints);
+
+      const output: any | UpdateStatsFailed = await profileService.updateStats(statPoints, jwtToken);
 
       return output as any | UpdateStatsFailed 
     } catch (error: any) {
@@ -39,13 +48,12 @@ const router = (app: Elysia) => {
         throw new Error('Bearer token not found in Authorization header');
       }
       const jwtToken: string = authorizationHeader.substring(7);
-      const decodedToken: string | jwt.JwtPayload = jwt.verify(jwtToken, JWT_SECRET);
-      const { userName } = decodedToken as { userName: string };
+
       const { bufferData } = context.body as { bufferData: ArrayBuffer }
 
       const driver: Driver = getDriver();
       const profileService: ProfileService = new ProfileService(driver);
-      const output: SuccessMessage = await profileService.uploadProfilePic(bufferData, userName);
+      const output: SuccessMessage = await profileService.uploadProfilePic(bufferData, jwtToken);
 
       return output as SuccessMessage
     } catch (error: any) {
@@ -60,12 +68,11 @@ const router = (app: Elysia) => {
         throw new Error('Bearer token not found in Authorization header');
       }
       const jwtToken: string = authorizationHeader.substring(7);
-      const decodedToken: string | jwt.JwtPayload = jwt.verify(jwtToken, JWT_SECRET);
-      const { userName } = decodedToken as { userName: string };
+
 
       const driver: Driver = getDriver();
       const profileService: ProfileService = new ProfileService(driver);
-      const output: ProfilePicture[] = await profileService.getProfilePic(userName);
+      const output: ProfilePicture[] = await profileService.getProfilePic(jwtToken);
 
       return output as ProfilePicture[]
     } catch (error: any) {

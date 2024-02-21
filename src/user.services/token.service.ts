@@ -5,11 +5,10 @@ import { createSigner, createVerifier } from 'fast-jwt';
 import { JWT_SECRET } from '../config/constants';
 
 //** TYPE INTERFACE IMPORT
-import { TokenScheme } from './user.service.interface';
+import { AccessRefresh, TokenScheme } from './user.service.interface';
 
 const ACCESS_TOKEN_EXPIRY = '1m'; // Set your desired access token expiry time
 const REFRESH_TOKEN_EXPIRY = '2m'; // Set your desired refresh token expiry time
-
 
 
 class TokenService {
@@ -19,7 +18,7 @@ class TokenService {
             const signSync = createSigner({ key: JWT_SECRET, expiresIn: REFRESH_TOKEN_EXPIRY });
             const refreshToken: string = signSync({ userName: username });
 
-            const accessToken: string = await this.generateAccessToken(username, refreshToken);
+            const accessToken: string = await this.generateAccessToken(username);
 
             return { refreshToken, accessToken, username } as TokenScheme;
         } catch (error : any) {
@@ -28,9 +27,9 @@ class TokenService {
         }
     }
 
-    private async generateAccessToken(username: string, refreshToken: string): Promise<string> {
+    private async generateAccessToken(username: string): Promise<string> {
         try {
-            const signSync = createSigner({ key: refreshToken, expiresIn: ACCESS_TOKEN_EXPIRY });
+            const signSync = createSigner({ key: JWT_SECRET, expiresIn: ACCESS_TOKEN_EXPIRY });
             const accessToken: string = signSync({ userName: username });
 
             return accessToken as string
@@ -39,6 +38,36 @@ class TokenService {
         }
     }
 
+    public async verifyAccessToken(token: string): Promise<string> {
+        try {
+            const verifyAccessTokenSync = createVerifier({ key:  JWT_SECRET });
+            const decodedToken = verifyAccessTokenSync(token);
+    
+            const { userName } = decodedToken as { userName: string };
+    
+            return userName as string;
+        } catch (error: any) {
+            throw error
+
+        }
+    }
+
+    public async verifyRefreshToken(token: string): Promise<AccessRefresh> {
+        try{
+            const verifyAccessTokenSync = createVerifier({ key:  JWT_SECRET });
+            const decodedToken = verifyAccessTokenSync(token);
+            
+            const { userName } = decodedToken as { userName: string };
+            const accessToken: string = await this.generateAccessToken(userName)
+
+            return { accessToken, userName } as AccessRefresh
+        } catch(error: any) {
+            throw error
+        }
+    }
+
+
+
     // public async verifyToken(accessToken: string, refreshToken: string): Promise<TokenScheme | string> {
     //     try {
     //         const verifyAccessTokenSync = createVerifier({ key: refreshToken });
@@ -46,9 +75,7 @@ class TokenService {
     
     //         // Access token is verified successfully
     //         const verifyRefreshTokenSync = createVerifier({ key: refreshToken });
-    //         const decodedToken = verifyRefreshTokenSync(accessToken);
-    
-    //         const { userName } = decodedToken as { userName: string };
+
     
     //         return userName as string
     //     } catch (error: any) {
