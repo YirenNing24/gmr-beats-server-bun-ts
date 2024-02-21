@@ -53,8 +53,8 @@ const auth = (app: Elysia): void => {
     try {
 
       console.log(context.body)
-        const token: any = context.body
-        const { serverToken } = token as { serverToken: string }
+       const token: any = context.body
+       const { serverToken } = token as { serverToken: string }
        const driver: Driver = getDriver();
        const authService: AuthService = new AuthService(driver);
        const output = await authService.googleServer(serverToken);
