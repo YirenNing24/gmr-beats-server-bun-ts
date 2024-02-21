@@ -204,6 +204,9 @@ class AuthService {
       
       const oAuth2Client = new OAuth2Client(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
       const { tokens } = await oAuth2Client.getToken(token);
+
+
+      console.log(tokens)
   
       // endpoint: https://games.googleapis.com
       const fetch = edenFetch<typeof app>('http://localhost:8085') 
