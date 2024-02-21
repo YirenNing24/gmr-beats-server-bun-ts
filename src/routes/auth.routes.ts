@@ -17,6 +17,8 @@ const auth = (app: Elysia): void => {
   app.post("api/login/beats", async (context: Context) => {
     try {
       const { username, password } = context.body as { username: string; password: string };
+
+      console.log(context.body)
       const driver: Driver = getDriver();
       const authService: AuthService = new AuthService(driver);
       const output: AuthenticateReturn = await authService.authenticate(username, password);
@@ -49,6 +51,8 @@ const auth = (app: Elysia): void => {
 
   .post("api/login/google", async (context: Context) => {
     try {
+
+      console.log(context.body)
         const token: any = context.body
         const { serverToken } = token as { serverToken: string }
        const driver: Driver = getDriver();
