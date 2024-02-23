@@ -246,13 +246,8 @@ export interface LocalWallet {
  * @property {string} time - A string representing the time associated with the user.
  */
 export interface User {
-  anon: boolean;
-  email: string;
-  userName: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  time: string;
+  userName: string
+  password: string
 }
 
 /**
@@ -264,9 +259,9 @@ export interface User {
  * @property {string} username - The username associated with the tokens.
  */
 export interface TokenScheme {
-  refreshToken: string;
-  accessToken: string;
-  username: string;
+  refreshToken: string
+  accessToken: string
+  username: string
 }
 
 /**

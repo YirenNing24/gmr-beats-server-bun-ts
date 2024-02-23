@@ -72,6 +72,8 @@ const auth = (app: Elysia): void => {
        const authService: AuthService = new AuthService(driver);
        const output: GoogleRegistered = await authService.googleCheck(serverToken)
 
+       
+
       //  await authService.googleServer(serverToken);
 
       //  return output
