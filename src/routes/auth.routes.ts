@@ -63,21 +63,22 @@ const auth = (app: Elysia): void => {
     }
   })
 
-  // .post("api/login/google", async (context: Context) => {
-  //   try {
-  //     const token: any = context.body as { serverToken: string }
-  //     const { serverToken } = token as { serverToken: string }
+   .post("api/login/google", async (context: Context) => {
+     try {
+       const token: any = context.body as { serverToken: string }
+      const { serverToken } = token as { serverToken: string }
 
-  //     const driver: Driver = getDriver();
-  //     const authService: AuthService = new AuthService(driver);
+       const driver: Driver = getDriver();
+       const authService: AuthService = new AuthService(driver);
+       const output: GoogleRegistered = await authService.googleCheck(serverToken)
 
-  //     await authService.googleServer(serverToken);
+      //  await authService.googleServer(serverToken);
 
-  //     return output
-  //   } catch (error: any) {
-  //     return error
-  //   }
-  // })
+      //  return output
+     } catch (error: any) {
+       return error
+     }
+   })
 
 
 

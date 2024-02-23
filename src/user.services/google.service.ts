@@ -10,7 +10,7 @@ import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from "../config/constants";
 
 
 class GoogleService {
-    async googleAuth(token: string): Promise<PlayerInfo> {
+    public async googleAuth(token: string): Promise<PlayerInfo> {
         try{
             const oAuth2Client = new OAuth2Client( GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
             const { tokens } = await oAuth2Client.getToken(token) as GetTokenResponse
@@ -21,7 +21,8 @@ class GoogleService {
             headers: { Authorization: `Bearer ${tokens.access_token}` },
             });
 
-            const playerInfo: PlayerInfo = await response.json() as PlayerInfo
+            const playerInfo: PlayerInfo = await response.json() as PlayerInfo ;
+            console.log(playerInfo)
 
             return playerInfo as PlayerInfo
         } catch(error: any){
