@@ -65,14 +65,17 @@ const auth = (app: Elysia): void => {
 
    .post("api/login/google", async (context: Context) => {
      try {
-       const token: any = context.body as { serverToken: string }
-      const { serverToken } = token as { serverToken: string }
+      const token: any = context.body as { serverToken: string };
+      const { serverToken } = token as { serverToken: string };
+      console.log(serverToken)
 
-       const driver: Driver = getDriver();
-       const authService: AuthService = new AuthService(driver);
-       const output: GoogleRegistered = await authService.googleCheck(serverToken)
 
-       console.log(output)
+
+      const driver: Driver = getDriver();
+      const authService: AuthService = new AuthService(driver);
+      const output: GoogleRegistered = await authService.googleCheck(serverToken)
+
+      console.log(output)
 
 
 
