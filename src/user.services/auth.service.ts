@@ -178,6 +178,7 @@ class AuthService {
             accessToken,
             message: 'You are now logged in',
             success: 'OK',
+            loginType: 'beats'
 
         } as AuthenticateReturn
     } catch (error: any) {
@@ -270,7 +271,7 @@ class AuthService {
         (tx: ManagedTransaction) => tx.run(
             `
             CREATE (u:User { 
-              userId: $userId,
+              userId: $playerId,
               username: $userName,
               password: $encrypted,
               localWallet: $localWallet, 
@@ -307,6 +308,65 @@ class AuthService {
         } finally {
           await session.close()
         }
+  };
+
+  public async googleLogin(token: string) {
+    const walletService: WalletService = new WalletService();
+    const profileService: ProfileService = new ProfileService();
+    const replenishService: Replenishments = new Replenishments();
+    const tokenService: TokenService = new TokenService();
+
+    const googleService: GoogleService = new GoogleService();
+    const playerInfo: PlayerInfo = await googleService.googleAuth(token);
+    const { displayName, playerId } = playerInfo as PlayerInfo;
+    const userName: string = displayName;
+
+    try {
+
+      const session: Session = this.driver.session();
+      // Find the user node within a Read Transaction
+      const result: QueryResult = await session.executeRead((tx: ManagedTransaction) =>
+          tx.run('MATCH (u:User {userId: $playerId}) RETURN u', { userName, playerId })
+      );
+
+      await session.close();
+      // Verify the user exists
+      if (result.records.length === 0) {
+          throw new ValidationError(`User with username '${userName}' not found.`, "");
+      }
+
+      // Compare Passwords
+      const user: UserData = result.records[0].get('u');
+
+      // Return User Details
+      const { password, localWallet, localWalletKey, playerStats, userId, username, cardInventory, powerUpInventory, ...safeProperties } = user.properties
+
+      const walletPromise: Promise<WalletData> = walletService.importWallet(localWallet, localWalletKey);
+      const energyPromise: Promise<number> = replenishService.getEnergy(userName, playerStats);
+      const statsPromise: Promise<PlayerStats> = profileService.getStats(userName)
+      const [ wallet, energy, stats ] = await Promise.all([walletPromise, energyPromise, statsPromise]);
+
+      const tokens: TokenScheme = await tokenService.generateTokens(userName);
+      const { refreshToken, accessToken } = tokens as TokenScheme
+      return {
+          username,
+          wallet,
+          safeProperties,
+          playerStats: stats,
+          energy,
+          uuid: userId,
+          refreshToken,
+          accessToken,
+          message: 'You are now logged in',
+          success: 'OK',
+          loginType: 'google'
+
+      } as AuthenticateReturn
+
+    } catch(error: any) {
+
+    }
+
   };
     
   public async googleCheck(token: string): Promise<GoogleRegistered> {
