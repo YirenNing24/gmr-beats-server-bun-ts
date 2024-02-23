@@ -1,5 +1,8 @@
 //**TODO SPACE IN LAST NAME SHOULD BE ALLOWED */
 //**TODO SERVER VALIDATE REGISTRATION */
+//**TODO ADD USERID CONSTRAINT
+//**TODO ADD EMAIL IN THE CONSTRAINT */
+
 
 //** JWT MODULE, AND CONFIGS IMPORTS
 import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SALT_ROUNDS } from '../config/constants'
@@ -18,9 +21,7 @@ import WalletService from './wallet.service'
 import Replenishments from '../game.services/replenishments.service.js'
 import ProfileService from '../game.services/profile.service'
 import TokenService from './token.service.js'
-
-//** GOOGLE AUTH IMPORTS
-import { OAuth2Client } from 'google-auth-library'
+import GoogleService from './google.service.js'
 
 //** UUID GENERATOR
 import { nanoid } from "nanoid/async";
@@ -29,10 +30,8 @@ import { nanoid } from "nanoid/async";
 import { Driver, QueryResult, Session,  ManagedTransaction } from 'neo4j-driver-core'
 
 //** TYPE INTERFACES
-import { LocalWallet, WalletData, UserData, ValidateSessionReturn, AuthenticateReturn, PlayerStats, TokenScheme, AccessRefresh } from './user.service.interface'
+import { LocalWallet, WalletData, UserData, ValidateSessionReturn, AuthenticateReturn, PlayerStats, TokenScheme, AccessRefresh, PlayerInfo, User, GoogleRegistered } from './user.service.interface'
 
-import { edenFetch } from '@elysiajs/eden'
-import app from '../app.js'
 /**
  * Service for handling authentication-related operations.
  * 
@@ -60,48 +59,41 @@ class AuthService {
    * @param {string} password - The password of the new user.
    * @returns {Promise<void>} A Promise that resolves when the registration is successful.
    */
-  public async register(anon: boolean, email: string, password: string, userName: string, firstName: string, lastName: string, time: string): Promise<void> {
+  public async register(userData: User): Promise<void> {
     const walletService: WalletService = new WalletService();
-    const replenishService: Replenishments = new Replenishments()
+    const replenishService: Replenishments = new Replenishments();
 
-    const userId: string = await nanoid()
+    const userId: string = await nanoid();
     const inventoryCard: string = JSON.stringify(cardInventory);
-    const statsPlayer: string = JSON.stringify(playerStats)
-    const inventoryPowerUp: string = JSON.stringify(powerUpInventory)
-    const equipIve: string = JSON.stringify(iveEquip)
-    
-    const encrypted: string = await hash(password, parseInt(SALT_ROUNDS))
-    const locKey: string = await hash(userName, parseInt(SALT_ROUNDS))
+    const statsPlayer: string = JSON.stringify(playerStats);
+    const inventoryPowerUp: string = JSON.stringify(powerUpInventory);
+    const equipIve: string = JSON.stringify(iveEquip);
+
+    const { userName, password } = userData as User
+    const encrypted: string = await hash(password, parseInt(SALT_ROUNDS));
+    const locKey: string = await hash(userName, parseInt(SALT_ROUNDS));
 
     const localWallet = await walletService.createWallet(locKey) as LocalWallet
-    const timeZone: string = await this.getTimezone(time)
-    // Open a new session
-    const session: Session = this.driver.session()
+
+    const session: Session = this.driver.session();
     try {
-      // Create the User node in a write transaction
        await session.executeWrite(
         (tx: ManagedTransaction) => tx.run(
            `
              CREATE (u:User { 
                userId: $userId,
-               anon: $anon,
-               email: $email,
                username: $userName,
                password: $encrypted,
-               firstName: $firstName,
-               lastName: $lastName,
                localWallet: $localWallet, 
                localWalletKey: $locKey,
                cardInventory: $inventoryCard,
                iveEquip: $equipIve,
                playerStats: $statsPlayer,
-               powerUpInventory: $inventoryPowerUp,
-               profilePics: $profilePics,
-               timeZone: $timeZone
+               powerUpInventory: $inventoryPowerUp
              })
              RETURN u
            `,
-           { userId, anon, email, userName, encrypted, firstName, lastName, localWallet, locKey, inventoryCard, equipIve, statsPlayer, inventoryPowerUp, profilePics: [], timeZone }
+           { userId, userName, encrypted, localWallet, locKey, inventoryCard, equipIve, statsPlayer, inventoryPowerUp }
          ) 
        )
 
@@ -115,12 +107,7 @@ class AuthService {
     } catch (error: any) {
       // Handle unique constraints in the database
       if (error.code === 'Neo.ClientError.Schema.ConstraintValidationFailed') {
-        if (error.message.includes('email')) {
-          throw new ValidationError(
-            `An account already exists with the email address ${email}`,
-              'Email address already taken',
-          )
-        } else if (error.message.includes('username')) {
+        if (error.message.includes('username')) {
           throw new ValidationError(
             `An account already exists with the username ${userName}`,
               'Username already taken',
@@ -198,44 +185,7 @@ class AuthService {
     }
   };
 
-  public async googleServer(token: string) {
-    try {
-      
-      console.log(token)
-      const oAuth2Client = new OAuth2Client(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
-
-      const { tokens } = await oAuth2Client.getToken(token);
-
-      console.log("tae: ", tokens)
-
-       // endpoint: https://games.googleapis.com
-      // const fetch = edenFetch<typeof app>('http://localhost:8085') 
-
-      const apiUrl: string = 'https://games.googleapis.com/games/v1/players/me';
-
-       //@ts-ignore
-    //    const response = await fetch(apiUrl, {
-    //      method: 'GET',
-    //      headers: { Authorization: `Bearer ${tokens.access_token}` }
-    //  })
-
-    //  console.log(response)
-
-      const response: Response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${tokens.access_token}` },
-      });
-  
-      const playerInfo: any = await response.json();
-      console.log('Player Info:', playerInfo);
-
-    } catch (error: any) {
-      console.error('An error occurred:', error);
-      return null; // or handle the error accordingly
-    }
-  }
-
-  /**
+    /**
    * Validates a user's session using JWT
    * @method
    * @memberof AuthService
@@ -245,62 +195,145 @@ class AuthService {
    * @throws {ValidationError} Throws a validation error if the user is not found.
    */
   public async validateSession(token: string): Promise<ValidateSessionReturn>  {
+      try {
+        // Create a new instance of the needed services class
+        const walletService: WalletService = new WalletService();
+        const replenishService: Replenishments = new Replenishments();
+        const tokenService: TokenService = new TokenService();
+  
+        const accessRefresh: AccessRefresh = await tokenService.verifyRefreshToken(token)
+        const { userName, accessToken } = accessRefresh as AccessRefresh
+  
+        // Open a new session
+        const session:Session = this.driver.session();
+        const result :QueryResult = await session.executeRead(tx =>
+          tx.run(`MATCH (u:User {username: $userName}) RETURN u`, { userName })
+        );
+  
+        // Close the session
+        await session.close();
+        // Verify the user exists
+        if (result.records.length === 0) {
+          throw new ValidationError(`User with username '${userName}' not found.`, "");
+        }
+        
+        const userData: UserData = result.records[0].get('u');
+        const { localWallet, localWalletKey, playerStats, password, userId, cardInventory, powerUpInventory, username, ...safeProperties } = userData.properties;
+        
+        // Import the user's smart wallet using the WalletService class
+        const walletPromise: Promise<WalletData> = walletService.importWallet(localWallet, localWalletKey);
+        const energyPromise: Promise<number> = replenishService.getEnergy(username, playerStats) ;
+  
+        // const statsPromise = profileService.getStats(username);
+        const [walletSmart, energy ] = await Promise.all([walletPromise, energyPromise ]);
+  
+        // Return an object containing the user's smart wallet, safe properties, success message, and JWT token
+        return {
+          username,
+          wallet: walletSmart,
+          safeProperties,
+          playerStats,
+          energy,
+          uuid: userId,
+          accessToken,
+          message: "You are now logged-in",
+          success: "OK", } as ValidateSessionReturn
+        } catch (error: any) {
+          throw error;
+        }
+  };
+
+  public async googleRegister(token: string): Promise<void> {
+    const walletService: WalletService = new WalletService();
+    const replenishService: Replenishments = new Replenishments();
+
+    const googleService: GoogleService = new GoogleService();
+    const playerInfo: PlayerInfo = await googleService.googleAuth(token);
+    const { displayName, playerId } = playerInfo as PlayerInfo;
+    const userName: string = displayName;
+    const session: Session = this.driver.session();
+
     try {
-      // Create a new instance of the needed services class
-      const walletService: WalletService = new WalletService();
-      const replenishService: Replenishments = new Replenishments();
-      const tokenService: TokenService = new TokenService();
+      
+      const inventoryCard: string = JSON.stringify(cardInventory);
+      const statsPlayer: string = JSON.stringify(playerStats);
+      const inventoryPowerUp: string = JSON.stringify(powerUpInventory);
+      const equipIve: string = JSON.stringify(iveEquip);
 
-      const accessRefresh: AccessRefresh = await tokenService.verifyRefreshToken(token)
-      const { userName, accessToken } = accessRefresh as AccessRefresh
+      const password: string = await nanoid()
+      const encrypted: string = await hash(password, parseInt(SALT_ROUNDS));
+      const locKey: string = await hash(displayName, parseInt(SALT_ROUNDS));
+  
+      const localWallet: LocalWallet = await walletService.createWallet(locKey) as LocalWallet
 
-      // Open a new session
-      const session:Session = this.driver.session();
-      const result :QueryResult = await session.executeRead(tx =>
-        tx.run(`MATCH (u:User {username: $userName}) RETURN u`, { userName })
+      await session.executeWrite(
+        (tx: ManagedTransaction) => tx.run(
+            `
+            CREATE (u:User { 
+              userId: $userId,
+              username: $userName,
+              password: $encrypted,
+              localWallet: $localWallet, 
+              localWalletKey: $locKey,
+              cardInventory: $inventoryCard,
+              iveEquip: $equipIve,
+              playerStats: $statsPlayer,
+              powerUpInventory: $inventoryPowerUp
+            })
+            RETURN u
+          `,
+            { playerId, userName , encrypted, localWallet, locKey, inventoryCard, equipIve, statsPlayer, inventoryPowerUp }
+          ) 
+        )
+  
+        // Close the session
+        await session.close()
+  
+        // Set energy for new users to 200
+        const currentTime: number = Math.floor(Date.now() / 1000);
+        await replenishService.setEnergy(userName, currentTime, 200, 1)
+  
+      } catch (error: any) {
+        // Handle unique constraints in the database
+        if (error.code === 'Neo.ClientError.Schema.ConstraintValidationFailed') {
+          if (error.message.includes('username')) {
+            throw new ValidationError(
+              `An account already exists with the email address ${userName}`,
+                'Email address already taken',
+            )
+          }
+          }
+          throw error
+        } finally {
+          await session.close()
+        }
+  };
+    
+  public async googleCheck(token: string): Promise<GoogleRegistered> {
+    try {
+      const googleService: GoogleService = new GoogleService();
+      const playerInfo: PlayerInfo = await googleService.googleAuth(token);
+      const { displayName, playerId } = playerInfo as PlayerInfo;
+
+      const session: Session = this.driver.session();
+      const result: QueryResult = await session.executeRead((tx: ManagedTransaction) =>
+        tx.run(`
+          MATCH (u:User)
+          WHERE u.username = $displayName OR u.userId = $playerId
+          RETURN u
+        `, { displayName, playerId })
       );
-
+  
       // Close the session
       await session.close();
-      // Verify the user exists
-      if (result.records.length === 0) {
-        throw new ValidationError(`User with username '${userName}' not found.`, "");
-      }
-      
-      const userData: UserData = result.records[0].get('u');
-      const { localWallet, localWalletKey, playerStats, password, userId, cardInventory, powerUpInventory, username, ...safeProperties } = userData.properties;
-      
-      // Import the user's smart wallet using the WalletService class
-      const walletPromise: Promise<WalletData> = walletService.importWallet(localWallet, localWalletKey);
-      const energyPromise: Promise<number> = replenishService.getEnergy(username, playerStats) ;
-
-      // const statsPromise = profileService.getStats(username);
-      const [walletSmart, energy ] = await Promise.all([walletPromise, energyPromise ]);
-
-      // Return an object containing the user's smart wallet, safe properties, success message, and JWT token
-      return {
-        username,
-        wallet: walletSmart,
-        safeProperties,
-        playerStats,
-        energy,
-        uuid: userId,
-        accessToken,
-        message: "You are now logged-in",
-        success: "OK", } as ValidateSessionReturn
-      } catch (error: any) {
-        throw error;
-      }
-    };
-
-
-  private async getTimezone(dateTime: string) {
-    const dateObject: Date = new Date(dateTime);
-    const offsetMinutes: number = dateObject.getTimezoneOffset();
-    const timezone: string = `UTC${offsetMinutes >= 0 ? '-' : '+'}${Math.abs(offsetMinutes / 60)}`;
-    return timezone as string;
-    };
-
+  
+      // Return boolean based on the existence of records
+      return { registered: result.records.length > 0 } as GoogleRegistered
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  
 };
 
 export default AuthService
