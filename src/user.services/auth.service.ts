@@ -318,6 +318,9 @@ class AuthService {
     const googleService: GoogleService = new GoogleService();
     const playerInfo: PlayerInfo = await googleService.googleAuth(token);
     const { displayName, playerId } = playerInfo as PlayerInfo;
+
+
+    console.log(playerInfo)
     const userName: string = displayName;
 
     const walletService: WalletService = new WalletService();
