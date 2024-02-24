@@ -268,8 +268,6 @@ class AuthService {
       const encrypted: string = await hash(password, parseInt(SALT_ROUNDS));
       const locKey: string = await hash(displayName, parseInt(SALT_ROUNDS));
 
-      console.log(password)
-  
       const localWallet: LocalWallet = await walletService.createWallet(locKey) as LocalWallet
 
       await session.executeWrite(
