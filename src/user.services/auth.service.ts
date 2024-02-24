@@ -260,6 +260,8 @@ class AuthService {
     const session: Session = this.driver.session();
     const registered: boolean = await this.googleCheck(token);
 
+    console.log(registered)
+
     if (registered === true) {
       throw new ValidationError(`You already have an account`, 
       'Username already have an account')
