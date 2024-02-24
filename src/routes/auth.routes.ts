@@ -61,7 +61,7 @@ const auth = (app: Elysia): void => {
 
        const driver: Driver = getDriver();
        const authService: AuthService = new AuthService(driver);
-       const output: AuthenticateReturn = await authService.googleLogin(serverToken);
+       const output: AuthenticateReturn | ValidationError = await authService.googleLogin(serverToken);
 
        console.log('login route: ', output)
        return output as AuthenticateReturn

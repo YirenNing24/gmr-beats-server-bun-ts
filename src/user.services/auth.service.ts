@@ -314,7 +314,7 @@ class AuthService {
         }
     };
 
-  public async googleLogin(token: string): Promise<AuthenticateReturn> {
+  public async googleLogin(token: string): Promise<AuthenticateReturn | ValidationError> {
     const googleService: GoogleService = new GoogleService();
     const playerInfo: PlayerInfo = await googleService.googleAuth(token);
     const { displayName, playerId } = playerInfo as PlayerInfo;
@@ -339,8 +339,8 @@ class AuthService {
       await session.close();
       // Verify the user exists
       if (result.records.length === 0) {
-           console.log('none')
-          throw new ValidationError(`User with playerId '${playerId}' not found.`, "");
+          console.log('none')
+          return new ValidationError(`User with playerId '${playerId}' not found.`, "");
       }
 
       // Compare Passwords
