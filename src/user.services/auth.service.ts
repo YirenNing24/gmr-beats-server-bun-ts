@@ -247,6 +247,9 @@ class AuthService {
 
 
   public async googleRegister(token: string): Promise<void | ValidationError> {
+
+
+    console.log(token)
     const walletService: WalletService = new WalletService();
     const replenishService: Replenishments = new Replenishments();
 
