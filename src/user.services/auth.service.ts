@@ -248,14 +248,14 @@ class AuthService {
 
   public async googleRegister(token: string): Promise<void | ValidationError> {
 
-
-    console.log(token)
     const walletService: WalletService = new WalletService();
     const replenishService: Replenishments = new Replenishments();
 
     const googleService: GoogleService = new GoogleService();
     const playerInfo: PlayerInfo = await googleService.googleAuth(token);
     const { displayName, playerId } = playerInfo as PlayerInfo;
+
+    console.log(playerInfo)
     const userName: string = displayName;
     const session: Session = this.driver.session();
     const registered: boolean = await this.googleCheck(token);
@@ -307,6 +307,7 @@ class AuthService {
         await replenishService.setEnergy(userName, currentTime, 200, 1)
   
       } catch (error: any) {
+        console.log(error)
         // Handle unique constraints in the database
         if (error.code === 'Neo.ClientError.Schema.ConstraintValidationFailed') {
           if (error.message.includes('username')) {
