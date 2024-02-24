@@ -22,7 +22,6 @@ class GoogleService {
             });
 
             const playerInfo: PlayerInfo = await response.json() as PlayerInfo ;
-            console.log(playerInfo)
 
             return playerInfo as PlayerInfo
         } catch(error: any){

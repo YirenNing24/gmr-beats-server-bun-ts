@@ -374,32 +374,6 @@ class AuthService {
 
     };
 
-  private async googleCheck(token: string): Promise<boolean> {
-    try {
-      const googleService: GoogleService = new GoogleService();
-      const playerInfo: PlayerInfo = await googleService.googleAuth(token);
-      const { displayName, playerId } = playerInfo as PlayerInfo;
-
-      const session: Session = this.driver.session();
-      const result: QueryResult = await session.executeRead((tx: ManagedTransaction) =>
-        tx.run(`
-          MATCH (u:User)
-          WHERE u.username = $displayName OR u.userId = $playerId
-          RETURN u
-        `, { displayName, playerId })
-      );
-  
-      // Close the session
-      await session.close();
-      if  (result.records.length > 0) {
-        return true
-      } else {
-        return false
-      }
-    } catch (error: any) {
-      throw error;
-    }
-    };
  
 };
 
