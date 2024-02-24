@@ -1,9 +1,9 @@
 //** ELYSIA IMPORT
-import Elysia, { Context, t } from 'elysia'
+import Elysia, { Context } from 'elysia'
 
 //** SERVICE IMPORT
 import AuthService from '../user.services/auth.service'
-import { Type, type Static } from '@sinclair/typebox'
+
 
 //** MEMGRAPGH IMPORTS
 import { getDriver } from '../db/memgraph'
@@ -18,19 +18,6 @@ const auth = (app: Elysia): void => {
   app.post("api/login/beats", async (context: Context) => {
     try {
       const { username, password } = context.body as { username: string; password: string };
-
-      const bodySchema = Type.Object({
-        username: Type.String(),
-        password: Type.String(),
-      });
-
-
-      const bodyValidationResult = bodySchema.validate(context.body);
-
-      // If validation fails, throw an error
-      if (bodyValidationResult.failed()) {
-        throw new ValidationError(bodyValidationResult.message(), "");
-        }
 
       const driver: Driver = getDriver();
       const authService: AuthService = new AuthService(driver);
