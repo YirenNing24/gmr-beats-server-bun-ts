@@ -92,7 +92,6 @@ class AuthService {
                playerStats: $statsPlayer,
                powerUpInventory: $inventoryPowerUp
              })
-             RETURN u
            `,
            { userId, userName, encrypted, localWallet, locKey, inventoryCard, equipIve, statsPlayer, inventoryPowerUp }
          ) 
@@ -272,6 +271,8 @@ class AuthService {
       const password: string = await nanoid()
       const encrypted: string = await hash(password, parseInt(SALT_ROUNDS));
       const locKey: string = await hash(displayName, parseInt(SALT_ROUNDS));
+
+      console.log(password)
   
       const localWallet: LocalWallet = await walletService.createWallet(locKey) as LocalWallet
 
@@ -290,7 +291,6 @@ class AuthService {
               playerStats: $statsPlayer,
               powerUpInventory: $inventoryPowerUp
             })
-            RETURN u
           `,
             { playerId, userName , encrypted, localWallet, locKey, inventoryCard, equipIve, statsPlayer, inventoryPowerUp }
           ) 
