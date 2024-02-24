@@ -339,6 +339,7 @@ class AuthService {
       await session.close();
       // Verify the user exists
       if (result.records.length === 0) {
+           console.log('none')
           throw new ValidationError(`User with playerId '${playerId}' not found.`, "");
       }
 

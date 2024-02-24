@@ -63,7 +63,6 @@ const auth = (app: Elysia): void => {
        const authService: AuthService = new AuthService(driver);
        const output: AuthenticateReturn = await authService.googleLogin(serverToken);
 
-
        console.log('login route: ', output)
        return output as AuthenticateReturn
      } catch (error: any) {
