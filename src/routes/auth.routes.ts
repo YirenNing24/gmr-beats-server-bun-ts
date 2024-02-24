@@ -87,6 +87,8 @@ const auth = (app: Elysia): void => {
       const token: any = context.body as { serverToken: string };
       const { serverToken } = token as { serverToken: string };
 
+      console.log(token)
+
       const driver: Driver = getDriver();
       const authService: AuthService = new AuthService(driver);
       await authService.googleRegister(serverToken);
