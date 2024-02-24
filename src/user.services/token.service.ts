@@ -13,14 +13,13 @@ const REFRESH_TOKEN_EXPIRY = '2m'; // Set your desired refresh token expiry time
 
 class TokenService {
     public async generateTokens(username: string): Promise<TokenScheme> {
-        console.log(username)
         try {
             const signSync = createSigner({ key: JWT_SECRET, expiresIn: REFRESH_TOKEN_EXPIRY });
             const refreshToken: string = signSync({ userName: username });
 
             const accessToken: string = await this.generateAccessToken(username);
 
-            return { refreshToken, accessToken, username } as TokenScheme;
+            return { refreshToken, accessToken, userName: username } as TokenScheme;
         } catch (error : any) {
             console.log(error)
             throw new Error('Failed to generate refresh token');
@@ -52,15 +51,15 @@ class TokenService {
         }
     }
 
-    public async verifyRefreshToken(token: string): Promise<AccessRefresh> {
+    public async verifyRefreshToken(token: string): Promise<TokenScheme> {
         try{
             const verifyAccessTokenSync = createVerifier({ key:  JWT_SECRET });
             const decodedToken = verifyAccessTokenSync(token);
             
             const { userName } = decodedToken as { userName: string };
-            const accessToken: string = await this.generateAccessToken(userName)
+            const tokens: TokenScheme = await this.generateTokens(userName)
 
-            return { accessToken, userName } as AccessRefresh
+            return tokens as TokenScheme
         } catch(error: any) {
             throw error
         }

@@ -30,7 +30,7 @@ import { nanoid } from "nanoid/async";
 import { Driver, QueryResult, Session,  ManagedTransaction } from 'neo4j-driver-core'
 
 //** TYPE INTERFACES
-import { LocalWallet, WalletData, UserData, ValidateSessionReturn, AuthenticateReturn, PlayerStats, TokenScheme, AccessRefresh, PlayerInfo, User, GoogleRegistered } from './user.service.interface'
+import { LocalWallet, WalletData, UserData, ValidateSessionReturn, AuthenticateReturn, PlayerStats, TokenScheme, AccessRefresh, PlayerInfo, User } from './user.service.interface'
 
 /**
  * Service for handling authentication-related operations.
@@ -81,6 +81,7 @@ class AuthService {
         (tx: ManagedTransaction) => tx.run(
            `
              CREATE (u:User { 
+               accountType: "beats",
                userId: $userId,
                username: $userName,
                password: $encrypted,
@@ -184,7 +185,7 @@ class AuthService {
     } catch (error: any) {
         throw error;
     }
-  };
+    };
 
     /**
    * Validates a user's session using JWT
@@ -238,13 +239,15 @@ class AuthService {
           uuid: userId,
           accessToken,
           message: "You are now logged-in",
-          success: "OK", } as ValidateSessionReturn
+          success: "OK", 
+          loginType: 'beats',} as ValidateSessionReturn
         } catch (error: any) {
           throw error;
         }
-  };
+    };
 
-  public async googleRegister(token: string): Promise<void> {
+
+  public async googleRegister(token: string): Promise<void | ValidationError> {
     const walletService: WalletService = new WalletService();
     const replenishService: Replenishments = new Replenishments();
 
@@ -253,9 +256,14 @@ class AuthService {
     const { displayName, playerId } = playerInfo as PlayerInfo;
     const userName: string = displayName;
     const session: Session = this.driver.session();
+    const registered: boolean = await this.googleCheck(token);
+
+    if (registered === true) {
+      throw new ValidationError(`You already have an account`, 
+      'Username already have an account')
+    }
 
     try {
-      
       const inventoryCard: string = JSON.stringify(cardInventory);
       const statsPlayer: string = JSON.stringify(playerStats);
       const inventoryPowerUp: string = JSON.stringify(powerUpInventory);
@@ -270,7 +278,8 @@ class AuthService {
       await session.executeWrite(
         (tx: ManagedTransaction) => tx.run(
             `
-            CREATE (u:User { 
+            CREATE (u:User {
+              accountType: "google",
               userId: $playerId,
               username: $userName,
               password: $encrypted,
@@ -299,8 +308,8 @@ class AuthService {
         if (error.code === 'Neo.ClientError.Schema.ConstraintValidationFailed') {
           if (error.message.includes('username')) {
             throw new ValidationError(
-              `An account already exists with the email address ${userName}`,
-                'Email address already taken',
+              `An account already exists with the username ${userName}`,
+                'Username already taken',
             )
           }
           }
@@ -308,31 +317,31 @@ class AuthService {
         } finally {
           await session.close()
         }
-  };
+    };
 
-  public async googleLogin(token: string) {
-    const walletService: WalletService = new WalletService();
-    const profileService: ProfileService = new ProfileService();
-    const replenishService: Replenishments = new Replenishments();
-    const tokenService: TokenService = new TokenService();
-
+  public async googleLogin(token: string): Promise<AuthenticateReturn> {
     const googleService: GoogleService = new GoogleService();
     const playerInfo: PlayerInfo = await googleService.googleAuth(token);
     const { displayName, playerId } = playerInfo as PlayerInfo;
     const userName: string = displayName;
+
+    const walletService: WalletService = new WalletService();
+    const profileService: ProfileService = new ProfileService();
+    const replenishService: Replenishments = new Replenishments();
+    const tokenService: TokenService = new TokenService();
 
     try {
 
       const session: Session = this.driver.session();
       // Find the user node within a Read Transaction
       const result: QueryResult = await session.executeRead((tx: ManagedTransaction) =>
-          tx.run('MATCH (u:User {userId: $playerId}) RETURN u', { userName, playerId })
+          tx.run('MATCH (u:User {userId: $playerId}) RETURN u', { playerId })
       );
 
       await session.close();
       // Verify the user exists
       if (result.records.length === 0) {
-          throw new ValidationError(`User with username '${userName}' not found.`, "");
+          throw new ValidationError(`User with playerId '${playerId}' not found.`, "");
       }
 
       // Compare Passwords
@@ -364,12 +373,13 @@ class AuthService {
       } as AuthenticateReturn
 
     } catch(error: any) {
+      throw error
 
     }
 
-  };
-    
-  public async googleCheck(token: string): Promise<GoogleRegistered> {
+    };
+
+  private async googleCheck(token: string): Promise<boolean> {
     try {
       const googleService: GoogleService = new GoogleService();
       const playerInfo: PlayerInfo = await googleService.googleAuth(token);
@@ -386,14 +396,16 @@ class AuthService {
   
       // Close the session
       await session.close();
-  
-      // Return boolean based on the existence of records
-      return { registered: result.records.length > 0 } as GoogleRegistered
+      if  (result.records.length > 0) {
+        return true
+      } else {
+        return false
+      }
     } catch (error: any) {
       throw error;
     }
-  };
-  
+    };
+ 
 };
 
 export default AuthService

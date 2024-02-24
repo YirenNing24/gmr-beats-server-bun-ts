@@ -1,9 +1,9 @@
 //** ELYSIA IMPORT
-import Elysia, { Context } from 'elysia'
+import Elysia, { Context, t } from 'elysia'
 
 //** SERVICE IMPORT
 import AuthService from '../user.services/auth.service'
-
+import { Type, type Static } from '@sinclair/typebox'
 
 //** MEMGRAPGH IMPORTS
 import { getDriver } from '../db/memgraph'
@@ -11,22 +11,37 @@ import { Driver } from 'neo4j-driver'
 
 
 //** TYPE INTERFACES
-import { AuthenticateReturn, GoogleRegistered, GoogleToken, User, ValidateSessionReturn } from '../user.services/user.service.interface';
+import { AuthenticateReturn, User, ValidateSessionReturn } from '../user.services/user.service.interface';
+import ValidationError from '../outputs/validation.error';
 
 const auth = (app: Elysia): void => {
   app.post("api/login/beats", async (context: Context) => {
     try {
       const { username, password } = context.body as { username: string; password: string };
 
+      const bodySchema = Type.Object({
+        username: Type.String(),
+        password: Type.String(),
+      });
+
+
+      const bodyValidationResult = bodySchema.validate(context.body);
+
+      // If validation fails, throw an error
+      if (bodyValidationResult.failed()) {
+        throw new ValidationError(bodyValidationResult.message(), "");
+        }
+
       const driver: Driver = getDriver();
       const authService: AuthService = new AuthService(driver);
       const output: AuthenticateReturn = await authService.authenticate(username, password);
 
-      return output;
+      return output as AuthenticateReturn;
     } catch (error: any) {
       return error
     }
   })
+
 
   .post('/api/validate_session/beats', async (context: Context): Promise<ValidateSessionReturn> => {
     try {
@@ -39,24 +54,8 @@ const auth = (app: Elysia): void => {
       const driver: Driver = getDriver();
       const authService: AuthService = new AuthService(driver);
 
-      const output: ValidateSessionReturn = await authService.validateSession(jwtToken) 
-      return output as ValidateSessionReturn
-
-    } catch (error: any) {
-      throw error
-    }
-  })
-
-  .post("/api/check/google", async (context: Context): Promise<GoogleRegistered> => {
-    try {
-      const token: GoogleToken = context.body as GoogleToken
-      const { serverToken } = token as GoogleToken
-
-      const driver: Driver = getDriver();
-      const authService: AuthService = new AuthService(driver);
-      const output: GoogleRegistered = await authService.googleCheck(serverToken)
-
-      return output as GoogleRegistered
+      const output: ValidateSessionReturn = await authService.validateSession(jwtToken);
+      return output as ValidateSessionReturn;
 
     } catch (error: any) {
       throw error
@@ -65,37 +64,40 @@ const auth = (app: Elysia): void => {
 
    .post("api/login/google", async (context: Context) => {
      try {
-      const token: any = context.body as { serverToken: string };
-      const { serverToken } = token as { serverToken: string };
-      console.log(serverToken)
+       const token: any = context.body as { serverToken: string };
+       const { serverToken } = token as { serverToken: string };
 
+       const driver: Driver = getDriver();
+       const authService: AuthService = new AuthService(driver);
+       const output: AuthenticateReturn = await authService.googleLogin(serverToken);
 
-
-      const driver: Driver = getDriver();
-      const authService: AuthService = new AuthService(driver);
-      const output: GoogleRegistered = await authService.googleCheck(serverToken)
-
-      console.log(output)
-
-
-
-      //  await authService.googleServer(serverToken);
-
-      //  return output
+       return output as AuthenticateReturn
      } catch (error: any) {
-       return error
+       throw error
      }
    })
 
-
-
-  .post('/api/register/beats', async (context: Context) => {
+  .post('/api/register/beats', async (context: Context): Promise<void> => {
     try {
       const userData: User = context.body as User
 
       const driver: Driver = getDriver();
       const authService: AuthService = new AuthService(driver);
       await authService.register(userData);
+
+    } catch (error: any) {
+      return error
+    }
+  })
+
+  .post('/api/register/google', async (context: Context): Promise<void | ValidationError> => {
+    try {
+      const token: any = context.body as { serverToken: string };
+      const { serverToken } = token as { serverToken: string };
+
+      const driver: Driver = getDriver();
+      const authService: AuthService = new AuthService(driver);
+      await authService.googleRegister(serverToken);
 
     } catch (error: any) {
       return error

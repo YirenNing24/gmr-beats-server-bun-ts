@@ -35,8 +35,9 @@ export interface ValidateSessionReturn {
  * @property {PlayerStats} playerStats - Player statistics.
  * @property {number} energy - User energy level.
  * @property {string} uuid - Unique identifier for the user.
- * @property {string} validator - refreshToken token for the user session.
- * @property {string} lookup - AccessToken token for the user session.
+ * @property {string} refreshToken - refreshToken token for the user session.
+ * @property {string} AccessToken - AccessToken token for the user session.
+ * @property {string} loginType - The type of login or authentication the client used.
  * @property {string} message - A message indicating the result of the authentication.
  * @property {string} success - A string indicating the success status of the authentication.
  */
@@ -261,7 +262,7 @@ export interface User {
 export interface TokenScheme {
   refreshToken: string
   accessToken: string
-  username: string
+  userName: string
 }
 
 /**
@@ -346,16 +347,6 @@ export interface PlayerInfo {
   profileSettings: ProfileSettings;
   experienceInfo: PlayerExperienceInfo;
   title: string;
-}
-
-/**
- * Represents the result of a Google registration check.
- *
- * @interface GoogleRegistered
- * @property {boolean} registered - Indicates if the player is registered.
- */
-export interface GoogleRegistered {
-  registered: boolean
 }
 
 /**

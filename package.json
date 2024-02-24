@@ -16,6 +16,7 @@
     "@elysiajs/eden": "^0.8.1",
     "@elysiajs/jwt": "^0.6.4",
     "@influxdata/influxdb-client": "^1.33.2",
+    "@sinclair/typebox": "^0.32.14",
     "@thirdweb-dev/chains": "^0.1.38",
     "@thirdweb-dev/sdk": "^4.0.9",
     "@thirdweb-dev/storage": "^2.0.2",
