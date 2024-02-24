@@ -4,20 +4,25 @@ import Elysia, { Context } from 'elysia'
 //** SERVICE IMPORT
 import AuthService from '../user.services/auth.service'
 
-
 //** MEMGRAPGH IMPORTS
 import { getDriver } from '../db/memgraph'
 import { Driver } from 'neo4j-driver'
-
 
 //** TYPE INTERFACES
 import { AuthenticateReturn, User, ValidateSessionReturn } from '../user.services/user.service.interface';
 import ValidationError from '../outputs/validation.error';
 
+//** VALIDATOR IMPORTS */
+import { BeatsLoginSchemaType } from './typebox/schema.routes';
+import { loginValidation } from './typebox/schema.routes';
+
+
 const auth = (app: Elysia): void => {
   app.post("api/login/beats", async (context: Context) => {
     try {
-      const { username, password } = context.body as { username: string; password: string };
+      const body: BeatsLoginSchemaType = context.body as BeatsLoginSchemaType;
+      const loginData: BeatsLoginSchemaType = loginValidation.verify(body);
+      const { username, password } = loginData as BeatsLoginSchemaType;
 
       const driver: Driver = getDriver();
       const authService: AuthService = new AuthService(driver);
