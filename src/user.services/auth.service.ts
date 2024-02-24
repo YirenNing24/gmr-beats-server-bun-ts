@@ -255,17 +255,8 @@ class AuthService {
     const playerInfo: PlayerInfo = await googleService.googleAuth(token);
     const { displayName, playerId } = playerInfo as PlayerInfo;
 
-    console.log(playerInfo)
     const userName: string = displayName;
     const session: Session = this.driver.session();
-    const registered: boolean = await this.googleCheck(token);
-
-    console.log(registered)
-
-    if (registered === true) {
-      throw new ValidationError(`You already have an account`, 
-      'Username already have an account')
-    }
 
     try {
       const inventoryCard: string = JSON.stringify(cardInventory);
