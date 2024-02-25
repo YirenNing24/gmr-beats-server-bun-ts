@@ -54,7 +54,7 @@ const auth = (app: Elysia): void => {
     }
   })
   
-   .post("api/login/google", async (context: Context) => {
+  .post("api/login/google", async (context: Context) => {
      try {
        const token: any = context.body as { serverToken: string };
        const { serverToken } = token as { serverToken: string };
@@ -69,25 +69,6 @@ const auth = (app: Elysia): void => {
        throw error
      }
    })
-
-   .post('/api/validate_session/google', async (context: Context): Promise<ValidateSessionReturn> => {
-    try {
-      const authorizationHeader: string | null = context.headers.authorization;
-      if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
-        throw new Error('Bearer token not found in Authorization header');
-      }
-      const jwtToken: string = authorizationHeader.substring(7);
-
-      const driver: Driver = getDriver();
-      const authService: AuthService = new AuthService(driver);
-
-      const output: ValidateSessionReturn = await authService.validateSession(jwtToken);
-      return output as ValidateSessionReturn;
-
-    } catch (error: any) {
-      throw error
-    }
-  })
 
   .post('/api/register/beats', async (context: Context): Promise<void> => {
     try {

@@ -25,7 +25,7 @@ class TokenService {
             throw new Error('Failed to generate refresh token');
         }
     }
-
+    
     private async generateAccessToken(username: string): Promise<string> {
         try {
             const signSync = createSigner({ key: JWT_SECRET, expiresIn: ACCESS_TOKEN_EXPIRY });
