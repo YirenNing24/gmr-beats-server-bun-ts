@@ -53,7 +53,7 @@ class TokenService {
 
     public async verifyRefreshToken(token: string): Promise<TokenScheme> {
         try{
-            const verifyAccessTokenSync = createVerifier({ key:  JWT_SECRET });
+            const verifyAccessTokenSync: (token: string | Buffer) => any = createVerifier({ key:  JWT_SECRET });
             const decodedToken = verifyAccessTokenSync(token);
             
             const { userName } = decodedToken as { userName: string };

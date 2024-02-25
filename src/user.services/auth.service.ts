@@ -4,8 +4,8 @@
 //**TODO ADD EMAIL IN THE CONSTRAINT */
 
 
-//** JWT MODULE, AND CONFIGS IMPORTS
-import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SALT_ROUNDS } from '../config/constants'
+//** CONFIGS IMPORT
+import { SALT_ROUNDS } from '../config/constants'
 
 //** BCRYPT IMPORT
 import { hash, compare } from 'bcrypt-ts'
@@ -202,8 +202,8 @@ class AuthService {
         const replenishService: Replenishments = new Replenishments();
         const tokenService: TokenService = new TokenService();
   
-        const accessRefresh: AccessRefresh = await tokenService.verifyRefreshToken(token)
-        const { userName, accessToken } = accessRefresh as AccessRefresh
+        const accessRefresh:  TokenScheme = await tokenService.verifyRefreshToken(token)
+        const { userName, accessToken, refreshToken  } = accessRefresh as  TokenScheme
   
         // Open a new session
         const session:Session = this.driver.session();
@@ -237,6 +237,7 @@ class AuthService {
           energy,
           uuid: userId,
           accessToken,
+          refreshToken,
           message: "You are now logged-in",
           success: "OK", 
           loginType: 'beats',} as ValidateSessionReturn
@@ -244,7 +245,6 @@ class AuthService {
           throw error;
         }
     };
-
 
   public async googleRegister(token: string): Promise<void | ValidationError> {
 
@@ -302,11 +302,7 @@ class AuthService {
         // Handle unique constraints in the database
         if (error.code === 'Neo.ClientError.Schema.ConstraintValidationFailed') {
           if (error.message.includes('username')) {
-            throw new ValidationError(
-              `An account already exists with the username ${userName}`,
-                'Username already taken',
-            )
-          }
+            return new ValidationError(`An account already exists`,'')}
           }
           throw error
         } finally {
@@ -319,8 +315,6 @@ class AuthService {
     const playerInfo: PlayerInfo = await googleService.googleAuth(token);
     const { displayName, playerId } = playerInfo as PlayerInfo;
 
-
-    console.log(playerInfo)
     const userName: string = displayName;
 
     const walletService: WalletService = new WalletService();
@@ -377,6 +371,59 @@ class AuthService {
     }
 
     };
+
+  public async googleValidateSession(token: string): Promise<ValidateSessionReturn>  {
+      try {
+        // Create a new instance of the needed services class
+        const walletService: WalletService = new WalletService();
+        const replenishService: Replenishments = new Replenishments();
+        const tokenService: TokenService = new TokenService();
+  
+        const accessRefresh:  TokenScheme = await tokenService.verifyRefreshToken(token);
+        const { userName, accessToken, refreshToken  } = accessRefresh as  TokenScheme;
+  
+        // Open a new session
+        const session:Session = this.driver.session();
+        const result :QueryResult = await session.executeRead(tx =>
+          tx.run(`MATCH (u:User {username: $userName}) RETURN u`, { userName })
+        );
+  
+        // Close the session
+        await session.close();
+        // Verify the user exists
+        if (result.records.length === 0) {
+          throw new ValidationError(`User with username '${userName}' not found.`, "");
+        }
+        
+        const userData: UserData = result.records[0].get('u');
+        const { localWallet, localWalletKey, playerStats, password, userId, cardInventory, powerUpInventory, username, ...safeProperties } = userData.properties;
+        
+        // Import the user's smart wallet using the WalletService class
+        const walletPromise: Promise<WalletData> = walletService.importWallet(localWallet, localWalletKey);
+        const energyPromise: Promise<number> = replenishService.getEnergy(username, playerStats) ;
+  
+        // const statsPromise = profileService.getStats(username);
+        const [walletSmart, energy ] = await Promise.all([walletPromise, energyPromise ]);
+  
+        // Return an object containing the user's smart wallet, safe properties, success message, and JWT token
+        return {
+          username,
+          wallet: walletSmart,
+          safeProperties,
+          playerStats,
+          energy,
+          uuid: userId,
+          accessToken,
+          refreshToken,
+          message: "You are now logged-in",
+          success: "OK", 
+          loginType: 'beats',} as ValidateSessionReturn
+        } catch (error: any) {
+          throw error;
+        }
+    };
+
+
 
  
 };
