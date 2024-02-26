@@ -22,6 +22,7 @@ export interface ValidateSessionReturn {
   energy: number;
   uuid: string;
   accessToken: string;
+  refreshToken: string;
   message: string;
   success: string;
 }
@@ -238,13 +239,8 @@ export interface LocalWallet {
  * Represents a user in the system.
  *
  * @interface User
- * @property {boolean} anon - Indicates whether the user is anonymous.
- * @property {string} email - The email address of the user.
  * @property {string} userName - The username of the user.
  * @property {string} password - The password of the user.
- * @property {string} firstName - The first name of the user.
- * @property {string} lastName - The last name of the user.
- * @property {string} time - A string representing the time associated with the user.
  */
 export interface User {
   userName: string

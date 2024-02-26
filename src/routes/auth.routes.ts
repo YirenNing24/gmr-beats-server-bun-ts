@@ -1,5 +1,5 @@
 //** ELYSIA IMPORT
-import Elysia, { Context } from 'elysia'
+import Elysia, { Context, t } from 'elysia'
 
 //** SERVICE IMPORT
 import AuthService from '../user.services/auth.service'
@@ -12,32 +12,41 @@ import { Driver } from 'neo4j-driver'
 import { AuthenticateReturn, User, ValidateSessionReturn } from '../user.services/user.service.interface';
 import ValidationError from '../outputs/validation.error';
 
-//** VALIDATOR IMPORTS */
-import { BeatsLoginSchemaType } from './typebox/schema.routes';
-import { loginValidation } from './typebox/schema.routes';
-
 
 const auth = (app: Elysia): void => {
-  app.post("api/login/beats", async (context: Context) => {
+  app.post('api/login/google', async ({ body }): Promise<AuthenticateReturn> => {
     try {
-      const body: BeatsLoginSchemaType = context.body as BeatsLoginSchemaType;
-      const loginData: BeatsLoginSchemaType = loginValidation.verify(body);
-      const { username, password } = loginData as BeatsLoginSchemaType;
-
+      const { serverToken } = body;
+  
       const driver: Driver = getDriver();
       const authService: AuthService = new AuthService(driver);
-      const output: AuthenticateReturn = await authService.authenticate(username, password);
-
+      const output: AuthenticateReturn | ValidationError = await authService.googleLogin(serverToken);
+  
       return output as AuthenticateReturn;
+    } catch (error: any) {
+      return error;
+    }
+      }, { body: t.Object({ serverToken: t.String() }) 
+  })
+
+  .post('/api/login/beats', async ({ body }): Promise<AuthenticateReturn> => {
+    try {
+        const { username, password } = body
+        const driver: Driver = getDriver(); 
+        const authService: AuthService = new AuthService(driver);
+
+        const output: AuthenticateReturn = await authService.authenticate(username, password);
+
+        return output as AuthenticateReturn;
     } catch (error: any) {
       return error
     }
+      }, { body: t.Object({ username: t.String(), password: t.String()})
   })
 
-
-  .post('/api/validate_session/beats', async (context: Context): Promise<ValidateSessionReturn> => {
+  .post('/api/validate_session/beats', async ({ headers }): Promise<AuthenticateReturn> => {
     try {
-      const authorizationHeader: string | null = context.headers.authorization;
+      const authorizationHeader: string | null = headers.authorization;
       if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
         throw new Error('Bearer token not found in Authorization header');
       }
@@ -48,31 +57,15 @@ const auth = (app: Elysia): void => {
 
       const output: ValidateSessionReturn = await authService.validateSession(jwtToken);
       return output as ValidateSessionReturn;
-
     } catch (error: any) {
-      throw error
+      return error
     }
+      }, { headers: t.Object({ authorization: t.String() })
   })
-  
-  .post("api/login/google", async (context: Context) => {
-     try {
-       const token: any = context.body as { serverToken: string };
-       const { serverToken } = token as { serverToken: string };
 
-       const driver: Driver = getDriver();
-       const authService: AuthService = new AuthService(driver);
-       const output: AuthenticateReturn | ValidationError = await authService.googleLogin(serverToken);
-
-       console.log('login route: ', output)
-       return output as AuthenticateReturn
-     } catch (error: any) {
-       throw error
-     }
-   })
-
-  .post('/api/register/beats', async (context: Context): Promise<void> => {
+  .post('/api/register/beats', async ({ body }): Promise<void> => {
     try {
-      const userData: User = context.body as User
+      const userData: User = body
 
       const driver: Driver = getDriver();
       const authService: AuthService = new AuthService(driver);
@@ -81,12 +74,13 @@ const auth = (app: Elysia): void => {
     } catch (error: any) {
       return error
     }
+      }, { body: t.Object({ userName: t.String(), password: t.String() }) 
   })
-
-  .post('/api/register/google', async (context: Context): Promise<void | ValidationError> => {
+  
+  .post('/api/register/google', async ({ body }): Promise<void | ValidationError> => {
     try {
-      const token: any = context.body as { serverToken: string };
-      const { serverToken } = token as { serverToken: string };
+
+      const { serverToken } = body
 
       const driver: Driver = getDriver();
       const authService: AuthService = new AuthService(driver);
@@ -95,6 +89,7 @@ const auth = (app: Elysia): void => {
     } catch (error: any) {
       return error
     }
+      }, { body: t.Object({ serverToken: t.String() }) 
   })
 
   .post('/api/version-check/beats', async (context: Context) => {
