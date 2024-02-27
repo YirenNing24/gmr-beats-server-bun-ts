@@ -1,6 +1,6 @@
 //** ELYSIA AND JWT MODULE IMPORT
-import Elysia, { Context } from 'elysia'
-import jwt from 'jsonwebtoken'
+import Elysia from 'elysia'
+
 
 //** MEMGRAPH DRIVER AND TYPES
 import { Driver } from 'neo4j-driver';
