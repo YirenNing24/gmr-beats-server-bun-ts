@@ -62,8 +62,8 @@ class InventoryService {
         try {
           const tokenService: TokenService = new TokenService();
           const userName: string = await tokenService.verifyAccessToken(token);
+
           const session: Session | undefined = this.driver?.session();
-      
           // Use a Read Transaction and only return the necessary properties
           const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
             (tx: ManagedTransaction) =>
@@ -141,8 +141,13 @@ class InventoryService {
         }
       }
 
-    public async updateInventoryData(userName: string, inventoryCardData: InventoryCardData):  Promise<{ success: true; }>  {
+    public async updateInventoryData(token: string, inventoryCardData: InventoryCardData):  Promise<{ success: true; }>  {
         try {
+
+
+          const tokenService: TokenService = new TokenService();
+          const userName: string = await tokenService.verifyAccessToken(token);
+
             const { slotEquipment, inventoryCard } = inventoryCardData;
             const session1: Session | undefined = this.driver?.session();
 

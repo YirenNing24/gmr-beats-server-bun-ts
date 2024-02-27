@@ -20,7 +20,7 @@ const store = (app: Elysia) => {
 
         // Create an instance of the StoreService to handle store-related operations
         //@ts-ignore
-        const storeService = new StoreService();
+        const storeService: StoreService = new StoreService();
 
         // Call the "getCards" method of the StoreService to fetch store items based on itemType
         const output = await storeService.getCards(itemType, jwtToken);
