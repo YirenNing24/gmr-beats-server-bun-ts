@@ -15,15 +15,15 @@ import { authorizationBearerSchema } from './route.schema/schema.auth';
 
 
 const scores = (app: Elysia): void => {
-    app.post('/api/save/score/classic', async (context: Context): Promise<void> => {
+    app.post('/api/save/score/classic', async ({ headers, body }): Promise<void> => {
         try {
-            const authorizationHeader: string | null = context.headers.authorization;
+            const authorizationHeader: string | null = headers.authorization;
             if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
                 throw new Error('Bearer token not found in Authorization header');
             }
             const jwtToken: string = authorizationHeader.substring(7);
 
-            const classicScoreStats: ClassicScoreStats = context.body as ClassicScoreStats
+            const classicScoreStats: ClassicScoreStats = body as ClassicScoreStats
 
             const driver: Driver = getDriver();
             const scoreService:  ScoreService = new ScoreService(driver)
@@ -32,7 +32,7 @@ const scores = (app: Elysia): void => {
         } catch (error: any) {
           throw error
         }
-      }
+      }, authorizationBearerSchema
     )
 
     .get('/api/open/highscore/classic', async ({ headers }): Promise<ClassicScoreStats[]> => {
