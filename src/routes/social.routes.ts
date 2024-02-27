@@ -1,9 +1,6 @@
-//** ELYSIA AND JWT MODULE IMPORT
+//** ELYSIA AND PLUGINS IMPORT
 import Elysia from 'elysia'
-import jwt from 'jsonwebtoken'
-
-//** CONFIG IMPORT
-import { JWT_SECRET } from '../config/constants';
+import { ip } from "elysia-ip";
 
 //* MEMGRAPH DRIVER AND ETC
 import { Driver } from 'neo4j-driver';
@@ -16,40 +13,46 @@ import ChatService from '../chat.services/chat.socket.service';
 //* TYPES IMPORTS
 import { FollowResponse, MutualData, PlayerStatus, PrivateMessage, ViewProfileData } from '../game.services/game.services.interfaces';
 
-
+//** VALIDATION SCHEMA IMPORT
+import { followResponseSchema, getMutualConversationSchema, setOnlineStatusSchema, unFollowResponseSchema, viewProfileSchema } from './route.schema/schema.social';
+import { authorizationBearerSchema } from './route.schema/schema.auth';
   
 
 const social = (app: Elysia) => {
-    app.get('/api/social/viewprofile/:username', async (context) => {
-      try {
+    
+  //@ts-ignore
 
-        const authorizationHeader = context.headers.authorization;
+    app.get('/api/social/viewprofile/:username', async ({ headers, params }): Promise<ViewProfileData> => {
+      try {
+        const authorizationHeader: string = headers.authorization;
         if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
           throw new Error('Bearer token not found in Authorization header');
         }
         const jwtToken: string = authorizationHeader.substring(7);
 
-        const viewUsername: string = context.params.username;
+        const viewUsername: string = params.username;
 
         const driver: Driver = getDriver();
         const followService: SocialService = new SocialService(driver);
 
         const output: ViewProfileData = await followService.viewProfile(viewUsername, jwtToken);
-        return output
+
+        return output as ViewProfileData
       } catch (error: any) {
         throw error
-      }
-    })
+        }
+      }, viewProfileSchema )
 
-    .post('/api/social/follow', async (context) => {
+    .post('/api/social/follow', async ({ headers, body }): Promise<FollowResponse> => {
         try {
-          const authorizationHeader = context.headers.authorization;
+
+          const authorizationHeader: string = headers.authorization;
           if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
             throw new Error('Bearer token not found in Authorization header');
           }
           const jwtToken: string = authorizationHeader.substring(7);
 
-          const { follower, toFollow } = context.body as { follower: string, toFollow: string }
+          const { follower, toFollow } = body
 
           const driver: Driver = getDriver();
           const followService: SocialService = new SocialService(driver);
@@ -59,33 +62,34 @@ const social = (app: Elysia) => {
         } catch (error: any) {
           throw new Error("Unauthorized")
         }
-    })
+      }, followResponseSchema
+    )
 
-    .post('/api/social/unfollow', async (context) => {
+    .post('/api/social/unfollow', async ({ headers, body }): Promise<FollowResponse> => {
       try {
-          const authorizationHeader = context.headers.authorization;
+          const authorizationHeader: string = headers.authorization;
           if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
             throw new Error('Bearer token not found in Authorization header');
           }
           const jwtToken: string = authorizationHeader.substring(7);
 
-          
-          const { follower, toUnfollow } = context.body as {follower: string, toUnfollow: string}
+          const { follower, toUnfollow } = body
 
           const driver: Driver = getDriver();
           const followService: SocialService = new SocialService(driver);
   
         const output: FollowResponse = await followService.unfollow(follower, toUnfollow, jwtToken);
 
-        return output
+        return output as FollowResponse
       } catch (error: any) {
         throw new Error("Unauthorized")
-      }
-    })
+        }
+      }, unFollowResponseSchema
+    )
 
-    .get('/api/social/list/mutual', async (context) => {
+    .get('/api/social/list/mutual', async ({ headers }) => {
       try {
-        const authorizationHeader = context.headers.authorization;
+        const authorizationHeader: string = headers.authorization;
         if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
           throw new Error('Bearer token not found in Authorization header');
         }
@@ -98,71 +102,70 @@ const social = (app: Elysia) => {
         return output;
       } catch (error: any) {
         throw new Error("Unauthorized")
-      }
-    })
+        }
+      }, authorizationBearerSchema
+    )
 
-    .get('/api/social/mutual/:conversingUsername', async (context) => {
+    .get('/api/social/mutual/:conversingUsername', async ({ headers, params }): Promise<PrivateMessage[]> => {
       try {
-        const authorizationHeader = context.headers.authorization;
+        const authorizationHeader = headers.authorization;
         if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
           throw new Error('Bearer token not found in Authorization header');
         }
         const jwtToken: string = authorizationHeader.substring(7);
 
-        const conversingUsername: string = context.params.conversingUsername
+        const conversingUsername: string = params.conversingUsername
 
         const chatService = new ChatService()
         const output: PrivateMessage[] = await chatService.privateInboxData(jwtToken, conversingUsername)
 
-        return output
+        return output as PrivateMessage[]
       } catch (error: any) {
         throw new Error("Unauthorized")
-      }
-    })
+        }
+      }, getMutualConversationSchema
+    )
 
-
-    .post('/api/social/status/online', async (context) => {
+    .post('/api/social/status/online', async ({ headers, body }): Promise<void> => {
       try {
-        const authorizationHeader = context.headers.authorization;
+        const authorizationHeader: string = headers.authorization;
         if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
           throw new Error('Bearer token not found in Authorization header');
         }
         const jwtToken: string = authorizationHeader.substring(7);
-        const decodedToken: string | jwt.JwtPayload = jwt.verify(jwtToken, JWT_SECRET)
-        const { userName } = decodedToken as { userName: string };
-    
-        const { activity, userAgent, osName } = context.body as {activity: string, userAgent: string, osName: string}
-        const ipAddress = "temporaryfornow"
+
+        const { activity, userAgent, osName } = body
+        const ipAddress: string = "toFollowlaterssss"
         
         const driver: Driver = getDriver();
         const socialService: SocialService = new SocialService(driver);
 
-        await socialService.setStatusOnline(userName, activity, userAgent, osName, ipAddress);
+        await socialService.setStatusOnline(activity, userAgent, osName, ipAddress, jwtToken);
     
       } catch (error: any) {
         throw new Error("Unauthorized")
-      }
-    })
+        }
+      }, setOnlineStatusSchema
+    )
     
-    .get('/api/social/mutual/online', async (context) => {
+    .get('/api/social/mutual/online', async ({ headers }): Promise<PlayerStatus[]> => {
       try {
-        const authorizationHeader = context.headers.authorization;
+        const authorizationHeader: string = headers.authorization;
         if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
           throw new Error('Bearer token not found in Authorization header');
         }
         const jwtToken: string = authorizationHeader.substring(7);
-        const decodedToken: string | jwt.JwtPayload = jwt.verify(jwtToken, JWT_SECRET)
-        const { userName } = decodedToken as { userName: string };
 
         const driver: Driver = getDriver();
         const socialService: SocialService = new SocialService(driver);
-        const output: PlayerStatus[] = await socialService.mutualStatus(userName)
+        const output: PlayerStatus[] = await socialService.mutualStatus(jwtToken)
 
-        return output
+        return output as PlayerStatus[]
       } catch (error: any) {
         throw new Error("Unauthorized")
-      }
-    })
+        }
+      }, authorizationBearerSchema
+    )
 
   };
 

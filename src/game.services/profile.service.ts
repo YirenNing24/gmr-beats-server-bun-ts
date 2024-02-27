@@ -1,6 +1,6 @@
 //** IMPORTED TYPES
 import { Driver, QueryResult, RecordShape, Session } from "neo4j-driver";
-import { UpdateStatsFailed, PlayerStats, ProfilePicture } from "./game.services.interfaces";
+import { UpdateStatsFailed, PlayerStats, ProfilePicture, StatPoints } from "./game.services.interfaces";
 import { getDriver } from '../db/memgraph';
 
 //** RETHINK DB
@@ -15,6 +15,8 @@ import { SuccessMessage } from "../outputs/success.message";
 import TokenService from "../user.services/token.service";
 
 
+
+
 class ProfileService {
 
   driver?: Driver;
@@ -22,7 +24,7 @@ class ProfileService {
     this.driver = driver;
   }
 
-  public async updateStats(statPoints: any, token: string): Promise<any | UpdateStatsFailed>{
+  public async updateStats(statPoints: StatPoints, token: string): Promise<any | UpdateStatsFailed>{
     try {
 
         const tokenService: TokenService = new TokenService();
@@ -48,7 +50,7 @@ class ProfileService {
         // Extract existing stat values and new stat points
         const availStatPoints: number = playerStats.availStatPoints;
         const { level, playerExp, rank, statPointsSaved } = playerStats as PlayerStats
-        const newStatPoints = statPoints.statPointsSaved;
+        const newStatPoints: StatPoints = statPoints;
         // Calculate total stat points added, considering existing values from the database
       const totalStatPointsAdded =
           (newStatPoints.mainVocalist - statPointsSaved.mainVocalist) +
@@ -143,7 +145,7 @@ class ProfileService {
       }
     };
 
-  public async uploadProfilePic(bufferData: ArrayBuffer, token: string): Promise<SuccessMessage> {
+  public async uploadProfilePic(bufferData: number[], token: string): Promise<SuccessMessage> {
       try {
 
         const tokenService: TokenService = new TokenService();

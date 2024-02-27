@@ -10,7 +10,12 @@ import { Driver } from 'neo4j-driver'
 
 //** TYPE INTERFACES
 import { AuthenticateReturn, User, ValidateSessionReturn } from '../user.services/user.service.interface';
+
+//** VALIDATION ERROR IMPORT
 import ValidationError from '../outputs/validation.error';
+
+//** VALIDATION SCHEMA IMPORT
+import { authorizationBearerSchema, beatsLoginSchema, googleServerTokenSchema, registrationSchema } from './route.schema/schema.auth';
 
 
 const auth = (app: Elysia): void => {
@@ -41,8 +46,7 @@ const auth = (app: Elysia): void => {
     } catch (error: any) {
       return error
     }
-      }, { body: t.Object({ username: t.String(), password: t.String()})
-  })
+  }, beatsLoginSchema)
 
   .post('/api/validate_session/beats', async ({ headers }): Promise<AuthenticateReturn> => {
     try {
@@ -58,10 +62,9 @@ const auth = (app: Elysia): void => {
       const output: ValidateSessionReturn = await authService.validateSession(jwtToken);
       return output as ValidateSessionReturn;
     } catch (error: any) {
-      return error
+      throw error
     }
-      }, { headers: t.Object({ authorization: t.String() })
-  })
+      }, authorizationBearerSchema)
 
   .post('/api/register/beats', async ({ body }): Promise<void> => {
     try {
@@ -72,10 +75,9 @@ const auth = (app: Elysia): void => {
       await authService.register(userData);
 
     } catch (error: any) {
-      return error
+      throw error
     }
-      }, { body: t.Object({ userName: t.String(), password: t.String() }) 
-  })
+      }, registrationSchema ) 
   
   .post('/api/register/google', async ({ body }): Promise<void | ValidationError> => {
     try {
@@ -87,10 +89,9 @@ const auth = (app: Elysia): void => {
       await authService.googleRegister(serverToken);
 
     } catch (error: any) {
-      return error
+      throw error
     }
-      }, { body: t.Object({ serverToken: t.String() }) 
-  })
+      }, googleServerTokenSchema) 
 
   .post('/api/version-check/beats', async (context: Context) => {
     const currentVersion = {

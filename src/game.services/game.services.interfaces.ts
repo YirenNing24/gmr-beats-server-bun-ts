@@ -312,7 +312,7 @@ export interface LevelUpResult {
 export interface ProfilePicture {
   userName: string
   fileFormat: string
-  profilePicture: ArrayBuffer
+  profilePicture: number[]
   uploadedAt: number
   fileSize: number
 }
@@ -359,3 +359,15 @@ export interface PlayerStatus {
     ipAddress: string
     id: string
   }
+
+
+export interface StatPoints {
+    mainVocalist: number;
+    rapper: number;
+    leadDancer: number;
+    leadVocalist: number;
+    mainDancer: number;
+    visual: number;
+    leadRapper: number;
+  }
+  

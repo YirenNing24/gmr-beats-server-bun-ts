@@ -19,6 +19,7 @@ export interface NewMessage{
     sender: SenderData
     receiver: string
     ts: number
+    timestamp: number
   }
   
   

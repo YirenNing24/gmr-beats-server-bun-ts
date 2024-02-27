@@ -1,9 +1,6 @@
 //** ELYSIA AND JWT MODULE IMPORT
 import Elysia from 'elysia'
 
-//** JWT IMPORT
-import jwt from 'jsonwebtoken'
-
 //** MEMGRAPH DRIVER AND TYPES
 import { getDriver } from '../db/memgraph'
 import { Driver } from 'neo4j-driver'
@@ -12,25 +9,29 @@ import { Driver } from 'neo4j-driver'
 import ProfileService from '../game.services/profile.service'
 
 //** OUTPUT IMPORT
-import { ProfilePicture, UpdateStatsFailed } from '../game.services/game.services.interfaces'
+import { ProfilePicture, StatPoints, UpdateStatsFailed } from '../game.services/game.services.interfaces'
 
 //** CONFIG IMPORT
-import { JWT_SECRET } from '../config/constants'
 import { SuccessMessage } from '../outputs/success.message'
 
+//** VALIDATION SCHEMA IMPORT
+import { authorizationBearerSchema } from './route.schema/schema.auth'
+import { newStatPointsSchema, uploadDpBufferSchema } from './route.schema/schema.profile'
+
+
 const router = (app: Elysia) => {
-  app.post('/api/update/statpoints', async (context): Promise<any | UpdateStatsFailed | Error > => {
+  app.post('/api/update/statpoints', async ({ headers, body }): Promise<any | UpdateStatsFailed | Error > => {
     try {
 
-      const authorizationHeader = context.headers.authorization;
+      const authorizationHeader = headers.authorization;
       if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
           throw new Error('Bearer token not found in Authorization header');
       }
       const jwtToken: string = authorizationHeader.substring(7);
 
-      const statPoints = context.body;
-      const driver: Driver = getDriver();
+      const statPoints = body as StatPoints
 
+      const driver: Driver = getDriver();
       const profileService = new ProfileService(driver);
 
       const output: any | UpdateStatsFailed = await profileService.updateStats(statPoints, jwtToken);
@@ -38,18 +39,19 @@ const router = (app: Elysia) => {
       return output as any | UpdateStatsFailed 
     } catch (error: any) {
       return error;
-    }
-  })
+      }
+    }, newStatPointsSchema
+  )
 
-  .post('/api/upload/dp', async (context): Promise<SuccessMessage | Error> => {
+  .post('/api/upload/dp', async ({ headers, body }): Promise<SuccessMessage | Error> => {
     try {
-      const authorizationHeader: string | null = context.headers.authorization;
+      const authorizationHeader: string | null = headers.authorization;
       if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
         throw new Error('Bearer token not found in Authorization header');
       }
       const jwtToken: string = authorizationHeader.substring(7);
 
-      const { bufferData } = context.body as { bufferData: ArrayBuffer }
+      const { bufferData } = body
 
       const driver: Driver = getDriver();
       const profileService: ProfileService = new ProfileService(driver);
@@ -58,17 +60,17 @@ const router = (app: Elysia) => {
       return output as SuccessMessage
     } catch (error: any) {
       return error;
-    }
-  })
+      }
+    }, uploadDpBufferSchema
+  )
 
-  .get('/api/open/profilepic', async (context): Promise<ProfilePicture[] | Error> => {
+  .get('/api/open/profilepic', async ({ headers }): Promise<ProfilePicture[] | Error> => {
     try {
-      const authorizationHeader: string | null = context.headers.authorization;
+      const authorizationHeader: string | null = headers.authorization;
       if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
         throw new Error('Bearer token not found in Authorization header');
       }
       const jwtToken: string = authorizationHeader.substring(7);
-
 
       const driver: Driver = getDriver();
       const profileService: ProfileService = new ProfileService(driver);
@@ -77,8 +79,9 @@ const router = (app: Elysia) => {
       return output as ProfilePicture[]
     } catch (error: any) {
       return error;
-    }
-  })
+      }
+    }, authorizationBearerSchema
+  )
   
 };
 

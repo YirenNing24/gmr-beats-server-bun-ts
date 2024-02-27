@@ -12,12 +12,17 @@ import LeaderboardService from '../game.services/leaderboard.services'
 
 //** TYPES IMPORTS
 import { ClassicLeaderboardRequest, ClassicScoreStats } from '../game.services/game.services.interfaces'
+import { authorizationBearerSchema } from './route.schema/schema.auth'
 
 
 const leaderboards = (app: Elysia): void => {
-  app.get('/api/leaderboard/weekly', async (context) => {
+  app.get('/api/leaderboard/weekly', async ({ headers }) => {
     try {
-w
+      const authorizationHeader = headers.authorization;
+      if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+          throw new Error('Bearer token not found in Authorization header');
+      }
+      const jwtToken: string = authorizationHeader.substring(7);
 
       //@ts-ignore
       const { gameMode, songName, period, difficulty } = context.query as ClassicLeaderboardRequest
@@ -30,8 +35,9 @@ w
 
     } catch (error: any) {
       throw error;
-    }
-});
+      }
+    }, authorizationBearerSchema
+  );
 
 };
 

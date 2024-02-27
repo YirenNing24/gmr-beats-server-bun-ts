@@ -231,7 +231,7 @@ class SocialService {
    * @returns {Promise<PlayerStatus[]>} A promise that resolves to an array of PlayerStatus representing online status of mutual followers.
    * @throws {Error} If an error occurs during the retrieval process.
    */
-  public async mutualStatus(username: string): Promise<PlayerStatus[]> {
+  public async mutualStatus(token: string): Promise<PlayerStatus[]> {
     /**
      * @typedef {Object} PlayerStatus
      * @property {string} username - The username of a mutual follower.
@@ -240,6 +240,10 @@ class SocialService {
      */
 
     try {
+      
+      const tokenService: TokenService = new TokenService();
+      const username: string = await tokenService.verifyAccessToken(token);
+
       const session: Session = this.driver.session();
       const result: QueryResult = await session.executeRead((tx: ManagedTransaction) =>
         tx.run(
@@ -285,18 +289,13 @@ class SocialService {
    * @returns {Promise<void>} A promise that resolves once the online status is successfully set.
    * @throws {Error} If an error occurs during the status setting process.
    */
-  public async setStatusOnline(username: string, activity: string, userAgent: string, osName: string, ipAddress: string): Promise<void> {
-    /**
-     * @typedef {Object} SetPlayerStatus
-     * @property {string} username - The username of the user.
-     * @property {boolean} status - The online status of the user (true for online, false for offline).
-     * @property {string} activity - The activity description of the user.
-     * @property {number} lastOnline - The timestamp representing the last online time of the user.
-     * @property {string} userAgent - The user agent string representing the user's browser.
-     * @property {string} osName - The name of the operating system used by the user.
-     * @property {string} ipAddress - The IP address from which the user is accessing the system.
-     */
+  public async setStatusOnline(activity: string, userAgent: string, osName: string, ipAddress: string, token: string): Promise<void> {
+
     try {
+
+      const tokenService: TokenService = new TokenService();
+      const username: string = await tokenService.verifyAccessToken(token);
+
       const playerStatus: SetPlayerStatus = {
         username,
         status: true,

@@ -6,13 +6,16 @@ import jwt from 'jsonwebtoken'
 import { Driver } from 'neo4j-driver';
 import { getDriver } from '../db/memgraph';
 
-//** SERVICE
+//** SERVICE IMPORTS
 import ScoreService from '../game.services/scores.service';
 import { ClassicScoreStats } from '../game.services/game.services.interfaces';
 
+//** VALIDATION SCHEMA IMPORT
+import { authorizationBearerSchema } from './route.schema/schema.auth';
+
 
 const scores = (app: Elysia): void => {
-    app.post('/api/save/score/classic', async (context: Context) => {
+    app.post('/api/save/score/classic', async (context: Context): Promise<void> => {
         try {
             const authorizationHeader: string | null = context.headers.authorization;
             if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
@@ -24,18 +27,17 @@ const scores = (app: Elysia): void => {
 
             const driver: Driver = getDriver();
             const scoreService:  ScoreService = new ScoreService(driver)
-            const output: void = await scoreService.saveScoreClassic(classicScoreStats, jwtToken)
+            await scoreService.saveScoreClassic(classicScoreStats, jwtToken)
 
-          return output
         } catch (error: any) {
           throw error
         }
       }
     )
 
-    .get('/api/open/highscore/classic', async (context) => {
+    .get('/api/open/highscore/classic', async ({ headers }): Promise<ClassicScoreStats[]> => {
         try {
-            const authorizationHeader = context.headers.authorization;
+            const authorizationHeader = headers.authorization;
             if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
                 throw new Error('Bearer token not found in Authorization header');
             }
@@ -49,10 +51,8 @@ const scores = (app: Elysia): void => {
         } catch (error: any) {
           throw error
         }
-    })
-
-    
-
+      }, authorizationBearerSchema
+    )
 };
 
 
