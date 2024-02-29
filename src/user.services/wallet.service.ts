@@ -22,9 +22,9 @@ export default class WalletService {
   public async createWallet(password: string): Promise<object> {
     try {
       // Local signer
-      const newWallet = new LocalWalletNode({ chain: CHAIN });
+      const newWallet: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
       await newWallet.generate();
-      const localWallet:Object = await newWallet.export({
+      const localWallet: Object = await newWallet.export({
         strategy: "encryptedJson",
         password: password,
       });
@@ -46,20 +46,20 @@ export default class WalletService {
  */
   public async importWallet(walletData: string, password: string): Promise<WalletData> {
     try {
-      const localWallet = new LocalWalletNode({ chain: CHAIN });
+      const localWallet: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
       await localWallet.import({
         encryptedJson: walletData,
         password: password,
       });
 
       // Connect the smart wallet
-      const smartWallet = new SmartWallet(SMART_WALLET_CONFIG);
+      const smartWallet: SmartWallet = new SmartWallet(SMART_WALLET_CONFIG);
       await smartWallet.connect({
         personalWallet: localWallet,
       });
 
       // Use the SDK normally
-      const sdk = await ThirdwebSDK.fromWallet(smartWallet, CHAIN, {
+      const sdk: ThirdwebSDK = await ThirdwebSDK.fromWallet(smartWallet, CHAIN, {
         secretKey: SECRET_KEY,
       });
 
@@ -109,7 +109,6 @@ export default class WalletService {
 
       // Fetch token balances using the SDK
       const [smartWalletAddress] = await Promise.all([
-
         sdk.wallet.getAddress()
       ])
 
