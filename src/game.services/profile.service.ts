@@ -1,5 +1,5 @@
 //** IMPORTED TYPES
-import { Driver, QueryResult, RecordShape, Session } from "neo4j-driver";
+import { Driver, ManagedTransaction, QueryResult, RecordShape, Session } from "neo4j-driver";
 import { UpdateStatsFailed, PlayerStats, ProfilePicture, StatPoints } from "./game.services.interfaces";
 import { getDriver } from '../db/memgraph';
 
@@ -154,8 +154,14 @@ class ProfileService {
         const session: Session | undefined = this.driver?.session();
     
         // Find the user node within a Read Transaction
-        const result: QueryResult | undefined = await session?.executeRead(tx =>
-          tx.run('MATCH (u:User {username: $userName}) RETURN u', { userName })
+        const result: QueryResult | undefined = await session?.executeRead((tx: ManagedTransaction) =>
+          tx.run(`
+            MATCH (u:User {username: $userName})
+            RETURN u
+            OR
+            MATCH (u:User {username: $username})
+            RETURN u
+          `, { userName })
         );
     
         await session?.close();
