@@ -16,6 +16,7 @@ export const newStatPointsSchema = {
         leadVocalist: t.Number(),
         mainDancer: t.Number(),
         visual: t.Number(),
-        leadRapper: t.Number()
+        leadRapper: t.Number(),
+        username: t.String()
     })
 }
