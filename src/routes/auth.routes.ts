@@ -64,7 +64,8 @@ const auth = (app: Elysia): void => {
     } catch (error: any) {
       throw error
     }
-      }, authorizationBearerSchema)
+        }, authorizationBearerSchema
+      )
 
   .post('/api/register/beats', async ({ body }): Promise<void> => {
     try {
