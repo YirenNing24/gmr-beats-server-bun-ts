@@ -301,8 +301,13 @@ class AuthService {
         console.log(error)
         // Handle unique constraints in the database
         if (error.code === 'Neo.ClientError.Schema.ConstraintValidationFailed') {
+          if (error.message.includes('userId')) {
+            return new ValidationError(`An account already exists`,'An account already exists')}
+          }
+
+        if (error.code === 'Neo.ClientError.Schema.ConstraintValidationFailed') {
           if (error.message.includes('username')) {
-            return new ValidationError(`An account already exists`,'')}
+              return new ValidationError(`An account already exists`,'An account already exists')}
           }
           throw error
         } finally {
