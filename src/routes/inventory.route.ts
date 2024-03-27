@@ -13,7 +13,7 @@ import InventoryService from '../game.services/inventory.services/inventory.serv
 
 //** VALIDATION SCHEMA IMPORT
 import { authorizationBearerSchema } from './route.schema/schema.auth';
-import { inventoryCardDataSchema } from './route.schema/schema.inventory';
+
 
 
 
@@ -37,27 +37,27 @@ const inventory = (app: Elysia): void => {
         }, authorizationBearerSchema
     )
     
-    .post('/api/card/inventory/update', async ({ headers, body }) => {
-        try {
-            const authorizationHeader: string = headers.authorization || "";
-            if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
-                throw new Error('Bearer token not found in Authorization header');
-            }
-            const jwtToken: string = authorizationHeader.substring(7);
+    // .post('/api/card/inventory/update', async ({ headers, body }) => {
+    //     try {
+    //         const authorizationHeader: string = headers.authorization || "";
+    //         if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+    //             throw new Error('Bearer token not found in Authorization header');
+    //         }
+    //         const jwtToken: string = authorizationHeader.substring(7);
 
-            const driver: Driver = getDriver();
-            const inventoryService: InventoryService = new InventoryService(driver);
+    //         const driver: Driver = getDriver();
+    //         const inventoryService: InventoryService = new InventoryService(driver);
 
-            const inventoryCardData = body as InventoryCardData
-            const output = await inventoryService.updateInventoryData(jwtToken, inventoryCardData)
+    //         const inventoryCardData = body as InventoryCardData
+    //         const output = await inventoryService.updateInventoryData(jwtToken, inventoryCardData)
 
-            return output
-        } catch (error: any) {
-            console.log(error)
-            return error
-            }
-        }, inventoryCardDataSchema
-    )
+    //         return output
+    //     } catch (error: any) {
+    //         console.log(error)
+    //         return error
+    //         }
+    //     }, inventoryCardDataSchema
+    // )
 
 };
 
