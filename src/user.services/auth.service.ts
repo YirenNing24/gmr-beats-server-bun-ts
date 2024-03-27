@@ -14,7 +14,7 @@ import { hash, compare } from 'bcrypt-ts'
 import ValidationError from '../outputs/validation.error'
 
 //** NEW ACCOUNT DEFAULT VALUES
-import { cardInventory, playerStats, powerUpInventory, iveEquip } from '../noobs/noobs'
+import { cardInventory, playerStats, powerUpInventory, iveEquip, IveEquip } from '../noobs/noobs'
 
 //**  IMPORTED SERVICES
 import WalletService from './wallet.service'
@@ -30,70 +30,54 @@ import { nanoid } from "nanoid/async";
 import { Driver, QueryResult, Session,  ManagedTransaction } from 'neo4j-driver-core'
 
 //** TYPE INTERFACES
-import { LocalWallet, WalletData, UserData, ValidateSessionReturn, AuthenticateReturn, PlayerStats, TokenScheme, AccessRefresh, PlayerInfo, User } from './user.service.interface'
+import { LocalWallet, WalletData, UserData, ValidateSessionReturn, AuthenticateReturn, PlayerStats, TokenScheme, PlayerInfo, User, CardInventory, PowerUpInventory, Suspended } from './user.service.interface'
 
-/**
- * Service for handling authentication-related operations.
- * 
- * @class
- * @name AuthService
- */
+
 class AuthService {
-  /**
-   * The Neo4j driver used for database interactions.
-   * @type {Driver}
-   * @memberof AuthService
-   * @instance
-   */
+
   driver: Driver
   constructor(driver: Driver) {
     this.driver = driver
     }
-    /**
-   * Registers a new user.
-   *
-   * @method
-   * @memberof AuthService
-   * @instance
-   * @param {string} username - The username of the new user.
-   * @param {string} password - The password of the new user.
-   * @returns {Promise<void>} A Promise that resolves when the registration is successful.
-   */
+
   public async register(userData: User): Promise<void> {
     const walletService: WalletService = new WalletService();
     const replenishService: Replenishments = new Replenishments();
 
     const userId: string = await nanoid();
-    const inventoryCard: string = JSON.stringify(cardInventory);
-    const statsPlayer: string = JSON.stringify(playerStats);
-    const inventoryPowerUp: string = JSON.stringify(powerUpInventory);
-    const equipIve: string = JSON.stringify(iveEquip);
+    const statsPlayer: PlayerStats = playerStats;
 
     const { userName, password } = userData as User
     const encrypted: string = await hash(password, parseInt(SALT_ROUNDS));
     const locKey: string = await hash(userName, parseInt(SALT_ROUNDS));
 
-    const localWallet = await walletService.createWallet(locKey) as LocalWallet
+    const localWallet: LocalWallet = await walletService.createWallet(locKey) as LocalWallet
+
+    const signupDate: number = Date.now()
+    const suspended: Suspended = { until: null, reason: "" };
 
     const session: Session = this.driver.session();
     try {
        await session.executeWrite(
         (tx: ManagedTransaction) => tx.run(
            `
-             CREATE (u:User { 
+             CREATE (u:User {
+               signupDate: $signupDate,
                accountType: "beats",
                userId: $userId,
                username: $userName,
                password: $encrypted,
                localWallet: $localWallet, 
                localWalletKey: $locKey,
-               cardInventory: $inventoryCard,
-               iveEquip: $equipIve,
                playerStats: $statsPlayer,
-               powerUpInventory: $inventoryPowerUp
+               suspended: $suspended,
+               cardInventory: [],
+               inventoryCapacity: 200,
+               powerUpInventory: [],
+               iveEquip: []
              })
            `,
-           { userId, userName, encrypted, localWallet, locKey, inventoryCard, equipIve, statsPlayer, inventoryPowerUp }
+           { signupDate, userId, userName, encrypted, localWallet, locKey, statsPlayer, suspended }
          ) 
        )
 
@@ -120,17 +104,6 @@ class AuthService {
       }
     };
 
-/**
- * Authenticates a user by verifying their username and password.
- *
- * @method
- * @memberof AuthService
- * @instance
- * @param {string} userName - The username of the user to authenticate.
- * @param {string} unencryptedPassword - The unencrypted password of the user.
- * @returns {Promise<AuthenticateReturn>} A promise that resolves with authentication details.
- * @throws {ValidationError} Throws a validation error if authentication fails.
- */
   public async authenticate(userName: string, unencryptedPassword: string): Promise<AuthenticateReturn> {
     const walletService: WalletService = new WalletService();
     const profileService: ProfileService = new ProfileService();
@@ -186,15 +159,6 @@ class AuthService {
     }
     };
 
-    /**
-   * Validates a user's session using JWT
-   * @method
-   * @memberof AuthService
-   * @instance
-   * @param {string} username - The username of the user whose session is to be validated.
-   * @returns {Promise<ValidateSessionReturn>} A promise that resolves with session validation details.
-   * @throws {ValidationError} Throws a validation error if the user is not found.
-   */
   public async validateSession(token: string): Promise<ValidateSessionReturn>  {
       try {
         // Create a new instance of the needed services class

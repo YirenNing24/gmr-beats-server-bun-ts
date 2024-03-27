@@ -5,18 +5,20 @@ import { Driver, ManagedTransaction, QueryResult, RecordShape, Session } from "n
 import { Edition, NFT, Pack, ThirdwebSDK } from "@thirdweb-dev/sdk";
 
 //** VALIDATION ERROR
-import ValidationError from "../outputs/validation.error";
+import ValidationError from "../../outputs/validation.error";
 
 //** IMPORTED SERVICES
-import WalletService from "../user.services/wallet.service";
-import TokenService from "../user.services/token.service";
+import WalletService from "../../user.services/wallet.service";
+import TokenService from "../../user.services/token.service";
 
 //** CONFIG IMPORTS
-import { EDITION_ADDRESS, PACK_ADDRESS, SECRET_KEY } from "../config/constants";
+import { EDITION_ADDRESS, PACK_ADDRESS, SECRET_KEY } from "../../config/constants";
 
 //** TYPE INTERFACES
-import { CardNFT, CardInventoryOpen, EquipmentSlots, CardMetaData, CardsData, InventoryCardData } from "./game.services.interfaces";
-import { CardInventory, CardInventoryItem } from "../user.services/user.service.interface";
+import {  CardInventoryOpen, EquipmentSlots } from "../game.services.interfaces";
+import { CardData, CardMetaData, CardNFT, InventoryCardData } from "./inventory.interface";
+import { CardInventory, CardInventoryItem } from "../../user.services/user.service.interface";
+
 
 /**
  * Service for handling user inventory-related operations.
@@ -25,130 +27,58 @@ import { CardInventory, CardInventoryItem } from "../user.services/user.service.
  * @name InventoryService
  */
 class InventoryService {
-    /**
-     * Neo4j driver instance for database interactions.
-     * @type {Driver|undefined}
-     * @memberof InventoryService
-     * @instance
-     */
     driver?: Driver;
-
-    /**
-     * Creates an instance of InventoryService.
-     *
-     * @constructor
-     * @param {Driver|undefined} driver - The Neo4j driver to be used for database interactions.
-     * @memberof InventoryService
-     * @instance
-     */
     constructor(driver?: Driver) {
         this.driver = driver;
     }
 
-    /**
-     * Opens the card inventory for the specified user.
-     *
-     * @async
-     * @method
-     * @memberof InventoryService
-     * @param {string} userName - The username of the user.
-     * @returns {Promise<NFT[]>} A promise that resolves to an array of NFT cards owned by the user.
-     * @throws {ValidationError} If the user is not found or an error occurs during the process.
-     */
-
     //** CARD INVENTORY */
-
-    public async cardInventoryOpen(token: string): Promise<InventoryCardData> {
-        try {
+    public async cardInventoryOpen(token: string): Promise<InventoryCardData>  {
+      try {
           const tokenService: TokenService = new TokenService();
           const userName: string = await tokenService.verifyAccessToken(token);
-
+  
           const session: Session | undefined = this.driver?.session();
           // Use a Read Transaction and only return the necessary properties
           const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
-            (tx: ManagedTransaction) =>
-              tx.run(
-                `MATCH (u:User {username: $userName}) 
-                RETURN u.localWallet as localWallet, u.localWalletKey as localWalletKey, u.cardInventory as cardInventory`,
-                { userName }
-              )
+              (tx: ManagedTransaction) =>
+                  tx.run(
+                      ` MATCH (u:User{username: $userName})-[:OWNS]->(c:Card)
+                        
+                        RETURN c.uri as uri, c as card`,
+                      { userName }
+                  )
           );
-      
+  
           await session?.close();
-      
+  
           // Verify the user exists
-          if (result?.records.length === 0) {
-            throw new ValidationError(`User with username '${userName}' not found.`, "");
+          if (!result || result.records.length === 0) {
+              throw new ValidationError(`User with username '${userName}' not found.`, "");
           }
-      
-          const walletData: RecordShape | undefined = result?.records[0].toObject();
-          // Retrieve the required properties directly from the query result
-          const { localWallet, localWalletKey, cardInventory } = walletData as CardInventoryOpen;
-      
-          // Return wallet address
-          const walletAddress: string = await this.getWalletAddress(localWallet, localWalletKey);
-      
-          // Use ThirdwebSDK to get NFT cards
-          const inventoryCard: CardInventory = JSON.parse(cardInventory);
-          const cards: CardNFT[] = await this.getOwnedCardNFTs(walletAddress);
-          
-          // Create a new object to store cards with URI as main key and metadata as value
-          const cardsData: Record<string, CardsData['uri']> = {};
-      
-          for (const card of cards) {
-            const { metadata } = card as CardNFT;
-      
-            // Extract the relevant information from the card metadata
-            const { uri, ...Metadata } = metadata as CardMetaData;
-      
-            // Set URI as the main key with metadata as the value
-            cardsData[uri] = { ...Metadata };
-      
-            // Extract the group and slot information
-            const { group, slot } = metadata as { group: string; slot: string };
+  
+          const cardData = result.records.map((record) => {
+              const uri: string = record.get("uri");
+              const card: CardMetaData = record.get("card").properties;
+              return { [uri]: card };
+          });
+  
 
-            const equipmentSlot: string = `${group.toLowerCase().replace(/\s+/g, "")}Equip`;
-      
-            // Check if the URI already exists in the inventoryCard if not check in equipment slot
-            if (!Object.values(inventoryCard).some((item) => item?.Item === uri)) {
-
-              // If URI is not in both inventory and equipment slot, add it to any null slot in the inventory
-              const equipmentSlotExists: boolean = await this.checkEquipmentSlot(userName, equipmentSlot, uri, slot, group);
-
-              if (!equipmentSlotExists) {
-                const emptySlot: string | undefined = Object.keys(inventoryCard).find((slot) => inventoryCard[slot]?.Item === null);
-                if (emptySlot) {
-                  inventoryCard[emptySlot] = { Item: uri };
-                }
-              }
-
-            }
-            else{
-              console.log("not yet sure!")
-          }
-          }
-      
-          // Update inventory only if there's a change
-          await this.updateWalletCardInventory(userName, inventoryCard);
-      
-          // Retrieve equipment slots after potential updates
-          const slotEquipment: EquipmentSlots = await this.getEquipmentSlot(userName);
-          
-          // Return all relevant data
-          return { slotEquipment, inventoryCard, cardsData } as InventoryCardData
-        } catch (error: any) {
+          return cardData as InventoryCardData
+  
+      } catch (error: any) {
+          console.log(error);
           throw error;
-        }
       }
+  }
+  
 
-    public async updateInventoryData(token: string, inventoryCardData: InventoryCardData):  Promise<{ success: true; }>  {
+    public async updateInventoryData(token: string, inventoryCardData: any):  Promise<{ success: true; }>  {
         try {
-
-
           const tokenService: TokenService = new TokenService();
           const userName: string = await tokenService.verifyAccessToken(token);
 
-            const { slotEquipment, inventoryCard } = inventoryCardData;
+            const { slotEquipment, inventoryCard } = inventoryCardData as InventoryCardData;
             const session1: Session | undefined = this.driver?.session();
 
             // Use a Read Transaction and only return the necessary properties
@@ -183,12 +113,12 @@ class InventoryService {
             // Iterate through each entry in inventoryCard
             for (const key in inventoryCard) {
               if (inventoryCard.hasOwnProperty(key)) {
-                  const slot = inventoryCard[key];
+                  const slot: { Item: string | null} = inventoryCard[key];
           
                   // Check if 'Item' value is not null
                   if (slot.Item !== null) {
                       // Check if there's a matching URI in the cards obtained from the wallet
-                      const matchingCard = cards.find((card) => {
+                      const matchingCard: CardNFT | undefined = cards.find((card) => {
                           const { metadata } = card as CardNFT;
                           const { uri } = metadata as CardMetaData;
                           return uri === slot.Item;
@@ -203,19 +133,18 @@ class InventoryService {
                   }
               }
           }
-          
+           
           if (mismatchFound) {
               throw new Error('At least one non-null slot.Item value does not match with the URI in metadata.');
           }
-          const stringCardInventory: string = JSON.stringify(inventoryCard)
           const session2: Session | undefined = this.driver?.session();
     
             // Use a Write Transaction to update the inventoryCard property in the database
           await session2?.executeWrite(async (tx: ManagedTransaction) => {
                 await tx.run(
                     `MATCH (u:User {username: $userName}) 
-                     SET u.cardInventory = $stringCardInventory`,
-                    { userName, stringCardInventory}
+                     SET u.cardInventory = $inventoryCard`,
+                    { userName, inventoryCard }
                 );
             });
     
@@ -245,7 +174,7 @@ class InventoryService {
         const cardContract: Edition = await sdk.getContract(EDITION_ADDRESS, "edition");
         
         //@ts-ignore
-        return cardContract.erc1155.getOwned(walletAddress) as Promise<CardNFT[]>;
+        return await cardContract.erc1155.getOwned(walletAddress) as Promise<CardNFT[]>;
       }
 
     private async checkEquipmentSlot(userName: string, equipSlot: string, uri: string, slot: string, group: string): Promise<boolean> {
@@ -267,15 +196,15 @@ class InventoryService {
             throw new ValidationError(`Equipment Slot '${equipSlot}' not found.`, "");
           }
       
-          const equipmentSlotValue = result?.records[0].get("equipmentSlot");
-          const capitalizedGroup: string = await this.titleCase(group)
-          const mainKey: string =  capitalizedGroup + "Equip"
+          const equipmentSlotValue: EquipmentSlots = result?.records[0].get("equipmentSlot");
+          const capitalizedGroupName: string = await this.titleCase(group)
+          const mainKey: string =  capitalizedGroupName + "Equip"
       
-          // Parse the JSON if the value is not null
-          const equipmentSlots = equipmentSlotValue ? JSON.parse(equipmentSlotValue) : null;
-          
+          const equipmentSlots: EquipmentSlots = equipmentSlotValue;
           // Check if the slot exists in the equipment slot and if the URI matches
-          if (equipmentSlots[mainKey][slot]["Item"] === uri) {
+
+          //@ts-ignore
+          if (equipmentSlots[mainKey] && equipmentSlots[mainKey][slot] && equipmentSlots[mainKey][slot]["Item"] === uri) {
             return true;
           }
         } catch (error: any) {
@@ -287,19 +216,17 @@ class InventoryService {
 
     private async updateWalletCardInventory(userName: string, cardInventory: CardInventory) {
         try {
-          const inventoryCard: string = JSON.stringify(cardInventory);
           const session: Session | undefined = this.driver?.session();
       
           // Use a Write Transaction to update the cardInventory property in the database
           await session?.executeWrite(async (tx: ManagedTransaction) => {
             await tx.run(
               `MATCH (u:User {username: $userName}) 
-              SET u.cardInventory = $inventoryCard`,
-              { userName, inventoryCard }
+               SET u.cardInventory = $cardInventory`,
+              { userName, cardInventory }
             );
           });
         } catch (error: any) {
-          // Handle errors here, log them, or throw a specific error type
         throw error
         }
       }
@@ -325,36 +252,34 @@ class InventoryService {
           }
   
           // Parse the stringified JSON back to a JavaScript object
-          const equipmentSlotsString = result?.records[0].get("u.iveEquip").toString();
-          const equipmentSlots: EquipmentSlots = JSON.parse(equipmentSlotsString)
-  
+          const equipmentSlots: EquipmentSlots = result?.records[0].get("u.iveEquip");
           return equipmentSlots;
       } catch (error: any) {
           throw error;
       }
       }
 
-    private async updateEquipmentSlots(equipmentSlots: EquipmentSlots, userName: string, cards: CardNFT[], inventoryCard: CardInventory): Promise<void> {
+      private async updateEquipmentSlots(equipmentSlots: EquipmentSlots, userName: string, cards: CardNFT[], inventoryCard: CardInventory): Promise<void> {
         try {
-            const { IveEquip } = equipmentSlots as EquipmentSlots
-
+            const { IveEquip } = equipmentSlots as EquipmentSlots;
+    
             let mismatchFound: boolean = false;
     
             for (const memberName in IveEquip.IveEquip) {
-                if (IveEquip.hasOwnProperty(memberName)) {
-                    const member = IveEquip.IveEquip[memberName];
+                if (IveEquip.IveEquip.hasOwnProperty(memberName)) {
+                    const member: Member = IveEquip.IveEquip[memberName];
     
                     // Check if the 'Item' property is not null for the current member
-                    if (member.Item !== null) {
+                    if (member?.Item !== null) {
                         // Check if there's a matching URI in the cards obtained from the wallet
                         const matchingCard = cards.find((card) => {
                             const { metadata } = card as CardNFT;
                             const { uri } = metadata as CardMetaData;
-                            return uri === member.Item as string
+                            return uri === member?.Item as string;
                         });
     
                         // Check if the 'Item' value already exists in cardInventory
-                        const isItemInCardInventory: boolean = this.checkItemInCardInventory(member.Item, inventoryCard);
+                        const isItemInCardInventory: boolean = this.checkItemInCardInventory(member?.Item, inventoryCard);
     
                         // If a match is not found, set mismatchFound to true
                         if (!matchingCard || isItemInCardInventory) {
@@ -369,24 +294,32 @@ class InventoryService {
                 throw new Error('At least one equipment slot Item value does not match with the URI in metadata.');
             }
     
-            const stringIveEquip: string = JSON.stringify({IveEquip: IveEquip});
             const session: Session | undefined = this.driver?.session();
     
-            // Use a Write Transaction to update the iveEquip property in the database
+            const mainKey = 'IveEquip'; // Set your main key here
+    
+            // Dynamically build the structure with the main key
+            const dynamicStructure: { [key: string]: any } = { [mainKey]: { [mainKey]: IveEquip } };
+
+
+            console.log(dynamicStructure)
+    
+            // Use a Write Transaction to update the dynamicStructure property in the database
             await session?.executeWrite(async (tx: ManagedTransaction) => {
                 await tx.run(
                     `MATCH (u:User {username: $userName}) 
-                    SET u.iveEquip = $stringIveEquip`,
-                    { userName, stringIveEquip }
+                    SET u.${mainKey} = $dynamicStructure`,
+                    { userName, dynamicStructure }
                 );
             });
         } catch (error: any) {
             // Handle errors here, log them, or throw a specific error type
             throw error;
         }
-      }
+    }
     
-    private checkItemInCardInventory(item: string, inventoryCard: CardInventory): boolean {
+    
+    private checkItemInCardInventory(item: string | undefined, inventoryCard: CardInventory): boolean {
       for (const key in inventoryCard) {
           if (inventoryCard.hasOwnProperty(key)) {
               const slot: CardInventoryItem | null = inventoryCard[key];
@@ -494,17 +427,7 @@ class InventoryService {
       return group[0].toUpperCase() + group.substring(1).toLowerCase()
       }
 
-      /**
-     * Gets the wallet address using the WalletService.
-     *
-     * @private
-     * @async
-     * @method
-     * @memberof InventoryService
-     * @param {string} localWallet - The local wallet data.
-     * @param {string} localWalletKey - The local wallet key.
-     * @returns {Promise<string>} A promise that resolves to the wallet address.
-     */
+
     private async getWalletAddress(localWallet: string, localWalletKey: string): Promise<string> {
       const walletService: WalletService = new WalletService();
       return await walletService.getWalletAddress(localWallet, localWalletKey);

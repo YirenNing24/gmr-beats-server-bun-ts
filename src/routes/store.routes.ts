@@ -1,6 +1,6 @@
 import Elysia from 'elysia';
 import { getDriver } from '../db/memgraph';
-import StoreService from '../game.services/store.service';
+import StoreService from '../game.services/store.services/store.service';
 
 
 

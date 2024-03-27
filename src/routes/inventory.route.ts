@@ -6,14 +6,15 @@ import { Driver } from 'neo4j-driver';
 import { getDriver } from '../db/memgraph';
 
 //** INTERFACE IMPORT
-import { InventoryCardData } from '../game.services/game.services.interfaces';
+import { InventoryCardData } from '../game.services/inventory.services/inventory.interface';
 
 //** SERVICES IMPORTS
-import InventoryService from '../game.services/inventory.service';
+import InventoryService from '../game.services/inventory.services/inventory.service';
 
 //** VALIDATION SCHEMA IMPORT
 import { authorizationBearerSchema } from './route.schema/schema.auth';
 import { inventoryCardDataSchema } from './route.schema/schema.inventory';
+
 
 
 const inventory = (app: Elysia): void => {
@@ -27,8 +28,8 @@ const inventory = (app: Elysia): void => {
 
             const driver: Driver = getDriver();
             const inventoryService: InventoryService = new InventoryService(driver);
-            const output: InventoryCardData = await inventoryService.cardInventoryOpen(jwtToken)
-            
+            const output = await inventoryService.cardInventoryOpen(jwtToken)
+
             return output as InventoryCardData
             } catch (error: any) {
             return error

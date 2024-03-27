@@ -63,32 +63,32 @@ export const iveEquip: IveEquip = {
   "IveEquip":{
      "Wonyoung":{
         "Equipped": false,
-        "Item": "",
+        "Item": null,
 
      },
      "Yujin":{
         "Equipped": false,
-        "Item": "",
+        "Item": null,
 
      },
      "Rei":{
         "Equipped": false,
-        "Item": "",
+        "Item": null,
 
      },
      "Liz":{
         "Equipped": false,
-        "Item": "",
+        "Item": null,
 
      },
      "Gaeul":{
         "Equipped": false,
-        "Item": "",
+        "Item": null,
 
      },
      "Leeseo":{
         "Equipped": false,
-        "Item": "",
+        "Item": null,
      }
   }
 }
@@ -97,10 +97,6 @@ export const iveEquip: IveEquip = {
 export const equipInventory: EquipInventory = [
   iveEquip,
 ]
-
-
-
-
 
 
 export const cardInventory: CardInventory =  {
@@ -463,11 +459,11 @@ export const powerUpInventory: PowerUpInventory = {
 export const playerStats: PlayerStats = {
   "level": 1, "playerExp": 0, "availStatPoints": 7, "rank": "Debut",
     "statPointsSaved": {
-      "mainVocalist":1,
-      "rapper":1,
-      "leadDancer":1,
-      "leadVocalist":1,
-      "mainDancer":1,
-      "visual":1,
-      "leadRapper":1}
+      "mainVocalist": 1,
+      "rapper": 1,
+      "leadDancer": 1,
+      "leadVocalist": 1,
+      "mainDancer": 1,
+      "visual": 1,
+      "leadRapper": 1}
 };

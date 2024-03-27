@@ -34,9 +34,9 @@ class ChatService {
           if (error) throw error;
           cursor.each((error, row)  => {
             if (error) throw error;
-            if (row.new_val) {
-              const room_data: Result = row.new_val;
-                const roomData: string = JSON.stringify(room_data);
+            if (row.roomNewVal) {
+              const roomNewVal: Result = row.roomNewVal;
+                const roomData: string = JSON.stringify(roomNewVal);
                 app.server?.publish('all', roomData)
             }
           })

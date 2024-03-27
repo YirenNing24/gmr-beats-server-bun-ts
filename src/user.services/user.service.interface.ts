@@ -85,8 +85,8 @@ export interface CardInventory {
    * @property {number} Stack - The stack quantity of the item.
    */
 export interface PowerUpInventoryItem {
-    Item: string;
-    Stack: number;
+    Item: string | null;
+    Stack: number | null;
   }
   
   /**
@@ -97,7 +97,7 @@ export interface PowerUpInventoryItem {
    * @description The value associated with each key is either a PowerUpInventoryItem or undefined.
    */
 export interface PowerUpInventory {
-    [key: string]: PowerUpInventoryItem | undefined;
+    [key: string]: PowerUpInventoryItem | null;
   }
   
   /**
@@ -147,13 +147,10 @@ export interface PlayerStats {
    * @property {string} username - The username.
    */
 export interface SafeProperties {
-    anon: boolean;
-    createdAt: number;
-
+    signupDate: number;
     email: string;
     firstName: string;
     lastName: string;
-    profilePics: string[];
   }
   
   /**
@@ -178,9 +175,8 @@ export interface SafeProperties {
    */
 export interface UserData {
     properties: {
-      anon: boolean;
+      signupDate: number
       cardInventory: CardInventory;
-      createdAt: number;
       email: string;
       firstName: string;
       lastName: string;
@@ -189,9 +185,9 @@ export interface UserData {
       password: string;
       playerStats: PlayerStats;
       powerUpInventory: PowerUpInventory;
-      profilePics: string[];
       userId: string;
       username: string;
+      suspended: Suspended
     };
   }
   
@@ -353,4 +349,16 @@ export interface PlayerInfo {
  */
 export interface GoogleToken { 
   serverToken: string 
+}
+
+/**
+ * Represents the suspension status of a player's account.
+ *
+ * @interface Suspended
+ * @property {string} suspended - Shows a date if the account is suspended
+ * @property {string} reason - Shows the reason of suspension
+ */
+export interface Suspended {
+  until: number | null
+  reason: string 
 }

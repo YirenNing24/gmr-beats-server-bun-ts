@@ -1,12 +1,22 @@
-import app from "../app";
-import ValidationError from "../outputs/validation.error";
+//** THIRDWEB IMPORTS
 import { ThirdwebSDK } from "@thirdweb-dev/sdk";
 import { LocalWalletNode } from "@thirdweb-dev/wallets/evm/wallets/local-wallet-node";
-import { CHAIN, SMART_WALLET_CONFIG } from "../config/constants";
 import { SmartWallet } from "@thirdweb-dev/wallets";
-import { CARD_MARKETPLACE } from "../config/constants";
-import { Driver } from "neo4j-driver-core";
-import TokenService from "../user.services/token.service";
+
+//** MEMGRAPH IMPORTS
+import { CARD_MARKETPLACE } from "../../config/constants";
+import { Driver, Session, ManagedTransaction, QueryResult } from "neo4j-driver-core";
+
+//** CONFIG IMPORTs
+import { CHAIN, SMART_WALLET_CONFIG } from "../../config/constants";
+
+//** VALIDATION IMPORT
+import ValidationError from "../../outputs/validation.error";
+
+//** SERVICE IMPORTS
+import TokenService from "../../user.services/token.service";
+import { StoreCardData } from "./store.interface";
+
 
 export default class StoreService {
   driver: Driver;
@@ -15,25 +25,25 @@ export default class StoreService {
     this.driver = driver;
   }
 
-  async getCards(itemType: string, token: string): Promise<any[]> {
+  public async getListedCards(token: string): Promise<StoreCardData[]> {
     try {
-
       const tokenService: TokenService = new TokenService();
       await tokenService.verifyAccessToken(token);
 
+      const session: Session = this.driver.session();
+      const result: QueryResult = await session.executeRead((tx: ManagedTransaction) =>
+          tx.run(` MATCH (c:Card) 
+                   WHERE c.packed IS NULL AND c.lister IS NOT NULL
+                   RETURN c`)
+      );
+      await session.close();
 
-      if (itemType === "cards") {
-        const tx = await app.redis.get("cardStore");
-        if (tx === null) {
-          return [];
-        }
-        //@ts-ignore
-        return tx;
-      }
-      return [];
-    } catch (error) {
+      const cards: StoreCardData[] = result.records.map(record => record.get("c").properties);
+
+      return cards as StoreCardData[];
+    } catch (error: any) {
       console.error("Error fetching items:", error);
-      throw new Error("Failed to fetch items.");
+      throw error
     }
   }
 
@@ -77,24 +87,24 @@ export default class StoreService {
     }
   }
 
-  async getBundles(itemType: string, token: string): Promise<any[]> {
-    try {
+  // async getBundles(itemType: string, token: string): Promise<any[]> {
+  //   try {
 
-      const tokenService: TokenService = new TokenService();
-      await tokenService.verifyAccessToken(token);
+  //     const tokenService: TokenService = new TokenService();
+  //     await tokenService.verifyAccessToken(token);
 
-      if (itemType === "bundles") {
-        const tx = await app.redis.get("bundleStore");
-        if (tx === null) {
-          return [];
-        }
-        //@ts-ignore
-        return tx;
-      }
-      return [];
-    } catch (error) {
-      console.error("Error fetching items:", error);
-      throw new Error("Failed to fetch items.");
-    }
-  }
+  //     if (itemType === "bundles") {
+  //       const tx = await app.redis.get("bundleStore");
+  //       if (tx === null) {
+  //         return [];
+  //       }
+  //       //@ts-ignore
+  //       return tx;
+  //     }
+  //     return [];
+  //   } catch (error) {
+  //     console.error("Error fetching items:", error);
+  //     throw new Error("Failed to fetch items.");
+  //   }
+  // }
 }

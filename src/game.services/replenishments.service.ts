@@ -9,13 +9,13 @@ export default class Replenishments {
    * @returns {number} - The last recorded energy value.
    * @throws {Error} - If there is an issue retrieving the energy value.
    */
-    async getEnergy(userName: string, playerStats: any) {
+    public async getEnergy(userName: string, playerStats: any) {
       try {
         // Retrieve the serialized energy data from Redis
         const serializedEnergy = await keydb.get(userName + "Energy") as string
 
         const energy = JSON.parse(serializedEnergy)
-        const stats = JSON.parse(playerStats)
+        const stats = playerStats
         const playerLevel = stats.level
 
         if (serializedEnergy) {
