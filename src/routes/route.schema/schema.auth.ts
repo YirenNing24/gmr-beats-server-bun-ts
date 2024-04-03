@@ -34,7 +34,11 @@ export const authorizationBearerSchema = {
  * @property {string} body.password - The password for registration.
  */
 export const registrationSchema = { 
-    body: t.Object({ userName: t.String(), password: t.String() })
+    body: t.Object({ 
+        userName: t.String(), 
+        password: t.String(), 
+        deviceId: t.String()
+    })
 }
 
 /**

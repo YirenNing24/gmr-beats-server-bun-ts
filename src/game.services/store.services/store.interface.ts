@@ -38,3 +38,8 @@ export interface StoreCardData {
     pricePerToken?: number
     currencyName?: string
 }
+
+export interface BuyCardData {
+    uri: string;
+    listingId: number
+}

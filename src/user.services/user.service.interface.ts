@@ -1,5 +1,7 @@
 //**  TYPE INTERFACE
 
+import { StringLike } from "bun";
+
 /**
  * Represents the return data structure for validating a user session.
  *
@@ -148,9 +150,6 @@ export interface PlayerStats {
    */
 export interface SafeProperties {
     signupDate: number;
-    email: string;
-    firstName: string;
-    lastName: string;
   }
   
   /**
@@ -176,18 +175,17 @@ export interface SafeProperties {
 export interface UserData {
     properties: {
       signupDate: number
-      cardInventory: CardInventory;
-      email: string;
-      firstName: string;
-      lastName: string;
-      localWallet: string;
-      localWalletKey: string;
-      password: string;
-      playerStats: PlayerStats;
-      powerUpInventory: PowerUpInventory;
+      accountType: "beats",
       userId: string;
       username: string;
+      password: string;
+      localWallet: string;
+      localWalletKey: string;
+      playerStats: PlayerStats;
       suspended: Suspended
+      country: string;
+      deviceId: string;
+      inventorySize: number;
     };
   }
   
@@ -237,10 +235,12 @@ export interface LocalWallet {
  * @interface User
  * @property {string} userName - The username of the user.
  * @property {string} password - The password of the user.
+ * @property {string} deviceId - The device identifier of the user.
  */
 export interface User {
   userName: string
   password: string
+  deviceId: string
 }
 
 /**

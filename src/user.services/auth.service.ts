@@ -32,7 +32,8 @@ import { Driver, QueryResult, Session,  ManagedTransaction } from 'neo4j-driver-
 //** TYPE INTERFACES
 import { LocalWallet, WalletData, UserData, ValidateSessionReturn, AuthenticateReturn, PlayerStats, TokenScheme, PlayerInfo, User, CardInventory, PowerUpInventory, Suspended } from './user.service.interface'
 
-
+//** GEO IP IMPORT
+import geoip from 'geoip-lite2'
 class AuthService {
 
   driver: Driver
@@ -40,14 +41,14 @@ class AuthService {
     this.driver = driver
     }
 
-  public async register(userData: User): Promise<void> {
+  public async register(userData: User, ipAddress: string): Promise<void> {
     const walletService: WalletService = new WalletService();
     const replenishService: Replenishments = new Replenishments();
 
     const userId: string = await nanoid();
     const statsPlayer: PlayerStats = playerStats;
 
-    const { userName, password } = userData as User
+    const { userName, password, deviceId } = userData as User
     const encrypted: string = await hash(password, parseInt(SALT_ROUNDS));
     const locKey: string = await hash(userName, parseInt(SALT_ROUNDS));
 
@@ -55,6 +56,10 @@ class AuthService {
 
     const signupDate: number = Date.now()
     const suspended: Suspended = { until: null, reason: "" };
+
+    const geo = geoip.lookup(ipAddress);
+    const country: string | undefined = geo?.country
+
 
     const session: Session = this.driver.session();
     try {
@@ -71,13 +76,12 @@ class AuthService {
                localWalletKey: $locKey,
                playerStats: $statsPlayer,
                suspended: $suspended,
-               cardInventory: [],
-               inventoryCapacity: 200,
-               powerUpInventory: [],
-               iveEquip: []
+               country: "SOKOR",
+               deviceId: $deviceId,
+               inventorySize: 200
              })
            `,
-           { signupDate, userId, userName, encrypted, localWallet, locKey, statsPlayer, suspended }
+           { signupDate, userId, userName, encrypted, localWallet, locKey, statsPlayer, suspended, country, deviceId }
          ) 
        )
 
@@ -131,7 +135,7 @@ class AuthService {
             throw new ValidationError('Incorrect password.', "");
         }
         // Return User Details
-        const { password, localWallet, localWalletKey, playerStats, userId, username, cardInventory, powerUpInventory, ...safeProperties } = user.properties
+        const { password, localWallet, localWalletKey, playerStats, userId, username, ...safeProperties } = user.properties
 
         const walletPromise: Promise<WalletData> = walletService.importWallet(localWallet, localWalletKey);
         const energyPromise: Promise<number> = replenishService.getEnergy(userName, playerStats);
@@ -183,7 +187,7 @@ class AuthService {
         }
         
         const userData: UserData = result.records[0].get('u');
-        const { localWallet, localWalletKey, playerStats, password, userId, cardInventory, powerUpInventory, username, ...safeProperties } = userData.properties;
+        const { localWallet, localWalletKey, playerStats, password, userId, username, ...safeProperties } = userData.properties;
         
         // Import the user's smart wallet using the WalletService class
         const walletPromise: Promise<WalletData> = walletService.importWallet(localWallet, localWalletKey);
@@ -310,7 +314,7 @@ class AuthService {
       const user: UserData = result.records[0].get('u');
 
       // Return User Details
-      const { password, localWallet, localWalletKey, playerStats, userId, username, cardInventory, powerUpInventory, ...safeProperties } = user.properties
+      const { password, localWallet, localWalletKey, playerStats, userId, username, ...safeProperties } = user.properties
 
       const walletPromise: Promise<WalletData> = walletService.importWallet(localWallet, localWalletKey);
       const energyPromise: Promise<number> = replenishService.getEnergy(userName, playerStats);

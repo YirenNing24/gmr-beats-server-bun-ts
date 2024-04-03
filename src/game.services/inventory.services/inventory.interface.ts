@@ -1,3 +1,5 @@
+import { StringLike } from "bun"
+
 /**
  * Represents the return data structure from the card Editition Contract in the blockchain.
  *
@@ -82,6 +84,11 @@ export interface CardMetaData {
     currencyName?: string
  };
 
+
+export interface UpdateInventoryData {
+  uri: string;
+  equipped: boolean;
+}
 
 
 interface CardDataArray {

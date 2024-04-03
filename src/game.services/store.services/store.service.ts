@@ -1,11 +1,11 @@
 //** THIRDWEB IMPORTS
-import { ThirdwebSDK } from "@thirdweb-dev/sdk";
+import { Marketplace, ThirdwebSDK } from "@thirdweb-dev/sdk";
 import { LocalWalletNode } from "@thirdweb-dev/wallets/evm/wallets/local-wallet-node";
 import { SmartWallet } from "@thirdweb-dev/wallets";
 
 //** MEMGRAPH IMPORTS
 import { CARD_MARKETPLACE } from "../../config/constants";
-import { Driver, Session, ManagedTransaction, QueryResult } from "neo4j-driver-core";
+import { Driver, Session, ManagedTransaction, QueryResult, RecordShape } from "neo4j-driver-core";
 
 //** CONFIG IMPORTs
 import { CHAIN, SMART_WALLET_CONFIG } from "../../config/constants";
@@ -15,7 +15,10 @@ import ValidationError from "../../outputs/validation.error";
 
 //** SERVICE IMPORTS
 import TokenService from "../../user.services/token.service";
-import { StoreCardData } from "./store.interface";
+import { BuyCardData, StoreCardData } from "./store.interface";
+import { UserData } from "../../user.services/user.service.interface";
+import { buyCardCypher } from "./store.cypher";
+import { SuccessMessage } from "../../outputs/success.message";
 
 
 export default class StoreService {
@@ -25,7 +28,7 @@ export default class StoreService {
     this.driver = driver;
   }
 
-  public async getListedCards(token: string): Promise<StoreCardData[]> {
+  public async getValidCards(token: string): Promise<StoreCardData[]> {
     try {
       const tokenService: TokenService = new TokenService();
       await tokenService.verifyAccessToken(token);
@@ -47,45 +50,89 @@ export default class StoreService {
     }
   }
 
-  async buyCard(tokenId: number, cardName: string, token: string): Promise<any> {
+  public async buyCard(buycardData: BuyCardData, token: string): Promise<any> {
     try {
-
       const tokenService: TokenService = new TokenService();
       const username: string = await tokenService.verifyAccessToken(token);
 
-      const session = this.driver.session();
-      const res = await session.executeRead((tx) =>
-        tx.run("MATCH (u:User {username: $username}) RETURN u", { username })
+      const { listingId, uri } = buycardData as BuyCardData
+
+      const session: Session = this.driver.session();
+      const result: QueryResult<RecordShape> = await session.executeRead((tx: ManagedTransaction) =>
+        tx.run(buyCardCypher, { username }) 
       );
       await session.close();
 
-      if (res.records.length === 0) {
+      if (result.records.length === 0) {
         throw new ValidationError(`User with username '${username}' not found.`, '');
       }
-
-      const userData = res.records[0].get("u");
+      const userData: UserData = result.records[0].get("u");
       const { localWallet, localWalletKey } = userData.properties;
 
-      const walletLocal = new LocalWalletNode({ chain: CHAIN });
-      await walletLocal.import({
-        encryptedJson: localWallet,
-        password: localWalletKey,
-      });
+      await this.cardPurchase(localWallet, localWalletKey, listingId)
 
-      const smartWallet = new SmartWallet(SMART_WALLET_CONFIG);
-      await smartWallet.connect({
-        personalWallet: walletLocal,
-      });
+      // Decide the relationship type based on inventory and bag size
+      const inventorySize: number = userData.properties.inventorySize
+      const bagSize: number = result.records[0].get("sizeBaggedCards");
 
-      const sdk = await ThirdwebSDK.fromWallet(smartWallet, CHAIN);
-      const contract = await sdk.getContract(CARD_MARKETPLACE, "marketplace-v3");
-      await contract.directListings.buyFromListing(tokenId, 1);
+      // Create relationship using a separate Cypher query
+      await this.createRelationship(username, uri, bagSize, inventorySize );
 
-      return { success: "ok" };
-    } catch (error) {
-      return { error: error };
+      return new SuccessMessage("Purchase was successfull");
+    } catch (error: any) {
+      throw error
     }
   }
+
+
+  private async createRelationship(username: string, uri: string, bagSize: number, inventorySize: number): Promise<void> {
+    try {
+      // Determine the relationship type based on bag and inventory size
+      let relationship: string[];
+      if (bagSize + 1 <= inventorySize) {
+        relationship = ["BAGGED, OWNS"];
+      } else {
+        relationship = ["OWNS"];
+      }
+      const session: Session = this.driver.session();
+      // Loop through each relationship type
+      for (const rel of relationship) {
+        await session.run(`
+          MATCH (u:User {username: $username}), (c:Card {uri: $uri})
+          CREATE (u)-[:${rel}]->(c)`,
+          { username, uri });
+      }
+      
+      await session.close();
+    } catch (error: any) {
+      throw error;
+    }
+  }
+
+
+  private async cardPurchase(localWallet: string, localWalletKey: string, listingId: number): Promise<void> {
+    try {
+
+    const walletLocal: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
+    await walletLocal.import({
+      encryptedJson: localWallet,
+      password: localWalletKey,
+    });
+    const smartWallet: SmartWallet = new SmartWallet(SMART_WALLET_CONFIG);
+    await smartWallet.connect({
+      personalWallet: walletLocal,
+    });
+
+    const sdk: ThirdwebSDK = await ThirdwebSDK.fromWallet(smartWallet, CHAIN);
+    const contract = await sdk.getContract(CARD_MARKETPLACE, "marketplace-v3");
+    await contract.directListings.buyFromListing(listingId, 1);
+  } catch(error: any) {
+    throw error
+      }
+    }
+  }
+
+  
 
   // async getBundles(itemType: string, token: string): Promise<any[]> {
   //   try {
@@ -107,4 +154,4 @@ export default class StoreService {
   //     throw new Error("Failed to fetch items.");
   //   }
   // }
-}
+

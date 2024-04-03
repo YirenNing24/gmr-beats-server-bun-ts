@@ -6,15 +6,15 @@ import { Driver } from 'neo4j-driver';
 import { getDriver } from '../db/memgraph';
 
 //** INTERFACE IMPORT
-import { InventoryCardData } from '../game.services/inventory.services/inventory.interface';
+import { InventoryCardData, UpdateInventoryData } from '../game.services/inventory.services/inventory.interface';
 
 //** SERVICES IMPORTS
 import InventoryService from '../game.services/inventory.services/inventory.service';
 
 //** VALIDATION SCHEMA IMPORT
 import { authorizationBearerSchema } from './route.schema/schema.auth';
-
-
+import { updateInventorySchema } from '../game.services/inventory.services/inventory.schema';
+import { SuccessMessage } from '../outputs/success.message';
 
 
 const inventory = (app: Elysia): void => {
@@ -37,27 +37,24 @@ const inventory = (app: Elysia): void => {
         }, authorizationBearerSchema
     )
     
-    // .post('/api/card/inventory/update', async ({ headers, body }) => {
-    //     try {
-    //         const authorizationHeader: string = headers.authorization || "";
-    //         if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
-    //             throw new Error('Bearer token not found in Authorization header');
-    //         }
-    //         const jwtToken: string = authorizationHeader.substring(7);
+     .post('/api/card/inventory/update', async ({ headers, body }): Promise<SuccessMessage> => {
+         try {
+             const authorizationHeader: string = headers.authorization || "";
+             if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+                 throw new Error('Bearer token not found in Authorization header');
+             }
+             const jwtToken: string = authorizationHeader.substring(7);
 
-    //         const driver: Driver = getDriver();
-    //         const inventoryService: InventoryService = new InventoryService(driver);
+             const driver: Driver = getDriver();
+             const inventoryService: InventoryService = new InventoryService(driver);
+             const output: SuccessMessage = await inventoryService.updateInventoryData(jwtToken, body)
 
-    //         const inventoryCardData = body as InventoryCardData
-    //         const output = await inventoryService.updateInventoryData(jwtToken, inventoryCardData)
-
-    //         return output
-    //     } catch (error: any) {
-    //         console.log(error)
-    //         return error
-    //         }
-    //     }, inventoryCardDataSchema
-    // )
+             return output as SuccessMessage
+         } catch (error: any) {
+             return error
+             }
+         }, updateInventorySchema
+     )
 
 };
 

@@ -16,10 +16,12 @@ import ValidationError from '../outputs/validation.error';
 
 //** VALIDATION SCHEMA IMPORT
 import { authorizationBearerSchema, beatsLoginSchema, googleServerTokenSchema, registrationSchema } from './route.schema/schema.auth';
-
+import { ip } from 'elysia-ip';
 
 const auth = (app: Elysia): void => {
-  app.post('api/login/google', async ({ body }): Promise<AuthenticateReturn> => {
+
+  app.use(ip())
+  .post('api/login/google', async ({ body }): Promise<AuthenticateReturn> => {
     try {
       const { serverToken } = body;
   
@@ -67,18 +69,20 @@ const auth = (app: Elysia): void => {
         }, authorizationBearerSchema
       )
 
-  .post('/api/register/beats', async ({ body }): Promise<void> => {
+  .post('/api/register/beats', async ({ body, ip }): Promise<void> => {
     try {
       const userData: User = body
 
       const driver: Driver = getDriver();
       const authService: AuthService = new AuthService(driver);
-      await authService.register(userData);
+      const ipAddress = ip as string
+      await authService.register(userData, ipAddress);
 
     } catch (error: any) {
       throw error
     }
-      }, registrationSchema ) 
+      }, registrationSchema 
+      ) 
   
   .post('/api/register/google', async ({ body }): Promise<void | ValidationError> => {
     try {
