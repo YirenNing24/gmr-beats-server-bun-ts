@@ -5,10 +5,10 @@ import { createSigner, createVerifier } from 'fast-jwt';
 import { JWT_SECRET } from '../config/constants';
 
 //** TYPE INTERFACE IMPORT
-import { AccessRefresh, TokenScheme } from './user.service.interface';
+import { TokenScheme } from './user.service.interface';
 
-const ACCESS_TOKEN_EXPIRY = '5m'; // Set your desired access token expiry time
-const REFRESH_TOKEN_EXPIRY = '10m'; // Set your desired refresh token expiry time
+const ACCESS_TOKEN_EXPIRY = '10m';
+const REFRESH_TOKEN_EXPIRY = '30m';
 
 
 class TokenService {

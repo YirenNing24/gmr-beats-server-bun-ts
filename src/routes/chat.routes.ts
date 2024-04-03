@@ -32,7 +32,7 @@ const chat = (app: Elysia): void => {
         chatService.chatRoom(room, jwtToken);
         ws?.subscribe('all');
       } catch (error: any) {
-        return error;
+        throw error;
       }
     },
 
