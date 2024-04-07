@@ -16,7 +16,6 @@
     "@elysiajs/eden": "^0.8.1",
     "@elysiajs/jwt": "^0.6.4",
     "@influxdata/influxdb-client": "^1.33.2",
-    "@sinclair/typebox": "^0.32.14",
     "@thirdweb-dev/chains": "^0.1.38",
     "@thirdweb-dev/sdk": "^4.0.9",
     "@thirdweb-dev/storage": "^2.0.2",
@@ -34,17 +33,12 @@
     "fast-jwt": "^4.0.0",
     "geoip-lite2": "^2.1.31",
     "google-auth-library": "^9.6.3",
-    "install": "^0.13.0",
-    "jsonwebtoken": "^9.0.2",
     "meilisearch": "^0.34.2",
     "nanoid": "^4.0.2",
     "neo4j-driver": "^5.11.0",
     "oauth-1.0a": "^2.2.6",
     "ollama": "^0.4.4",
     "redis": "^4.6.10",
-    "rethink": "^1.4.0",
-    "rethinkdb": "^2.4.2",
-    "sharp": "^0.33.2",
-    "twitter-api-sdk": "^1.2.1"
+    "rethinkdb": "^2.4.2"
   }
 }
