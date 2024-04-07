@@ -2,27 +2,12 @@
 import { Driver, ManagedTransaction, QueryResult, Session } from "neo4j-driver";
 
 //** VALIDATION ERROR
-import { ClassicScoreStats } from "./game.services.interfaces";
-import TokenService from "../user.services/token.service";
+import { ClassicScoreStats } from "./leaderboard.interface";
+import TokenService from "../../user.services/token.service";
 
 
 class LeaderboardService {
-	/**
-	 * Memgraph driver instance for database interactions.
-	 * @type {Driver|undefined}
-	 * @memberof InventoryService
-	 * @instance
-	 */
 	driver?: Driver;
-
-	/**
-	 * Creates an instance of InventoryService.
-	 *
-	 * @constructor
-	 * @param {Driver|undefined} driver - The Neo4j driver to be used for database interactions.
-	 * @memberof InventoryService
-	 * @instance
-	 */
 	constructor(driver?: Driver) {
 		this.driver = driver;
 	}

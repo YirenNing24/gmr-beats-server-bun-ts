@@ -1,0 +1,19 @@
+
+
+
+//** ELYSIA TYPE VALIDATION IMPORT
+import { t } from "elysia";
+
+//
+/**
+ * Schema for validating the body of a Beats login request.
+ *
+ * @type {Object}
+ * @property {Object} body - The body of the request.
+ * @property {string} body.username - The username for login.
+ * @property {string} body.password - The password for login.
+ */
+export const redeemBundleSchema = {
+    body: t.Object({ bundleId: t.Number(), amount: t.Number() }),
+    headers: t.Object({ authorization: t.String() })
+}

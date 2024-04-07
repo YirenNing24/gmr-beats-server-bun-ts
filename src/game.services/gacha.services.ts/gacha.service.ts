@@ -3,19 +3,25 @@ import { Driver, ManagedTransaction, QueryResult, RecordShape, Session } from "n
 
 //** THIRDWEB IMPORTS
 import { Pack, ThirdwebSDK } from "@thirdweb-dev/sdk";
+
 //** THIRDWEB IMPORT * TYPES
 import { LocalWalletNode } from "@thirdweb-dev/wallets/evm/wallets/local-wallet-node";
 import { SmartWallet } from "@thirdweb-dev/wallets";
 
 //** VALIDATION ERROR
-import ValidationError from "../outputs/validation.error";
+import ValidationError from "../../outputs/validation.error";
 
 //** IMPORTED SERVICES
-import { PACK_ADDRESS, SECRET_KEY, CHAIN, SMART_WALLET_CONFIG } from "../config/constants";
-import TokenService from "../user.services/token.service";
+import { PACK_ADDRESS, SECRET_KEY, CHAIN, SMART_WALLET_CONFIG } from "../../config/constants";
+import TokenService from "../../user.services/token.service";
 
 //** TYPE INTERFACES
-import { BundleRewards, CardInventoryOpen } from "./game.services.interfaces";
+import { BundleRewards, RedeemBundle } from "./gacha.interface";
+import { UserData } from "../../user.services/user.service.interface";
+
+//** CYPHER IMPORT
+import { redeemBundle } from "./gacha.cypher";
+
 
 
 class GachaService {
@@ -23,8 +29,10 @@ class GachaService {
     constructor(driver?: Driver) {
         this.driver = driver;
     }
-    public async redeemBundle(bundleId: number, amount: number = 1, token: string): Promise<BundleRewards> {
+    //Redeems a bundle for a user and returns the rewards obtaine
+    public async redeemBundle(body: RedeemBundle, token: string): Promise<BundleRewards> {
         try {
+
             const tokenService: TokenService = new TokenService();
             const userName: string = await tokenService.verifyAccessToken(token);
 
@@ -32,10 +40,7 @@ class GachaService {
             // Use a Read Transaction and only return the necessary properties
             const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
               (tx: ManagedTransaction) =>
-                tx.run(
-                  `MATCH (u:User {username: $userName}) 
-                  RETURN u.localWallet as localWallet u.localWalletKey as localWalletKey`,
-                  { userName }
+                tx.run(redeemBundle, { userName }
                 )
             );
 
@@ -44,10 +49,8 @@ class GachaService {
                 throw new ValidationError(`User with username '${userName}' not found.`, "");
             }
         
-            const walletData: RecordShape | undefined = result?.records[0].toObject();
-
-            // Retrieve the required properties directly from the query result
-            const { localWallet, localWalletKey } = walletData as CardInventoryOpen;
+            const userData: UserData = result?.records[0].get("u");
+            const { localWallet, localWalletKey } = userData.properties
 
             const walletLocal: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
             await walletLocal.import({
@@ -67,12 +70,13 @@ class GachaService {
             });
 
             const bundleContract: Pack = await sdk.getContract(PACK_ADDRESS, "pack")
-            const reward = await bundleContract.open(bundleId, amount)
+            const reward = await bundleContract.open(body.bundleId, 1)
             const { erc1155Rewards, erc20Rewards } = reward
         
         //@ts-ignore
         return { erc1155Rewards, erc20Rewards } as BundleRewards
         } catch(error: any) {
+          console.error("Error in redeeming bundle: ", error)
           throw error
       }
 

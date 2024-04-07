@@ -95,6 +95,9 @@ export interface UpdateInventoryData {
   equipped: boolean;
 }
 
+
+
+
 /**
  * Interface representing an array of card data indexed by URI.
  */

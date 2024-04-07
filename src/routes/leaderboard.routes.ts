@@ -8,7 +8,7 @@ import { Driver } from 'neo4j-driver'
 import { getDriver } from '../db/memgraph'
 
 //** SERVICES IMPORT
-import LeaderboardService from '../game.services/leaderboard.services'
+import LeaderboardService from '../game.services/leaderboard.services/leaderboard.services'
 
 //** TYPES IMPORTS
 import { ClassicLeaderboardRequest, ClassicScoreStats } from '../game.services/game.services.interfaces'

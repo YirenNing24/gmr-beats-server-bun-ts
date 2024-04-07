@@ -8,13 +8,15 @@ import ValidationError from '../outputs/validation.error'
 import WalletService from "../user.services/wallet.service";
 
 //** TYPE INTERFACES
-import { CardInventoryOpen, ClassicScoreStats } from "./game.services.interfaces";
+import { ClassicScoreStats } from "./leaderboard.services/leaderboard.interface";
+
 
 //** THIRDWEB IMPORTS
 import { ThirdwebSDK, Token } from "@thirdweb-dev/sdk";
 
 //** CONFIGS
 import { SECRET_KEY } from "../config/constants";
+import { UserData } from "../user.services/user.service.interface";
 
 
 class RewardsService {
@@ -112,8 +114,8 @@ constructor(driver?: Driver) {
         throw new ValidationError(`User with username '${userName}' not found.`, "");
       }
   
-      // Retrieve the required properties directly from the query result
-      const { localWallet, localWalletKey } = result?.records[0].toObject() as CardInventoryOpen;
+      const userData: UserData = result?.records[0].get("u");
+      const { localWallet, localWalletKey } = userData.properties;
   
       // Return wallet address
       const walletService: WalletService = new WalletService();
