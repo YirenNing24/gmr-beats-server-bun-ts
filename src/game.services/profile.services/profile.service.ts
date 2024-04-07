@@ -24,7 +24,6 @@ class ProfileService {
     this.driver = driver;
   }
 
-
   //Updates the statistics of a user based on the provided stat points.
   public async updateStats(statPoints: StatPoints, token: string): Promise<any | UpdateStatsFailed> {
     try {
@@ -148,34 +147,25 @@ class ProfileService {
   // Retrieves profile pictures for the user.
   public async getProfilePic(token: string): Promise<ProfilePicture[]> {
       try {
-
         const tokenService: TokenService = new TokenService();
         const userName: string = await tokenService.verifyAccessToken(token);
 
         const session: Session | undefined = this.driver?.session();
-    
+
         // Find the user node within a Read Transaction
         const result: QueryResult | undefined = await session?.executeRead(tx =>
-          tx.run('MATCH (u:User {username: $userName}) RETURN u', { userName })
+            tx.run('MATCH (u:User {username: $userName}) RETURN u.profilePictures', { userName })
         );
-    
+
         await session?.close();
-    
-        // Verify the user exists
-        if (result?.records.length === 0) {
-          throw new ValidationError(`User with username '${userName}' not found.`, "");
+
+        // Verify the user exists and has profile pictures
+        if (!result || result.records.length === 0) {
+            throw new ValidationError(`User with username '${userName}' not found or has no profile pictures.`, "");
         }
-    
-        const connection: rt.Connection = await getRethinkDB();
-        const query: rt.Cursor = await rt
-          .db('beats')
-          .table('profilepic')
-          .filter({ userName })  // Filter by userName
-          .orderBy(rt.desc('uploadedAt'))
-          .limit(10)
-          .run(connection);
-    
-        const profilePictures = await query.toArray() as ProfilePicture[];
+
+        // Extract profile pictures from the query result
+        const profilePictures: ProfilePicture[] = result.records[0].get('u.profilePictures');
     
         return profilePictures as ProfilePicture[];
       } catch (error: any) {
@@ -184,32 +174,43 @@ class ProfileService {
     };
   
   // Retrieves display pictures for the specified user names.
-  public async getDisplayPic(userNames: string[]) {
-      try {
-        const connection: rt.Connection = await getRethinkDB();
-        
-        const query: rt.Cursor = await rt
-        .db('beats')
-        .table('profilepic')
-        .getAll(...userNames)
-        .orderBy(rt.desc('uploadedAt'))
-        .limit(10)  // Limit to the latest 10 for each user
-        .run(connection);
-  
-        // Map the result to an array of objects with username and profilePicture
-        const profilePictures: { userName: string, profilePicture: ProfilePicture }[] = await query.toArray().then(rows => 
-          rows.map(row => ({ 
-            userName: row('group'), 
-            profilePicture: row('reduction') 
-          }))
+  public async getDisplayPic(userNames: string[]): Promise<{ profilePicture: ProfilePicture }[]> {
+    try {
+        const session: Session | undefined = this.driver?.session();
+        const queryResult: QueryResult | undefined = await session?.executeRead(tx =>
+            tx.run(`
+                MATCH (u:User)
+                WHERE u.username IN $userNames
+                UNWIND u.profilePictures AS profilePicture
+                RETURN u.username AS username, profilePicture
+                ORDER BY profilePicture.uploadedAt DESC
+                LIMIT 10
+            `, { userNames })
         );
-    
+
+        await session?.close();
+
+        if (!queryResult) {
+            throw new ValidationError("Error getting profile pictures: query result is undefined.", "");
+        }
+
+        const profilePictures: { profilePicture: ProfilePicture }[] = queryResult.records.map(record => ({
+            profilePicture: {
+                userName: record.get("username"),
+                profilePicture: record.get("profilePicture").profilePicture,
+                fileFormat: record.get("profilePicture").fileFormat,
+                uploadedAt: record.get("profilePicture").uploadedAt,
+                fileSize: record.get("profilePicture").fileSize
+            }
+        }));
+
         return profilePictures;
-      } catch (error: any) {
+    } catch (error: any) {
         console.error("Error getting profile pictures:", error);
-        throw new ValidationError(`Error retrieving the image ${error.message}.`, "");
-      }
-    };
+        throw new ValidationError(`Error retrieving the profile pictures: ${error.message}.`, "");
+    }
+};
+
 
   //Retrieves the count of profile pictures for the specified user.
   private async getProfilePicsCount(userName: string): Promise<number> {
