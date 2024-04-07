@@ -49,7 +49,10 @@ export const registrationSchema = {
  * @property {string} body.serverToken - The server token for Google authentication.
  */
 export const googleServerTokenSchema = { 
-    body: t.Object({ serverToken: t.String() })
+    body: t.Object({ 
+        serverToken: t.String(),
+        deviceId: t.String() 
+    })
 }
 
 

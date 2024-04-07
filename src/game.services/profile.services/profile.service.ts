@@ -18,7 +18,6 @@ import { UpdateStatsFailed, ProfilePicture, StatPoints } from "./profile.interfa
 import { PlayerStats } from "../../user.services/user.service.interface";
 
 class ProfileService {
-
   driver?: Driver;
   constructor(driver?: Driver) {
     this.driver = driver;
@@ -75,7 +74,7 @@ class ProfileService {
         console.error("Error updating stats:", error);
         return { success: false, message: 'Error updating stats.' } as UpdateStatsFailed;
     }
-};
+    };
 
   //Retrieves the statistics of a player from the database.
   public async getStats(username: string): Promise<PlayerStats> {
@@ -111,21 +110,27 @@ class ProfileService {
   //Uploads a profile picture for the user
   public async uploadProfilePic(bufferData: number[], token: string): Promise<SuccessMessage> {
       try {
-
         const tokenService: TokenService = new TokenService();
         const userName: string = await tokenService.verifyAccessToken(token);
 
+        // Check the number of existing profile pictures for the user
+        const existingProfilePicsCount: number = await this.getProfilePicsCount(userName);
+        if (existingProfilePicsCount >= 5) {
+          throw new ValidationError(`You already have 5 profile pictures.`, "");
+        }
+
+        const uploadedAt: number = Date.now();
+        const fileFormat: string = 'png';
+        const fileSize: number = 100;
+        const profilePicture: ProfilePicture = { profilePicture: bufferData, userName, uploadedAt, fileFormat, fileSize };
+
         const session: Session | undefined = this.driver?.session();
-    
         // Find the user node within a Read Transaction
-        const result: QueryResult | undefined = await session?.executeRead((tx: ManagedTransaction) =>
-          tx.run(`
-            MATCH (u:User {username: $userName})
-            RETURN u
-            OR
-            MATCH (u:User {username: $username})
-            RETURN u
-          `, { userName })
+        const result: QueryResult | undefined = await session?.executeWrite((tx: ManagedTransaction) =>
+          tx.run(
+                  `MATCH (u:User {username: $userName})
+                   SET u.profilePictures = coalesce(u.profilePictures, []) + $profilePictures
+                   RETURN u`, { userName, profilePicture })
         );
     
         await session?.close();
@@ -135,36 +140,14 @@ class ProfileService {
           throw new ValidationError(`User with username '${userName}' not found.`, "");
         }
     
-        // Check the number of existing profile pictures for the user
-        const existingProfilePicsCount: number = await this.getProfilePicsCount(userName);
-    
-        if (existingProfilePicsCount >= 5) {
-          throw new ValidationError(`You already have 5 profile pictures.`, "");
-        }
-    
-        const uploadedAt: number = Date.now();
-        const fileFormat: string = 'png';
-        const fileSize: number = 100;
-
-        const profilePicture: ProfilePicture = { profilePicture: bufferData, userName, uploadedAt, fileFormat, fileSize };
-    
-        const connection: rt.Connection = await getRethinkDB();
-        
-        // Store the username along with the profile picture data
-        await rt
-          .db('beats')
-          .table('profilepic')
-          .insert(profilePicture)
-          .run(connection)
-    
         return new SuccessMessage("Profile picture upload successful");
-      } catch (error) {
-        console.error("Error updating profile picture:", error);
-        throw new Error("Error processing the image.");
+      } catch (error: any) {
+          console.error("Error updating profile picture:", error);
+          throw error
       }
     };
 
-  // Retrieves profile pictures for the user
+  // Retrieves profile pictures for the user.
   public async getProfilePic(token: string): Promise<ProfilePicture[]> {
       try {
 
@@ -202,7 +185,7 @@ class ProfileService {
       }
     };
   
-  // Retrieves display pictures for the specified user names
+  // Retrieves display pictures for the specified user names.
   public async getDisplayPic(userNames: string[]) {
       try {
         const connection: rt.Connection = await getRethinkDB();
@@ -230,7 +213,7 @@ class ProfileService {
       }
     };
 
-  //Retrieves the count of profile pictures for the specified user
+  //Retrieves the count of profile pictures for the specified user.
   private async getProfilePicsCount(userName: string): Promise<number> {
       const connection: rt.Connection = await getRethinkDB();
       try {
@@ -247,9 +230,6 @@ class ProfileService {
         throw new ValidationError(`Get profile pic error.`, "");
       }
     };
-
-    
-    
 }
 
 export default ProfileService

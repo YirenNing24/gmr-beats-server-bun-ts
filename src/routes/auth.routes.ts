@@ -84,19 +84,19 @@ const auth = (app: Elysia): void => {
       }, registrationSchema 
       ) 
   
-  .post('/api/register/google', async ({ body }): Promise<void | ValidationError> => {
+  .post('/api/register/google', async ({ body, ip }): Promise<void | ValidationError> => {
     try {
-
-      const { serverToken } = body
 
       const driver: Driver = getDriver();
       const authService: AuthService = new AuthService(driver);
-      await authService.googleRegister(serverToken);
+      const ipAddress = ip as string
+      await authService.googleRegister(body, ipAddress);
 
     } catch (error: any) {
       throw error
     }
-      }, googleServerTokenSchema) 
+      }, googleServerTokenSchema
+      ) 
 
   .post('/api/version-check/beats', async (context: Context) => {
     const currentVersion = {

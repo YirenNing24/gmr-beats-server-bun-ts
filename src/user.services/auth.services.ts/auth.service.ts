@@ -34,6 +34,7 @@ import { LocalWallet, WalletData, UserData, ValidateSessionReturn, AuthenticateR
 
 //** GEO IP IMPORT
 import geoip from 'geoip-lite2'
+import { GoogleRegister } from './auth.interface.js'
 
 class AuthService {
 
@@ -49,8 +50,6 @@ class AuthService {
     const replenishService: Replenishments = new Replenishments();
 
     const userId: string = await nanoid();
-    const statsPlayer: PlayerStats = playerStats;
-
     const { userName, password, deviceId } = userData as User
     const encrypted: string = await hash(password, parseInt(SALT_ROUNDS));
     const locKey: string = await hash(userName, parseInt(SALT_ROUNDS));
@@ -77,7 +76,7 @@ class AuthService {
                password: $encrypted,
                localWallet: $localWallet, 
                localWalletKey: $locKey,
-               playerStats: $statsPlayer,
+               playerStats: $playerStats,
                suspended: $suspended,
                country: "SOKOR",
                deviceId: $deviceId,
@@ -85,7 +84,7 @@ class AuthService {
                profilePictures: []
              })
            `,
-           { signupDate, userId, userName, encrypted, localWallet, locKey, statsPlayer, suspended, country, deviceId }
+           { signupDate, userId, userName, encrypted, localWallet, locKey, playerStats, suspended, country, deviceId }
          ) 
        )
 
@@ -220,24 +219,26 @@ class AuthService {
         }
     };
 
-  public async googleRegister(token: string): Promise<void | ValidationError> {
+  public async googleRegister(body: GoogleRegister , ipAddress: string): Promise<void | ValidationError> {
 
     const walletService: WalletService = new WalletService();
     const replenishService: Replenishments = new Replenishments();
 
     const googleService: GoogleService = new GoogleService();
-    const playerInfo: PlayerInfo = await googleService.googleAuth(token);
+
+    const { serverToken, deviceId } = body
+    const playerInfo: PlayerInfo = await googleService.googleAuth(serverToken);
     const { displayName, playerId } = playerInfo as PlayerInfo;
 
     const userName: string = displayName;
+    const signupDate: number = Date.now()
+    const suspended: Suspended = { until: null, reason: "" };
+
+    const geo = geoip.lookup(ipAddress);
+    const country: string | undefined = geo?.country
     const session: Session = this.driver.session();
 
     try {
-      const inventoryCard: string = JSON.stringify(cardInventory);
-      const statsPlayer: string = JSON.stringify(playerStats);
-      const inventoryPowerUp: string = JSON.stringify(powerUpInventory);
-      const equipIve: string = JSON.stringify(iveEquip);
-
       const password: string = await nanoid()
       const encrypted: string = await hash(password, parseInt(SALT_ROUNDS));
       const locKey: string = await hash(displayName, parseInt(SALT_ROUNDS));
@@ -248,19 +249,22 @@ class AuthService {
         (tx: ManagedTransaction) => tx.run(
             `
             CREATE (u:User {
+              signupDate: $signupDate,
               accountType: "google",
               userId: $playerId,
               username: $userName,
               password: $encrypted,
               localWallet: $localWallet, 
               localWalletKey: $locKey,
-              cardInventory: $inventoryCard,
-              iveEquip: $equipIve,
-              playerStats: $statsPlayer,
-              powerUpInventory: $inventoryPowerUp
+              playerStats: $playerStats,
+              suspended: $suspended,
+              country: "SOKOR",
+              deviceId: $deviceId,
+              inventorySize: 200,
+              profilePictures: []
             })
           `,
-            { playerId, userName , encrypted, localWallet, locKey, inventoryCard, equipIve, statsPlayer, inventoryPowerUp }
+          { signupDate, playerId, userName, encrypted, localWallet, locKey, playerStats, suspended, country, deviceId }
           ) 
         )
   
