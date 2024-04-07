@@ -16,6 +16,7 @@ import TokenService from "../../user.services/token.service";
 //** TYPE INTERFACES
 import { UpdateStatsFailed, ProfilePicture, StatPoints } from "./profile.interface";
 import { PlayerStats } from "../../user.services/user.service.interface";
+import { uploadProfilePicCypher } from "./profile.cypher";
 
 class ProfileService {
   driver?: Driver;
@@ -127,10 +128,7 @@ class ProfileService {
         const session: Session | undefined = this.driver?.session();
         // Find the user node within a Read Transaction
         const result: QueryResult | undefined = await session?.executeWrite((tx: ManagedTransaction) =>
-          tx.run(
-                  `MATCH (u:User {username: $userName})
-                   SET u.profilePictures = coalesce(u.profilePictures, []) + $profilePictures
-                   RETURN u`, { userName, profilePicture })
+          tx.run(uploadProfilePicCypher, { userName, profilePicture })
         );
     
         await session?.close();
