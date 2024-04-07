@@ -32,7 +32,7 @@ class GoogleService {
 
     public async googleValidate(token: string): Promise<PlayerInfo> {
         try{
-            const oAuth2Client = new OAuth2Client( GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
+            const oAuth2Client: OAuth2Client = new OAuth2Client( GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
             const { tokens } = await oAuth2Client.getToken(token) as GetTokenResponse
 
             const apiUrl: string = 'https://games.googleapis.com/games/v1/players/me';

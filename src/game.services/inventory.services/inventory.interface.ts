@@ -85,14 +85,24 @@ export interface CardMetaData {
  };
 
 
+/**
+ * Interface for updating inventory data.
+ */
 export interface UpdateInventoryData {
+  /** URI of the card to be updated. */
   uri: string;
+  /** Indicates whether the card is equipped. */
   equipped: boolean;
 }
 
-
+/**
+ * Interface representing an array of card data indexed by URI.
+ */
 interface CardDataArray {
-    [uri: string]: CardMetaData;
-  }
+  [uri: string]: CardMetaData;
+}
 
+/**
+ * Type alias for an array of inventory card data, indexed by URI.
+ */
 export type InventoryCardData = CardDataArray[];

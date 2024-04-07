@@ -1,9 +1,6 @@
 //** MEMGRAPH DRIVER AND TYPES
 import { Driver, ManagedTransaction, QueryResult, RecordShape, Session } from "neo4j-driver";
 
-//** THIRDWEB IMPORTS
-import { Edition, NFT, Pack, ThirdwebSDK } from "@thirdweb-dev/sdk";
-
 //** VALIDATION ERROR
 import ValidationError from "../../outputs/validation.error";
 
@@ -11,11 +8,8 @@ import ValidationError from "../../outputs/validation.error";
 import WalletService from "../../user.services/wallet.service";
 import TokenService from "../../user.services/token.service";
 
-//** CONFIG IMPORTS
-import { EDITION_ADDRESS, PACK_ADDRESS, SECRET_KEY } from "../../config/constants";
-
 //** TYPE INTERFACES
-import { CardMetaData, InventoryCardData, UpdateInventoryData } from "./inventory.interface";
+import { CardMetaData, InventoryCardData , UpdateInventoryData } from "./inventory.interface";
 import { inventoryOpenCardCypher, updateInventoryCypher } from "./inventory.cypher";
 import { SuccessMessage } from "../../outputs/success.message";
 
@@ -32,6 +26,11 @@ class InventoryService {
     }
 
     //** CARD INVENTORY */
+    /**
+     * Retrieves inventory card data for a user based on the provided access token.
+     * @param token The access token used for authentication.
+     * @returns A promise resolving to an array of inventory card data indexed by URI.
+     */
     public async cardInventoryOpen(token: string): Promise<InventoryCardData>  {
       try {
         const tokenService: TokenService = new TokenService();
@@ -65,7 +64,13 @@ class InventoryService {
         throw error;
       }
     }
-    
+
+    /**
+ * Updates inventory data for a user based on the provided access token and update information.
+ * @param token The access token used for authentication.
+ * @param updateInventoryData The data containing the URI of the card to update and its equipped status.
+ * @returns A promise resolving to a success message when the inventory update is successful.
+ */
   public async updateInventoryData(token: string, updateInventoryData: UpdateInventoryData): Promise<SuccessMessage> {
       try {
            const tokenService: TokenService = new TokenService();
@@ -100,10 +105,10 @@ class InventoryService {
           
 
 
-    private async getWalletAddress(localWallet: string, localWalletKey: string): Promise<string> {
-      const walletService: WalletService = new WalletService();
-      return await walletService.getWalletAddress(localWallet, localWalletKey);
-      }
+    // private async getWalletAddress(localWallet: string, localWalletKey: string): Promise<string> {
+    //   const walletService: WalletService = new WalletService();
+    //   return await walletService.getWalletAddress(localWallet, localWalletKey);
+    //   }
 
 
   }
