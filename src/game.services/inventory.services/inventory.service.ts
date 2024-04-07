@@ -14,9 +14,9 @@ import { SuccessMessage } from "../../outputs/success.message";
 
 
 class InventoryService {
-    driver?: Driver;
-    constructor(driver?: Driver) {
-        this.driver = driver;
+driver?: Driver;
+constructor(driver?: Driver) {
+this.driver = driver;
     }
 
     //** CARD INVENTORY */
@@ -51,12 +51,13 @@ class InventoryService {
     
         return cardData as InventoryCardData;
       } catch (error: any) {
+        console.error("Error opening user inventory:", error);
         throw error;
       }
     }
 
   // Updates inventory data for a user based on the provided access token and update information.
-  public async updateInventoryData(token: string, updateInventoryData: UpdateInventoryData): Promise<SuccessMessage> {
+    public async updateInventoryData(token: string, updateInventoryData: UpdateInventoryData): Promise<SuccessMessage> {
       try {
            const tokenService: TokenService = new TokenService();
            const userName: string = await tokenService.verifyAccessToken(token);
@@ -78,6 +79,7 @@ class InventoryService {
     
              return new SuccessMessage("Inventory update successfully");
             } catch(error: any) {
+              console.error("Error updating inventory:", error);
               throw error;
             }
     }

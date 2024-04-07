@@ -6,8 +6,10 @@ import ValidationError from '../../outputs/validation.error'
 
 //** TYPE INTERFACES
 import { UserData } from "../../user.services/user.service.interface";
-import { LevelUpResult, PlayerStats } from "../game.services.interfaces";
+import { PlayerStats,  LevelUpResult } from "./experience.interface";
 
+//** CYPHER IMPORT
+import { saveUserDetails } from "./experience.cypher";
 
 class ExperienceService {
 
@@ -19,11 +21,10 @@ constructor(driver?: Driver) {
     //Calculates the experience gain for a user based on their accuracy and experience needed for the next level.
     public async calculateExperienceGain(userName: string, accuracy: number, experienceRequired: number): Promise<LevelUpResult> {
         try {
+            // Retrieve user details
             const user = await this.getUserDetails(userName);
-
-            // Extract user stats
             const { playerStats } = user.properties;
-
+            
             // Calculate experience gain
             const baseExperienceGain: number = Math.floor(10 * Math.pow(playerStats.level, 1.8));
             let adjustedExperienceGain: number = baseExperienceGain * (accuracy / 100);
@@ -33,44 +34,49 @@ constructor(driver?: Driver) {
 
             const experienceGained: number = Math.floor(adjustedExperienceGain);
 
-            // Generate the experience and get the result
-            const result: LevelUpResult= await this.generateExperience(userName, experienceGained, playerStats);
-
-            // Do something with the result, or return it if needed
-            return result
+            // Generate the experience and return the result
+            const result: LevelUpResult = await this.generateExperience(userName, experienceGained, playerStats);
+            return result;
             
         } catch (error: any) {
             console.error("Error calculating experience gain:", error);
             throw error;
         }
     }
+
     //Generates experience for a user, updating their level and experience points accordingly.
     public async generateExperience(userName: string, experienceGained: number, stats: PlayerStats): Promise<LevelUpResult> {
-        const { level, playerExp } = stats;
-        let currentLevel = level;
-        let currentExperience = playerExp + experienceGained;
-
-        // Loop until all experience is consumed
-        while (currentExperience >= 50 * Math.pow(currentLevel, 2.5)) {
-            // Subtract required experience for the current level
-            currentExperience -= 50 * Math.pow(currentLevel, 2.5);
-            // Increment level
-            currentLevel++;
+        try {
+            const { level, playerExp } = stats;
+            let currentLevel = level;
+            let currentExperience = playerExp + experienceGained;
+    
+            // Loop until all experience is consumed
+            while (currentExperience >= 50 * Math.pow(currentLevel, 2.5)) {
+                // Subtract required experience for the current level
+                currentExperience -= 50 * Math.pow(currentLevel, 2.5);
+                // Increment level
+                currentLevel++;
+            }
+    
+            // Check if the player leveled up and adjust current experience
+            if (currentExperience > 0 && currentLevel > level) {
+                currentExperience = experienceGained;
+            } else {
+                currentExperience += experienceGained;
+            }
+            
+            // Update user statistics and save details
+            stats.level = currentLevel;
+            stats.playerExp = currentExperience;
+            await this.saveUserDetails(userName, stats);
+    
+            // Return the updated level and experience
+            return { currentLevel, currentExperience };
+        } catch (error: any) {
+            console.error("Error generating experience:", error);
+            throw error;
         }
-
-        // If there's excess experience and the player leveled up, set currentExperience to excessExperience
-        if (currentExperience > 0 && currentLevel > level) {
-            currentExperience = experienceGained;
-        } else {
-            // If not leveled up, add experience gained to currentExperience
-            currentExperience += experienceGained;
-        }
-        
-        stats.level = currentLevel
-        stats.playerExp = currentExperience
-
-        await this.saveUserDetails(userName, stats)
-        return { currentLevel, currentExperience }
     }
     //Retrieves details of a user  based on the provided username.
     private async getUserDetails(userName: string): Promise<UserData> {
@@ -93,22 +99,20 @@ constructor(driver?: Driver) {
     }
     //Saves the details of a user, including player statistics, in the database.
     private async saveUserDetails(userName: string, playerStats: PlayerStats): Promise<void> {
-        const session: Session | undefined = this.driver?.session();
-
+        
         try {
+            const session: Session | undefined = this.driver?.session();
             // Find the user node within a Read Transaction
             const result: QueryResult | undefined = await session?.executeWrite((tx: ManagedTransaction) =>
-                tx.run(
-                    `MATCH (u:User {username: $userName}) 
-                     SET u.playerStats = $playerStats`, 
-                    { userName, playerStats })
+                tx.run(saveUserDetails, { userName, playerStats })
             );
             await session?.close();
             if (!result || result.records.length === 0) {
                 throw new ValidationError(`User with username '${userName}' not found.`, "");
             }
 
-        } catch(error: any) { 
+        } catch(error: any) {
+            console.error("Error saving user details:", error);
             throw error
         }
     }

@@ -28,11 +28,7 @@ export default class StoreService {
     this.driver = driver;
   }
 
-/**
- * Retrieves valid cards from the using the provided access token.
- * @param token The access token used for authentication.
- * @returns A promise resolving to an array of valid card data.
- */
+//Retrieves valid cards from the using the provided access token.
   public async getValidCards(token: string): Promise<StoreCardData[]> {
     try {
       const tokenService: TokenService = new TokenService();
@@ -52,12 +48,7 @@ export default class StoreService {
       throw error
     }
   }
-/**
- * Buys a card using the provided card data and access token.
- * @param buycardData The data of the card to be purchased.
- * @param token The access token used for authentication.
- * @returns A promise resolving to the result of the purchase operation.
- */
+//Buys a card using the provided card data and access token.
   public async buyCard(buycardData: BuyCardData, token: string): Promise<any> {
     try {
       const tokenService: TokenService = new TokenService();
@@ -92,14 +83,7 @@ export default class StoreService {
     }
   }
 
-/**
- * Creates a relationship between a user and a card based on provided parameters.
- * @param username The username of the user.
- * @param uri The URI of the card.
- * @param bagSize The size of the user's bagged cards.
- * @param inventorySize The size of the user's card inventory.
- * @returns A promise resolving to void when the relationship is successfully created.
- */
+//Creates a relationship between a user and a card based on provided parameters.
   private async createRelationship(username: string, uri: string, bagSize: number, inventorySize: number): Promise<void> {
     try {
       // Determine the relationship type based on bag and inventory size
@@ -113,23 +97,18 @@ export default class StoreService {
       // Loop through each relationship type
       for (const rel of relationship) {
         await session.run(`
-          MATCH (u:User {username: $username}), (c:Card {uri: $uri})
-          CREATE (u)-[:${rel}]->(c)`,
-          { username, uri });
+        MATCH (u:User {username: $username}), (c:Card {uri: $uri})
+        CREATE (u)-[:${rel}]->(c)`,
+        { username, uri, rel });    
       }
       await session.close();
     } catch (error: any) {
+      console.error("Error creating relationship:", error);
       throw error;
     }
   }
   
-/**
- * Initiates a card purchase using the provided wallet information and listing ID.
- * @param localWallet The encrypted JSON string representing the local wallet.
- * @param localWalletKey The password/key to decrypt the local wallet.
- * @param listingId The ID of the listing from which the card is being purchased.
- * @returns A promise resolving to void when the purchase is successfully initiated.
- */
+  //Initiates a card purchase using the provided wallet information and listing ID.
     private async cardPurchase(localWallet: string, localWalletKey: string, listingId: number): Promise<void> {
     try {
     const walletLocal: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
@@ -146,10 +125,11 @@ export default class StoreService {
     const contract = await sdk.getContract(CARD_MARKETPLACE, "marketplace-v3");
     await contract.directListings.buyFromListing(listingId, 1);
   } catch(error: any) {
+    console.error("Error purchasing card:", error);
     throw error
       }
   }
-  }
+}
 
   
 
