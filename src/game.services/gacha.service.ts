@@ -19,26 +19,10 @@ import { BundleRewards, CardInventoryOpen } from "./game.services.interfaces";
 
 
 class GachaService {
-    /**
-     * Neo4j driver instance for database interactions.
-     * @type {Driver|undefined}
-     * @memberof InventoryService
-     * @instance
-     */
     driver?: Driver;
-
-    /**
-     * Creates an instance of InventoryService.
-     *
-     * @constructor
-     * @param {Driver|undefined} driver - The Neo4j driver to be used for database interactions.
-     * @memberof InventoryService
-     * @instance
-     */
     constructor(driver?: Driver) {
         this.driver = driver;
     }
-
     public async redeemBundle(bundleId: number, amount: number = 1, token: string): Promise<BundleRewards> {
         try {
             const tokenService: TokenService = new TokenService();

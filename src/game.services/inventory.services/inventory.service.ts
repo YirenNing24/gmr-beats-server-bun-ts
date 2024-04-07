@@ -5,7 +5,6 @@ import { Driver, ManagedTransaction, QueryResult, RecordShape, Session } from "n
 import ValidationError from "../../outputs/validation.error";
 
 //** IMPORTED SERVICES
-import WalletService from "../../user.services/wallet.service";
 import TokenService from "../../user.services/token.service";
 
 //** TYPE INTERFACES
@@ -13,12 +12,7 @@ import { CardMetaData, InventoryCardData , UpdateInventoryData } from "./invento
 import { inventoryOpenCardCypher, updateInventoryCypher } from "./inventory.cypher";
 import { SuccessMessage } from "../../outputs/success.message";
 
-/**
- * Service for handling user inventory-related operations.
- *
- * @class
- * @name InventoryService
- */
+
 class InventoryService {
     driver?: Driver;
     constructor(driver?: Driver) {
@@ -26,11 +20,7 @@ class InventoryService {
     }
 
     //** CARD INVENTORY */
-    /**
-     * Retrieves inventory card data for a user based on the provided access token.
-     * @param token The access token used for authentication.
-     * @returns A promise resolving to an array of inventory card data indexed by URI.
-     */
+    //Retrieves inventory card data for a user based on the provided access token.
     public async cardInventoryOpen(token: string): Promise<InventoryCardData>  {
       try {
         const tokenService: TokenService = new TokenService();
@@ -65,12 +55,7 @@ class InventoryService {
       }
     }
 
-    /**
- * Updates inventory data for a user based on the provided access token and update information.
- * @param token The access token used for authentication.
- * @param updateInventoryData The data containing the URI of the card to update and its equipped status.
- * @returns A promise resolving to a success message when the inventory update is successful.
- */
+  // Updates inventory data for a user based on the provided access token and update information.
   public async updateInventoryData(token: string, updateInventoryData: UpdateInventoryData): Promise<SuccessMessage> {
       try {
            const tokenService: TokenService = new TokenService();

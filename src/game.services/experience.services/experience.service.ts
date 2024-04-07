@@ -16,13 +16,7 @@ driver?: Driver;
 constructor(driver?: Driver) {
     this.driver = driver;
 }
-    /**
-     * Calculates the experience gain for a user based on their accuracy and experience needed for the next level.
-     * @param userName The username of the user for whom experience gain is calculated.
-     * @param accuracy The accuracy of the user's action, represented as a percentage.
-     * @param experienceNeededForNextLevel The amount of experience needed for the user to reach the next level.
-     * @returns A promise resolving to a LevelUpResult object representing the result of the experience gain calculation.
-     */
+    //Calculates the experience gain for a user based on their accuracy and experience needed for the next level.
     public async calculateExperienceGain(userName: string, accuracy: number, experienceRequired: number): Promise<LevelUpResult> {
         try {
             const user = await this.getUserDetails(userName);
@@ -50,13 +44,7 @@ constructor(driver?: Driver) {
             throw error;
         }
     }
-    /**
-     * Generates experience for a user, updating their level and experience points accordingly.
-     * @param userName The username of the user for whom experience is generated.
-     * @param experienceGained The amount of experience gained by the user.
-     * @param stats The current statistics of the user, including level and experience points.
-     * @returns A promise resolving to a LevelUpResult object representing the user's updated level and experience points.
-     */
+    //Generates experience for a user, updating their level and experience points accordingly.
     public async generateExperience(userName: string, experienceGained: number, stats: PlayerStats): Promise<LevelUpResult> {
         const { level, playerExp } = stats;
         let currentLevel = level;
@@ -84,11 +72,7 @@ constructor(driver?: Driver) {
         await this.saveUserDetails(userName, stats)
         return { currentLevel, currentExperience }
     }
-    /**
-     * Retrieves details of a user  based on the provided username.
-     * @param userName The username of the user whose details are to be retrieved.
-     * @returns A promise resolving to the user data.
-     */
+    //Retrieves details of a user  based on the provided username.
     private async getUserDetails(userName: string): Promise<UserData> {
         const session: Session | undefined = this.driver?.session();
 
@@ -107,12 +91,7 @@ constructor(driver?: Driver) {
             await session?.close();
         }
     }
-    /**
-     * Saves the details of a user, including player statistics, in the database.
-     * @param userName The username of the user whose details are to be saved.
-     * @param playerStats The player statistics to be saved for the user.
-     * @returns A promise resolving to void when the user details are successfully saved.
-     */
+    //Saves the details of a user, including player statistics, in the database.
     private async saveUserDetails(userName: string, playerStats: PlayerStats): Promise<void> {
         const session: Session | undefined = this.driver?.session();
 
