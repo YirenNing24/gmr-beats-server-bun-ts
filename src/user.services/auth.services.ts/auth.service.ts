@@ -5,23 +5,23 @@
 
 
 //** CONFIGS IMPORT
-import { SALT_ROUNDS } from '../config/constants'
+import { SALT_ROUNDS } from '../../config/constants.js'
 
 //** BCRYPT IMPORT
 import { hash, compare } from 'bcrypt-ts'
 
 //** ERROR CODES
-import ValidationError from '../outputs/validation.error'
+import ValidationError from '../../outputs/validation.error.js'
 
 //** NEW ACCOUNT DEFAULT VALUES
-import { cardInventory, playerStats, powerUpInventory, iveEquip, IveEquip } from '../noobs/noobs'
+import { cardInventory, playerStats, powerUpInventory, iveEquip, IveEquip } from '../../noobs/noobs.js'
 
 //**  IMPORTED SERVICES
-import WalletService from './wallet.service'
-import Replenishments from '../game.services/replenishments.service.js'
-import ProfileService from '../game.services/profile.service'
-import TokenService from './token.service.js'
-import GoogleService from './google.service.js'
+import WalletService from '../wallet.service.js'
+import Replenishments from '../../game.services/replenishments.service.js'
+import ProfileService from '../../game.services/profile.services/profile.service.js'
+import TokenService from '../token.service.js'
+import GoogleService from '../google.service.js'
 
 //** UUID GENERATOR
 import { nanoid } from "nanoid/async";
@@ -30,10 +30,11 @@ import { nanoid } from "nanoid/async";
 import { Driver, QueryResult, Session,  ManagedTransaction } from 'neo4j-driver-core'
 
 //** TYPE INTERFACES
-import { LocalWallet, WalletData, UserData, ValidateSessionReturn, AuthenticateReturn, PlayerStats, TokenScheme, PlayerInfo, User, CardInventory, PowerUpInventory, Suspended } from './user.service.interface'
+import { LocalWallet, WalletData, UserData, ValidateSessionReturn, AuthenticateReturn, PlayerStats, TokenScheme, PlayerInfo, User, CardInventory, PowerUpInventory, Suspended } from '../user.service.interface.js'
 
 //** GEO IP IMPORT
 import geoip from 'geoip-lite2'
+
 class AuthService {
 
   driver: Driver
@@ -41,6 +42,8 @@ class AuthService {
     this.driver = driver
     }
 
+
+  // Registers a user.
   public async register(userData: User, ipAddress: string): Promise<void> {
     const walletService: WalletService = new WalletService();
     const replenishService: Replenishments = new Replenishments();
@@ -78,7 +81,8 @@ class AuthService {
                suspended: $suspended,
                country: "SOKOR",
                deviceId: $deviceId,
-               inventorySize: 200
+               inventorySize: 200,
+               profilePictures: []
              })
            `,
            { signupDate, userId, userName, encrypted, localWallet, locKey, statsPlayer, suspended, country, deviceId }
@@ -108,6 +112,7 @@ class AuthService {
       }
     };
 
+  // Authenticates a user with the provided username and unencrypted password.
   public async authenticate(userName: string, unencryptedPassword: string): Promise<AuthenticateReturn> {
     const walletService: WalletService = new WalletService();
     const profileService: ProfileService = new ProfileService();
@@ -163,6 +168,7 @@ class AuthService {
     }
     };
 
+  // Authenticates a user using JWT for auto-login.
   public async validateSession(token: string): Promise<ValidateSessionReturn>  {
       try {
         // Create a new instance of the needed services class
@@ -283,6 +289,7 @@ class AuthService {
         }
     };
 
+  // Logins a user using Google Auth
   public async googleLogin(token: string): Promise<AuthenticateReturn | ValidationError> {
     const googleService: GoogleService = new GoogleService();
     const playerInfo: PlayerInfo = await googleService.googleAuth(token);

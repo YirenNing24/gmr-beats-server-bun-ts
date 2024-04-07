@@ -1,21 +1,21 @@
-//** IMPORTED TYPES
+//** MEMGRAPH IMPORT
 import { Driver, ManagedTransaction, QueryResult, RecordShape, Session } from "neo4j-driver";
-import { UpdateStatsFailed, PlayerStats, ProfilePicture, StatPoints } from "./game.services.interfaces";
-import { getDriver } from '../db/memgraph';
+import { getDriver } from '../../db/memgraph';
 
-//** RETHINK DB
+//** RETHINK DB IMPORT
 import rt from "rethinkdb";
-import { getRethinkDB } from "../db/rethink";
+import { getRethinkDB } from "../../db/rethink";
 
 //** OUTPUT IMPORTS
-import ValidationError from "../outputs/validation.error";
-import { SuccessMessage } from "../outputs/success.message";
+import ValidationError from "../../outputs/validation.error";
+import { SuccessMessage } from "../../outputs/success.message";
 
-//** IMPORTED SERVICES
-import TokenService from "../user.services/token.service";
+//** SERVICE IMPORT
+import TokenService from "../../user.services/token.service";
 
-
-
+//** TYPE INTERFACES
+import { UpdateStatsFailed, ProfilePicture, StatPoints } from "./profile.interface";
+import { PlayerStats } from "../../user.services/user.service.interface";
 
 class ProfileService {
 
@@ -24,98 +24,60 @@ class ProfileService {
     this.driver = driver;
   }
 
-  public async updateStats(statPoints: StatPoints, token: string): Promise<any | UpdateStatsFailed>{
-    try {
 
+  //Updates the statistics of a user based on the provided stat points.
+  public async updateStats(statPoints: StatPoints, token: string): Promise<any | UpdateStatsFailed> {
+    try {
         const tokenService: TokenService = new TokenService();
         const username: string = await tokenService.verifyAccessToken(token);
 
         const session: Session | undefined = this.driver?.session();
-        const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
-            tx => tx.run(
-                `MATCH (u:User {username: $username})
-                RETURN u.playerStats`,
-                { username }
-            )
+        if (!session) throw new Error('Session is undefined');
+
+        const result: QueryResult<RecordShape> | undefined = await session.executeRead(tx =>
+            tx.run(`MATCH (u:User {username: $username}) RETURN u.playerStats`, { username })
         );
-        // Close the database session
-        await session?.close();
-        // Check if user exists
-        if (result?.records.length === 0) {
-            throw new ValidationError(`User with username '${username}' not found.`, "");
-        }
-        // Parse playerStats from retrieved data
+
+        if (!result?.records.length) throw new ValidationError(`User with username '${username}' not found.`, "");
+
         const userData = result?.records[0].get('u.playerStats');
         const playerStats: PlayerStats = JSON.parse(userData);
-        // Extract existing stat values and new stat points
-        const availStatPoints: number = playerStats.availStatPoints;
-        const { level, playerExp, rank, statPointsSaved } = playerStats as PlayerStats
-        const newStatPoints: StatPoints = statPoints;
-        // Calculate total stat points added, considering existing values from the database
-      const totalStatPointsAdded =
-          (newStatPoints.mainVocalist - statPointsSaved.mainVocalist) +
-          (newStatPoints.rapper - statPointsSaved.rapper) +
-          (newStatPoints.leadDancer - statPointsSaved.leadDancer) +
-          (newStatPoints.leadVocalist - statPointsSaved.leadVocalist) +
-          (newStatPoints.mainDancer - statPointsSaved.mainDancer) +
-          (newStatPoints.visual - statPointsSaved.visual) +
-          (newStatPoints.leadRapper - statPointsSaved.leadRapper);
-        // Validate stat changes
+
+        const { level, playerExp, availStatPoints, rank, statPointsSaved } = playerStats;
+        const { mainVocalist, rapper, leadDancer, leadVocalist, mainDancer, visual, leadRapper } = statPoints;
+        const totalStatPointsAdded =
+            mainVocalist + rapper + leadDancer + leadVocalist + mainDancer + visual + leadRapper;
+
         if (
-            statPointsSaved.mainVocalist + newStatPoints.mainVocalist < 0 ||
-            statPointsSaved.rapper + newStatPoints.rapper < 0 ||
-            statPointsSaved.leadDancer + newStatPoints.leadDancer < 0 ||
-            statPointsSaved.leadVocalist + newStatPoints.leadVocalist < 0 ||
-            statPointsSaved.mainDancer + newStatPoints.mainDancer < 0 ||
-            statPointsSaved.visual + newStatPoints.visual < 0 ||
-            statPointsSaved.leadRapper + newStatPoints.leadRapper < 0 ||
+            Object.values(statPoints).some(val => val < 0) ||
             totalStatPointsAdded > availStatPoints
-        ) {
-            throw new ValidationError(`Invalid stat changes detected.`, "");
-        }
-        // Calculate new available stat points, ensuring it doesn't go below 0
+        ) throw new ValidationError(`Invalid stat changes detected.`, "");
+
         const newAvailStatPoints = Math.max(0, availStatPoints - totalStatPointsAdded);
-        // Construct updated playerStats object
-        const updatedPlayerStats = {
-            level,
-            playerExp,
-            availStatPoints: newAvailStatPoints,
-            rank,
-            statPointsSaved: {
-                mainVocalist: newStatPoints.mainVocalist,
-                rapper: newStatPoints.rapper,
-                leadDancer: newStatPoints.leadDancer,
-                leadVocalist: newStatPoints.leadVocalist,
-                mainDancer: newStatPoints.mainDancer,
-                visual: newStatPoints.visual,
-                leadRapper: newStatPoints.leadRapper,
-            },
+        const updatedStatPointsSaved = {
+            mainVocalist,
+            rapper,
+            leadDancer,
+            leadVocalist,
+            mainDancer,
+            visual,
+            leadRapper,
         };
-        try{
-        // Convert updatedPlayerStats to JSON format
-        const newPlayerStats: string = JSON.stringify(updatedPlayerStats);
-        // Connect to a new database session for writing
 
-
-        const session2: Session | undefined = this.driver?.session();
-        await session2?.executeWrite(
-            tx => tx.run(
-                `MATCH (u:User {username: $username})
-                SET u.playerStats = $newPlayerStats`,
-                { username, newPlayerStats }
-            )
+        const updatedPlayerStats: PlayerStats = { level, playerExp, availStatPoints: newAvailStatPoints, rank, statPointsSaved: updatedStatPointsSaved };
+        await session.executeWrite(tx =>
+            tx.run(`MATCH (u:User {username: $username}) SET u.playerStats = $newPlayerStats`, { username, updatedPlayerStats })
         );
-        await session2?.close();
-        } catch(error){
-          console.log(error)
-          throw error
-        }
-        return { success: true, message: 'Stats updated successfully.', updatedPlayerStats };
-      } catch (error: any) {
-        return { success: false, message: 'Error updating stats.' } as UpdateStatsFailed;
-      }
-    };
+        await session.close();
 
+        return { success: true, message: 'Stats updated successfully.', updatedPlayerStats };
+    } catch (error: any) {
+        console.error("Error updating stats:", error);
+        return { success: false, message: 'Error updating stats.' } as UpdateStatsFailed;
+    }
+};
+
+  //Retrieves the statistics of a player from the database.
   public async getStats(username: string): Promise<PlayerStats> {
     try {
 
@@ -141,10 +103,12 @@ class ProfileService {
           const playerStats: PlayerStats = result.records[0].get('u.playerStats');
           return playerStats;
       } catch (error: any) {
+        console.error("Error getting stats:", error);
         throw error;
       }
     };
 
+  //Uploads a profile picture for the user
   public async uploadProfilePic(bufferData: number[], token: string): Promise<SuccessMessage> {
       try {
 
@@ -195,11 +159,12 @@ class ProfileService {
     
         return new SuccessMessage("Profile picture upload successful");
       } catch (error) {
-        console.error(error);
+        console.error("Error updating profile picture:", error);
         throw new Error("Error processing the image.");
       }
     };
 
+  // Retrieves profile pictures for the user
   public async getProfilePic(token: string): Promise<ProfilePicture[]> {
       try {
 
@@ -236,7 +201,8 @@ class ProfileService {
         throw new ValidationError(`Error processing the image ${error.message}.`, "");
       }
     };
-    
+  
+  // Retrieves display pictures for the specified user names
   public async getDisplayPic(userNames: string[]) {
       try {
         const connection: rt.Connection = await getRethinkDB();
@@ -259,10 +225,12 @@ class ProfileService {
     
         return profilePictures;
       } catch (error: any) {
+        console.error("Error getting profile pictures:", error);
         throw new ValidationError(`Error retrieving the image ${error.message}.`, "");
       }
     };
-        
+
+  //Retrieves the count of profile pictures for the specified user
   private async getProfilePicsCount(userName: string): Promise<number> {
       const connection: rt.Connection = await getRethinkDB();
       try {
@@ -279,6 +247,8 @@ class ProfileService {
         throw new ValidationError(`Get profile pic error.`, "");
       }
     };
+
+    
     
 }
 

@@ -2,7 +2,7 @@
 import Elysia, { Context, t } from 'elysia'
 
 //** SERVICE IMPORT
-import AuthService from '../user.services/auth.service'
+import AuthService from '../user.services/auth.services.ts/auth.service'
 
 //** MEMGRAPGH IMPORTS
 import { getDriver } from '../db/memgraph'

@@ -6,10 +6,10 @@ import { getDriver } from '../db/memgraph'
 import { Driver } from 'neo4j-driver'
 
 //** SERVICES IMPORTS
-import ProfileService from '../game.services/profile.service'
+import ProfileService from '../game.services/profile.services/profile.service'
 
-//** OUTPUT IMPORT
-import { ProfilePicture, StatPoints, UpdateStatsFailed } from '../game.services/game.services.interfaces'
+//** TYPE INTERFACES
+import { ProfilePicture ,StatPoints, UpdateStatsFailed } from '../game.services/profile.services/profile.interface'
 
 //** CONFIG IMPORT
 import { SuccessMessage } from '../outputs/success.message'
@@ -51,10 +51,10 @@ const router = (app: Elysia) => {
       }
       const jwtToken: string = authorizationHeader.substring(7);
 
-      const { bufferData } = body
-
       const driver: Driver = getDriver();
       const profileService: ProfileService = new ProfileService(driver);
+
+      const { bufferData } = body
       const output: SuccessMessage = await profileService.uploadProfilePic(bufferData, jwtToken);
 
       return output as SuccessMessage

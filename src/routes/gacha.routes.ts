@@ -7,11 +7,11 @@ import { Driver } from 'neo4j-driver';
 import { getDriver } from '../db/memgraph';
 
 //** SERVICE IMPORT
-import GachaService from '../game.services/gacha.services.ts/gacha.service';
+import GachaService from '../game.services/gacha.services/gacha.service';
 
 //**  TYPE INTERFACE IMPORT
-import { BundleRewards } from '../game.services/gacha.services.ts/gacha.interface';
-import { redeemBundleSchema } from '../game.services/gacha.services.ts/gacha.schema';
+import { BundleRewards } from '../game.services/gacha.services/gacha.interface';
+import { redeemBundleSchema } from '../game.services/gacha.services/gacha.schema';
 
 
 
