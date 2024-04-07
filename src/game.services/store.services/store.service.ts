@@ -17,7 +17,7 @@ import ValidationError from "../../outputs/validation.error";
 import TokenService from "../../user.services/token.service";
 import { BuyCardData, StoreCardData } from "./store.interface";
 import { UserData } from "../../user.services/user.service.interface";
-import { buyCardCypher } from "./store.cypher";
+import { buyCardCypher, getValidCards } from "./store.cypher";
 import { SuccessMessage } from "../../outputs/success.message";
 
 
@@ -28,6 +28,11 @@ export default class StoreService {
     this.driver = driver;
   }
 
+/**
+ * Retrieves valid cards from the using the provided access token.
+ * @param token The access token used for authentication.
+ * @returns A promise resolving to an array of valid card data.
+ */
   public async getValidCards(token: string): Promise<StoreCardData[]> {
     try {
       const tokenService: TokenService = new TokenService();
@@ -35,9 +40,7 @@ export default class StoreService {
 
       const session: Session = this.driver.session();
       const result: QueryResult = await session.executeRead((tx: ManagedTransaction) =>
-          tx.run(` MATCH (c:Card) 
-                   WHERE c.packed IS NULL AND c.lister IS NOT NULL
-                   RETURN c`)
+          tx.run(getValidCards)
       );
       await session.close();
 
@@ -49,7 +52,12 @@ export default class StoreService {
       throw error
     }
   }
-
+/**
+ * Buys a card using the provided card data and access token.
+ * @param buycardData The data of the card to be purchased.
+ * @param token The access token used for authentication.
+ * @returns A promise resolving to the result of the purchase operation.
+ */
   public async buyCard(buycardData: BuyCardData, token: string): Promise<any> {
     try {
       const tokenService: TokenService = new TokenService();
@@ -84,7 +92,14 @@ export default class StoreService {
     }
   }
 
-
+/**
+ * Creates a relationship between a user and a card based on provided parameters.
+ * @param username The username of the user.
+ * @param uri The URI of the card.
+ * @param bagSize The size of the user's bagged cards.
+ * @param inventorySize The size of the user's card inventory.
+ * @returns A promise resolving to void when the relationship is successfully created.
+ */
   private async createRelationship(username: string, uri: string, bagSize: number, inventorySize: number): Promise<void> {
     try {
       // Determine the relationship type based on bag and inventory size
@@ -102,17 +117,21 @@ export default class StoreService {
           CREATE (u)-[:${rel}]->(c)`,
           { username, uri });
       }
-      
       await session.close();
     } catch (error: any) {
       throw error;
     }
   }
-
-
-  private async cardPurchase(localWallet: string, localWalletKey: string, listingId: number): Promise<void> {
+  
+/**
+ * Initiates a card purchase using the provided wallet information and listing ID.
+ * @param localWallet The encrypted JSON string representing the local wallet.
+ * @param localWalletKey The password/key to decrypt the local wallet.
+ * @param listingId The ID of the listing from which the card is being purchased.
+ * @returns A promise resolving to void when the purchase is successfully initiated.
+ */
+    private async cardPurchase(localWallet: string, localWalletKey: string, listingId: number): Promise<void> {
     try {
-
     const walletLocal: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
     await walletLocal.import({
       encryptedJson: localWallet,
@@ -129,7 +148,7 @@ export default class StoreService {
   } catch(error: any) {
     throw error
       }
-    }
+  }
   }
 
   
