@@ -1,12 +1,12 @@
 //** IMPORTED TYPES
 import { Driver, ManagedTransaction, QueryResult, Session } from "neo4j-driver";
-import { ClassicScoreStats } from "./game.services.interfaces";
+import { ClassicScoreStats } from "../leaderboard.services/leaderboard.interface";
 
 //** ERROR VALIDATION
-import ValidationError from "../outputs/validation.error";
+import ValidationError from "../../outputs/validation.error";
 
 //** IMPORTED SERVICES
-import TokenService from "../user.services/token.service";
+import TokenService from "../../user.services/token.service";
 
 
 class ScoreService {

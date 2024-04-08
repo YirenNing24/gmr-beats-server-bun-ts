@@ -18,7 +18,7 @@ import { cardInventory, playerStats, powerUpInventory, iveEquip, IveEquip } from
 
 //**  IMPORTED SERVICES
 import WalletService from '../wallet.service.js'
-import Replenishments from '../../game.services/replenishments.service.js'
+import Replenishments from '../../game.services/replenishments.services/replenishments.service.js'
 import ProfileService from '../../game.services/profile.services/profile.service.js'
 import TokenService from '../token.service.js'
 import GoogleService from '../google.service.js'

@@ -7,7 +7,7 @@ import { Driver } from 'neo4j-driver';
 import { getDriver } from '../db/memgraph';
 
 //** SERVICE IMPORTS
-import ScoreService from '../game.services/scores.service';
+import ScoreService from '../game.services/scores.services/scores.service';
 import { ClassicScoreStats } from '../game.services/game.services.interfaces';
 
 //** VALIDATION SCHEMA IMPORT

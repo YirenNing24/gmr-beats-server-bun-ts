@@ -9,7 +9,7 @@ import ChatService, { insertChats } from "../chat.services/chat.socket.service";
 import { NewMessage } from "../chat.services/chat.interface";
 
 //** SERVER TIME SERVICE IMPORT
-import TimeService from "../game.services/time.service";
+import TimeService from "../game.services/time.services/time.service";
 
 //** CONFIG IMPORT
 import ValidationError from "../outputs/validation.error";

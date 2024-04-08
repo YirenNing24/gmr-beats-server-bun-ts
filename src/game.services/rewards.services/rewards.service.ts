@@ -2,21 +2,21 @@
 import { Driver, ManagedTransaction, QueryResult, RecordShape, Session } from "neo4j-driver";
 
 //** ERROR CODES
-import ValidationError from '../outputs/validation.error'
+import ValidationError from '../../outputs/validation.error'
 
 //** IMPORTED SERVICES
-import WalletService from "../user.services/wallet.service";
+import WalletService from "../../user.services/wallet.service";
 
 //** TYPE INTERFACES
-import { ClassicScoreStats } from "./leaderboard.services/leaderboard.interface";
+import { ClassicScoreStats } from "../leaderboard.services/leaderboard.interface";
 
 
 //** THIRDWEB IMPORTS
 import { ThirdwebSDK, Token } from "@thirdweb-dev/sdk";
 
 //** CONFIGS
-import { SECRET_KEY } from "../config/constants";
-import { UserData } from "../user.services/user.service.interface";
+import { SECRET_KEY } from "../../config/constants";
+import { UserData } from "../../user.services/user.service.interface";
 
 
 class RewardsService {
