@@ -36,6 +36,7 @@
     "oauth-1.0a": "^2.2.6",
     "ollama": "^0.4.4",
     "redis": "^4.6.10",
-    "rethinkdb": "^2.4.2"
+    "rethinkdb": "^2.4.2",
+    "thirdweb": "^5.3.1"
   }
 }
