@@ -14,11 +14,8 @@ import { WalletData } from "../user.service.interface";
  * Public class representing a WalletService.
  */
 export default class WalletService {
-  /**
-   * Creates a wallet and returns the wallet data.
-   * @param {string} password - The password for encrypting the wallet data.
-   * @returns {Promise<object>} - The wallet data.
-   */
+
+  //** Creates a wallet and returns the wallet data.
   public async createWallet(password: string): Promise<object> {
     try {
       // Local signer
@@ -36,14 +33,7 @@ export default class WalletService {
     }
   }
 
-/**
- * Imports a wallet using the provided wallet data and password.
- *
- * @param {string} walletData - The encrypted wallet data.
- * @param {string} password - The password for decrypting the wallet data.
- *
- * @returns {Object} An object containing the local wallet's 0x address and balance information.
- */
+  //** Imports a wallet using the provided wallet data and password.
   public async importWallet(walletData: string, password: string): Promise<WalletData> {
     try {
       const localWallet: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });

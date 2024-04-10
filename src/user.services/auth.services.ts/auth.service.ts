@@ -21,7 +21,7 @@ import WalletService from '../wallet.services/wallet.service.js'
 import Replenishments from '../../game.services/replenishments.services/replenishments.service.js'
 import ProfileService from '../../game.services/profile.services/profile.service.js'
 import TokenService from '../token.services/token.service.js'
-import GoogleService from '../google.service.js'
+import GoogleService from '../google.services/google.service.js'
 
 //** UUID GENERATOR
 import { nanoid } from "nanoid/async";
@@ -30,7 +30,7 @@ import { nanoid } from "nanoid/async";
 import { Driver, QueryResult, Session,  ManagedTransaction } from 'neo4j-driver-core'
 
 //** TYPE INTERFACES
-import { LocalWallet, WalletData, UserData, ValidateSessionReturn, AuthenticateReturn, PlayerStats, TokenScheme, PlayerInfo, User, CardInventory, PowerUpInventory, Suspended } from '../user.service.interface.js'
+import { LocalWallet, WalletData, UserData, ValidateSessionReturn, AuthenticateReturn, PlayerStats, TokenScheme, PlayerInfo, User, Suspended } from '../user.service.interface.js'
 
 //** GEO IP IMPORT
 import geoip from 'geoip-lite2'
