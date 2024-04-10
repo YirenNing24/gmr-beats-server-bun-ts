@@ -3,13 +3,15 @@ import { OAuth2Client } from "google-auth-library";
 import { GetTokenResponse } from "google-auth-library/build/src/auth/oauth2client";
 
 //** TYPE INTERFACE IMPORT
-import { PlayerInfo } from "./user.service.interface";
+import { PlayerInfo } from "../user.service.interface";
 
 //** CONFIG IMPORT
-import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from "../config/constants";
+import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from "../../config/constants";
 
 
 class GoogleService {
+
+    // Authenticates the user with Google using the provided token.
     public async googleAuth(token: string): Promise<PlayerInfo> {
         try{
             const oAuth2Client = new OAuth2Client( GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
@@ -28,8 +30,8 @@ class GoogleService {
             throw error
         }
     };
-
-
+    
+    // Validates the Google authentication token and retrieves player information
     public async googleValidate(token: string): Promise<PlayerInfo> {
         try{
             const oAuth2Client: OAuth2Client = new OAuth2Client( GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
