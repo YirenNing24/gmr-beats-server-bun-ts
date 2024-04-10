@@ -5,10 +5,10 @@ import { SmartWallet } from "@thirdweb-dev/wallets";
 
 
 // * CONFIGS
-import { CHAIN, BEATS_TOKEN, KMR_TOKEN, THUMP_TOKEN, SECRET_KEY, SMART_WALLET_CONFIG } from "../config/constants";
+import { CHAIN, BEATS_TOKEN, KMR_TOKEN, THUMP_TOKEN, SECRET_KEY, SMART_WALLET_CONFIG } from "../../config/constants";
 
 //**  TYPE INTERFACE
-import { WalletData } from "./user.service.interface";
+import { WalletData } from "../user.service.interface";
 
 /**
  * Public class representing a WalletService.

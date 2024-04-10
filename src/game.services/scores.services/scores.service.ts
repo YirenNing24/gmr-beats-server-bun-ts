@@ -6,7 +6,7 @@ import { ClassicScoreStats } from "../leaderboard.services/leaderboard.interface
 import ValidationError from "../../outputs/validation.error";
 
 //** IMPORTED SERVICES
-import TokenService from "../../user.services/token.service";
+import TokenService from "../../user.services/token.services/token.service";
 
 
 class ScoreService {

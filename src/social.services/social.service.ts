@@ -12,7 +12,7 @@ import ValidationError from "../outputs/validation.error";
 import { FollowResponse, ViewProfileData, ViewedUserData, MutualData, PlayerStatus, SetPlayerStatus } from "./social.services.interface";
 
 //** IMPORTED SERVICES 
-import TokenService from "../user.services/token.service";
+import TokenService from "../user.services/token.services/token.service";
 
 class SocialService {
     /**

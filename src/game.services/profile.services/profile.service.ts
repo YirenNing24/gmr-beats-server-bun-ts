@@ -11,7 +11,7 @@ import ValidationError from "../../outputs/validation.error";
 import { SuccessMessage } from "../../outputs/success.message";
 
 //** SERVICE IMPORT
-import TokenService from "../../user.services/token.service";
+import TokenService from "../../user.services/token.services/token.service";
 
 //** TYPE INTERFACES
 import { UpdateStatsFailed, ProfilePicture, StatPoints } from "./profile.interface";

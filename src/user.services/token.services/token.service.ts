@@ -2,10 +2,10 @@
 import { createSigner, createVerifier } from 'fast-jwt';
 
 //** CONFIG IMPORT
-import { JWT_SECRET } from '../config/constants';
+import { JWT_SECRET } from '../../config/constants';
 
 //** TYPE INTERFACE IMPORT
-import { TokenScheme } from './user.service.interface';
+import { TokenScheme } from '../user.service.interface';
 
 const ACCESS_TOKEN_EXPIRY = '10m';
 const REFRESH_TOKEN_EXPIRY = '30m';

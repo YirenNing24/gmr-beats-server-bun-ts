@@ -17,10 +17,10 @@ import ValidationError from '../../outputs/validation.error.js'
 import { cardInventory, playerStats, powerUpInventory, iveEquip, IveEquip } from '../../noobs/noobs.js'
 
 //**  IMPORTED SERVICES
-import WalletService from '../wallet.service.js'
+import WalletService from '../wallet.services/wallet.service.js'
 import Replenishments from '../../game.services/replenishments.services/replenishments.service.js'
 import ProfileService from '../../game.services/profile.services/profile.service.js'
-import TokenService from '../token.service.js'
+import TokenService from '../token.services/token.service.js'
 import GoogleService from '../google.service.js'
 
 //** UUID GENERATOR

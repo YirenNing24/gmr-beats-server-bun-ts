@@ -3,7 +3,7 @@ import { Driver, ManagedTransaction, QueryResult, Session } from "neo4j-driver";
 
 //** VALIDATION ERROR
 import { ClassicScoreStats } from "./leaderboard.interface";
-import TokenService from "../../user.services/token.service";
+import TokenService from "../../user.services/token.services/token.service";
 
 
 class LeaderboardService {

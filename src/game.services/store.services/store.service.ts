@@ -14,7 +14,7 @@ import { CHAIN, SMART_WALLET_CONFIG } from "../../config/constants";
 import ValidationError from "../../outputs/validation.error";
 
 //** SERVICE IMPORTS
-import TokenService from "../../user.services/token.service";
+import TokenService from "../../user.services/token.services/token.service";
 import { BuyCardData, StoreCardData } from "./store.interface";
 import { UserData } from "../../user.services/user.service.interface";
 import { buyCardCypher, getValidCards } from "./store.cypher";

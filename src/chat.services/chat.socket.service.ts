@@ -8,7 +8,7 @@ import { getRethinkDB } from "../db/rethink";
 
 //** TYPE INTERFACE
 import { PrivateMessage, NewMessage, Result } from "./chat.interface";
-import TokenService from "../user.services/token.service";
+import TokenService from "../user.services/token.services/token.service";
 
 
 const watchedRooms: Record<string, boolean> = {};

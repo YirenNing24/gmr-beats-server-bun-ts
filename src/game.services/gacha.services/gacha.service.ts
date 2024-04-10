@@ -13,7 +13,7 @@ import ValidationError from "../../outputs/validation.error";
 
 //** IMPORTED SERVICES
 import { PACK_ADDRESS, SECRET_KEY, CHAIN, SMART_WALLET_CONFIG } from "../../config/constants";
-import TokenService from "../../user.services/token.service";
+import TokenService from "../../user.services/token.services/token.service";
 
 //** TYPE INTERFACES
 import { BundleRewards, RedeemBundle } from "./gacha.interface";

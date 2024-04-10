@@ -5,7 +5,7 @@ import { Driver, ManagedTransaction, QueryResult, RecordShape, Session } from "n
 import ValidationError from '../../outputs/validation.error'
 
 //** IMPORTED SERVICES
-import WalletService from "../../user.services/wallet.service";
+import WalletService from "../../user.services/wallet.services/wallet.service";
 
 //** TYPE INTERFACES
 import { ClassicScoreStats } from "../leaderboard.services/leaderboard.interface";

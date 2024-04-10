@@ -5,7 +5,7 @@ import { Driver, ManagedTransaction, QueryResult, RecordShape, Session } from "n
 import ValidationError from "../../outputs/validation.error";
 
 //** IMPORTED SERVICES
-import TokenService from "../../user.services/token.service";
+import TokenService from "../../user.services/token.services/token.service";
 
 //** TYPE INTERFACES
 import { CardMetaData, InventoryCardData , UpdateInventoryData } from "./inventory.interface";
