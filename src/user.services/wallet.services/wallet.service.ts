@@ -109,3 +109,96 @@ export default class WalletService {
     }
   }
 }
+
+
+[
+  {
+    "metadata": {
+      "name": "AccountExtension",
+      "metadataURI": "ipfs://QmNQ2djT2u4my5xpKPgJMnQEpoNjYZE8ugpLndvgEJBb3X",
+      "implementation": "0xCD68591e4F9FA55c4a9938A5574E22517047a055"
+    },
+    "functions": [
+      {
+        "functionSelector": "0x4a58db19",
+        "functionSignature": "addDeposit()"
+      },
+      {
+        "functionSelector": "0xe8a3d485",
+        "functionSignature": "contractURI()"
+      },
+      {
+        "functionSelector": "0xb61d27f6",
+        "functionSignature": "execute(address,uint256,bytes)"
+      },
+      {
+        "functionSelector": "0x47e1da2a",
+        "functionSignature": "executeBatch(address[],uint256[],bytes[])"
+      },
+      {
+        "functionSelector": "0x8b52d723",
+        "functionSignature": "getAllActiveSigners()"
+      },
+      {
+        "functionSelector": "0xe9523c97",
+        "functionSignature": "getAllAdmins()"
+      },
+      {
+        "functionSelector": "0xd42f2f35",
+        "functionSignature": "getAllSigners()"
+      },
+      {
+        "functionSelector": "0x399b77da",
+        "functionSignature": "getMessageHash(bytes32)"
+      },
+      {
+        "functionSelector": "0xf15d424e",
+        "functionSignature": "getPermissionsForSigner(address)"
+      },
+      {
+        "functionSelector": "0x7dff5a79",
+        "functionSignature": "isActiveSigner(address)"
+      },
+      {
+        "functionSelector": "0x24d7806c",
+        "functionSignature": "isAdmin(address)"
+      },
+      {
+        "functionSelector": "0x1626ba7e",
+        "functionSignature": "isValidSignature(bytes32,bytes)"
+      },
+      {
+        "functionSelector": "0xbc197c81",
+        "functionSignature": "onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"
+      },
+      {
+        "functionSelector": "0xf23a6e61",
+        "functionSignature": "onERC1155Received(address,address,uint256,uint256,bytes)"
+      },
+      {
+        "functionSelector": "0x150b7a02",
+        "functionSignature": "onERC721Received(address,address,uint256,bytes)"
+      },
+      {
+        "functionSelector": "0x938e3d7b",
+        "functionSignature": "setContractURI(string)"
+      },
+      {
+        "functionSelector": "0x5892e236",
+        "functionSignature": "setPermissionsForSigner((address,uint8,address[],uint256,uint128,uint128,uint128,uint128,bytes32),bytes)"
+      },
+      {
+        "functionSelector": "0x01ffc9a7",
+        "functionSignature": "supportsInterface(bytes4)"
+      },
+      {
+        "functionSelector": "0xa9082d84",
+        "functionSignature": "verifySignerPermissionRequest((address,uint8,address[],uint256,uint128,uint128,uint128,uint128,bytes32),bytes)"
+      },
+      {
+        "functionSelector": "0x4d44560d",
+        "functionSignature": "withdrawDepositTo(address,uint256)"
+      }
+    ]
+  }
+]
