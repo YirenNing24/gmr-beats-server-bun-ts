@@ -1,6 +1,4 @@
-
-import { SkaleNebulaHubTestnet } from "@thirdweb-dev/chains";
-
+import { PolygonAmoyTestnet } from "@thirdweb-dev/chains";
 
 // API Configuration
 export const API_PREFIX: string = process.env.API_PREFIX || '/api';
@@ -34,12 +32,11 @@ export const KDB: { host: string | undefined; port: string | number; password: s
 // Thirdweb SDK Configuration
 export const SECRET_KEY: string = process.env.SECRET_KEY || ""
 // Chain and Wallet Factory Configuration
-export const CHAIN: typeof SkaleNebulaHubTestnet = SkaleNebulaHubTestnet;
-export const FACTORIES: Record<number, string> = { [SkaleNebulaHubTestnet.chainId]: "0x514f1d6B8d22911eE84f97eDececE0479e38E1b6" };
+export const CHAIN: typeof PolygonAmoyTestnet = PolygonAmoyTestnet;
+export const FACTORIES: Record<number, string> = { [PolygonAmoyTestnet.chainId]: "0x2a3e0227174c57B201b448978117602aB0c4221a" };
 // Contract Addresses
-export const BEATS_TOKEN: string = '0x63F8Cb0ffc1DeB782E84B9C68b2F85260fbd497d';
-export const THUMP_TOKEN: string = '0xDAd44595262D2390192762bbb3358DF807808480';
-export const KMR_TOKEN: string = '0xb6446F25afD9f18B9716Aa32d65df9370980d6c7';
+export const BEATS_TOKEN: string = '0x787F78A1Fb0cB113238f1957F3fb98648a28288a';
+export const GMR_TOKEN: string = '0xd991050222Db34E1cA129DE155c8684C47614A76';
 
 export const PACK_ADDRESS: string = '0x749bBCe456372c744e42a2391CFcb012E225ab65';
 export const EDITION_ADDRESS: string = '0x75E504b9B341CA7f75d330Fa916AC3FFD81c0B4c'; // ** NFT CARD ADDRESS

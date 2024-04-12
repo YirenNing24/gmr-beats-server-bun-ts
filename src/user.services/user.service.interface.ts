@@ -202,8 +202,7 @@ export interface UserData {
 export interface WalletData {
     smartWalletAddress: string;
     beatsBalance: string;
-    kmrBalance: string;
-    thumpBalance: string;
+    gmrBalance: string;
     nativeBalance: string;
   }
   
