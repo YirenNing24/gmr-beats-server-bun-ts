@@ -11,7 +11,8 @@ import SocialService from '../social.services/social.service';
 import ChatService from '../chat.services/chat.socket.service';
 
 //* TYPES IMPORTS
-import { FollowResponse, MutualData, PlayerStatus, PrivateMessage, ViewProfileData } from '../game.services/game.services.interfaces';
+import { FollowResponse, MutualData, PlayerStatus, ViewProfileData } from '../social.services/social.services.interface';
+import { PrivateMessage } from '../chat.services/chat.interface';
 
 //** VALIDATION SCHEMA IMPORT
 import { followResponseSchema, getMutualConversationSchema, setOnlineStatusSchema, unFollowResponseSchema, viewProfileSchema } from './route.schema/schema.social';
@@ -101,7 +102,7 @@ const social = (app: Elysia) => {
         const output: MutualData[] = await socialService.mutual(jwtToken);
         return output;
       } catch (error: any) {
-        throw new Error("Unauthorized")
+        throw error
         }
       }, authorizationBearerSchema
     )

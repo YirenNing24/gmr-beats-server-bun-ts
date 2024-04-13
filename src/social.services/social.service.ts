@@ -181,20 +181,8 @@ class SocialService {
   };
 
 
-  /**
-   * Retrieves a list of users who are mutual followers with the specified user.
-   *
-   * @param {string} username - The username of the user for whom mutual followers are to be retrieved.
-   * @returns {Promise<MutualData[]>} A promise that resolves to an array of MutualData representing mutual followers.
-   * @throws {Error} If an error occurs during the retrieval process.
-   */
-  public async mutual(token: string): Promise<MutualData[]> {
-    /**
-     * @typedef {Object} MutualData
-     * @property {string} username - The username of a mutual follower.
-     * @property {string} playerStats - The player statistics of the mutual follower.
-     */
-
+  //Retrieves a list of users who are mutual followers with the specified user.
+   public async mutual(token: string): Promise<MutualData[]> {
     try {
       const tokenService:  TokenService = new TokenService();
       const username: string = await tokenService.verifyAccessToken(token);
@@ -212,9 +200,8 @@ class SocialService {
       await session.close();
 
       const users: MutualData[] = result.records.map(record => ({
-        username: record.get("username") || "", // Ensure a default value if property is undefined
-        playerStats: record.get("playerStats") || "" // Ensure a default value if property is undefined
-      })) as MutualData[];
+        username: record.get("username") || "",
+        playerStats: record.get("playerStats") || "" })) as MutualData[];
 
       return users as MutualData[];
     } catch (error: any) {
