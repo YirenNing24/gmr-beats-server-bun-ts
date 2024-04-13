@@ -1,5 +1,5 @@
 import { ArbitrumSepolia } from "@thirdweb-dev/chains";
-import { SmartWalletConfig, SmartWalletOptions } from "@thirdweb-dev/wallets";
+import { SmartWalletConfig } from "@thirdweb-dev/wallets";
 
 // API Configuration
 export const API_PREFIX: string = process.env.API_PREFIX || '/api';
