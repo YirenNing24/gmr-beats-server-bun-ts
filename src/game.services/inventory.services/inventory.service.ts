@@ -27,19 +27,18 @@ this.driver = driver;
         const userName: string = await tokenService.verifyAccessToken(token);
     
         const session: Session | undefined = this.driver?.session();
-        if (!session) throw new Error('Session is undefined'); // Check for session existence
-    
+
         // Use a Read Transaction and only return the necessary properties
-        const result: QueryResult<RecordShape> | undefined = await session.executeRead(
+        const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
           (tx: ManagedTransaction) =>
             tx.run( inventoryOpenCardCypher, { userName })
         );
     
-        await session.close();
+        await session?.close();
     
-        // Verify the user exists
+        // If no records found, return an empty array
         if (!result || result.records.length === 0) {
-          throw new ValidationError(`User with username '${userName}' not found.`, "");
+          return [];
         }
     
         // Map the card data
@@ -83,14 +82,6 @@ this.driver = driver;
               throw error;
             }
     }
-
-
-  
-
-          
-
-          
-
 
     // private async getWalletAddress(localWallet: string, localWalletKey: string): Promise<string> {
     //   const walletService: WalletService = new WalletService();

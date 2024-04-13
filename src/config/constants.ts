@@ -1,4 +1,4 @@
-import { PolygonAmoyTestnet } from "@thirdweb-dev/chains";
+import { ArbitrumSepolia } from "@thirdweb-dev/chains";
 import { SmartWalletConfig, SmartWalletOptions } from "@thirdweb-dev/wallets";
 
 // API Configuration
@@ -33,11 +33,11 @@ export const KDB: { host: string | undefined; port: string | number; password: s
 // Thirdweb SDK Configuration
 export const SECRET_KEY: string = process.env.SECRET_KEY || ""
 // Chain and Wallet Factory Configuration
-export const CHAIN: typeof PolygonAmoyTestnet  = PolygonAmoyTestnet;
-export const FACTORIES: Record<number, string> = { [PolygonAmoyTestnet .chainId]: "0x2a3e0227174c57B201b448978117602aB0c4221a" };
+export const CHAIN: typeof ArbitrumSepolia  = ArbitrumSepolia;
+export const FACTORIES: Record<number, string> = { [ArbitrumSepolia.chainId]: "0x514f1d6B8d22911eE84f97eDececE0479e38E1b6" };
 // Contract Addresses
-export const BEATS_TOKEN: string = '0x787F78A1Fb0cB113238f1957F3fb98648a28288a';
-export const GMR_TOKEN: string = '0xd991050222Db34E1cA129DE155c8684C47614A76';
+export const BEATS_TOKEN: string = '0xAA95DA3D6EbdAb099630b6d4Cf0fcb904a44C2ab';
+export const GMR_TOKEN: string = '0x7dce27C81b7e112018FA6C2e27f8444b5D39688B';
 
 export const PACK_ADDRESS: string = '0x749bBCe456372c744e42a2391CFcb012E225ab65';
 export const EDITION_ADDRESS: string = '0x75E504b9B341CA7f75d330Fa916AC3FFD81c0B4c'; // ** NFT CARD ADDRESS
