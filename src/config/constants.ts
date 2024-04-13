@@ -1,4 +1,5 @@
 import { PolygonAmoyTestnet } from "@thirdweb-dev/chains";
+import { SmartWalletConfig, SmartWalletOptions } from "@thirdweb-dev/wallets";
 
 // API Configuration
 export const API_PREFIX: string = process.env.API_PREFIX || '/api';
@@ -32,8 +33,8 @@ export const KDB: { host: string | undefined; port: string | number; password: s
 // Thirdweb SDK Configuration
 export const SECRET_KEY: string = process.env.SECRET_KEY || ""
 // Chain and Wallet Factory Configuration
-export const CHAIN: typeof PolygonAmoyTestnet = PolygonAmoyTestnet;
-export const FACTORIES: Record<number, string> = { [PolygonAmoyTestnet.chainId]: "0x2a3e0227174c57B201b448978117602aB0c4221a" };
+export const CHAIN: typeof PolygonAmoyTestnet  = PolygonAmoyTestnet;
+export const FACTORIES: Record<number, string> = { [PolygonAmoyTestnet .chainId]: "0x2a3e0227174c57B201b448978117602aB0c4221a" };
 // Contract Addresses
 export const BEATS_TOKEN: string = '0x787F78A1Fb0cB113238f1957F3fb98648a28288a';
 export const GMR_TOKEN: string = '0xd991050222Db34E1cA129DE155c8684C47614A76';
@@ -47,15 +48,26 @@ export const GOOGLE_CLIENT_ID: string  = process.env.GOOGLE_CLIENT_ID || ""
 export const GOOGLE_CLIENT_SECRET: string = process.env.GOOGLE_CLIENT_SECRET || ""
 
 const factoryAddress: string = FACTORIES[CHAIN.chainId];
-export const SMART_WALLET_CONFIG: {
-  chain: typeof CHAIN;
-  gasless: boolean;
-  factoryAddress: string;
-  secretKey: string;
-} = {
+// export const SMART_WALLET_CONFIG: {
+//   chain: typeof CHAIN;
+//   gasless: boolean;
+//   factoryAddress: string;
+//   secretKey: string;
+  
+// } = {
+//   chain: CHAIN,
+//   gasless: true,
+//   factoryAddress: factoryAddress,
+//   secretKey: SECRET_KEY,
+
+// };
+
+export const SMART_WALLET_CONFIG: SmartWalletConfig = {
   chain: CHAIN,
+  factoryAddress,
   gasless: true,
-  factoryAddress: factoryAddress,
   secretKey: SECRET_KEY,
 };
+
+
 
