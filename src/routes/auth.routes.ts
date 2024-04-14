@@ -99,7 +99,7 @@ const auth = (app: Elysia): void => {
       }, googleServerTokenSchema
       )
 
-  .post('/admin/renew/access', async ({ headers }): Promise<TokenScheme> => {
+  .post('/api/renew/access', async ({ headers }): Promise<TokenScheme> => {
         try {
           const authorizationHeader: string = headers.authorization;
           if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
