@@ -9,7 +9,7 @@ import { getDriver } from '../db/memgraph'
 import { Driver } from 'neo4j-driver'
 
 //** TYPE INTERFACES
-import { AuthenticateReturn, User, ValidateSessionReturn } from '../user.services/user.service.interface';
+import { AuthenticateReturn, TokenScheme, User, ValidateSessionReturn } from '../user.services/user.service.interface';
 
 //** VALIDATION ERROR IMPORT
 import ValidationError from '../outputs/validation.error';
@@ -17,6 +17,7 @@ import ValidationError from '../outputs/validation.error';
 //** VALIDATION SCHEMA IMPORT
 import { authorizationBearerSchema, beatsLoginSchema, googleServerTokenSchema, registrationSchema } from './route.schema/schema.auth';
 import { ip } from 'elysia-ip';
+import TokenService from '../user.services/token.services/token.service';
 
 const auth = (app: Elysia): void => {
 
@@ -96,7 +97,25 @@ const auth = (app: Elysia): void => {
       throw error
     }
       }, googleServerTokenSchema
-      ) 
+      )
+
+  .post('/admin/renew/access', async ({ headers }): Promise<TokenScheme> => {
+        try {
+          const authorizationHeader: string = headers.authorization;
+          if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+              throw new Error('Bearer token not found in Authorization header');
+          };
+  
+          const jwtToken: string = authorizationHeader.substring(7);
+          const tokenService: TokenService = new TokenService();
+          const output: TokenScheme = await tokenService.refreshTokens(jwtToken);
+  
+          return output as TokenScheme;
+        } catch(error: any) {
+          throw error
+          }
+        }, authorizationBearerSchema
+      )
 
   .post('/api/version-check/beats', async (context: Context) => {
     const currentVersion = {
