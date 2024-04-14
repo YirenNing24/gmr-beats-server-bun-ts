@@ -161,10 +161,10 @@ class SocialService {
         const followsUser: boolean = followQuery.records[0].get('followsUser');
         const followedByUser: boolean = followedByQuery.records[0].get('followedByUser');
 
-        return { username, playerStats, followsUser, followedByUser };
+        return { username, playerStats, followsUser, followedByUser } as ViewProfileData
       });
 
-      return result;
+      return result as ViewProfileData;
     } catch (error: any) {
       throw error;
     } finally {
