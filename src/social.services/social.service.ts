@@ -121,14 +121,8 @@ class SocialService {
     }
   };
 
-  /**
-   * Retrieves profile information for a user's view of another user's profile.
-   *
-   * @param {string} userName - The username of the user making the request.
-   * @param {string} viewUsername - The username of the user whose profile is being viewed.
-   * @returns {Promise<ViewProfileData>} A promise that resolves to ViewProfileData containing profile information.
-   * @throws {ValidationError} If the user with the specified viewUsername is not found.
-   */
+  //** Retrieves profile information for a user's view of another user's profile.
+
   public async viewProfile(viewUsername: string, token: string): Promise<ViewProfileData> {
     /**
      * @typedef {Object} ViewProfileData
@@ -181,7 +175,7 @@ class SocialService {
   };
 
 
-  //Retrieves a list of users who are mutual followers with the specified user.
+  //** Retrieves a list of users who are mutual followers with the specified user.
    public async mutual(token: string): Promise<MutualData[]> {
     try {
       const tokenService:  TokenService = new TokenService();
