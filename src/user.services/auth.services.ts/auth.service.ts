@@ -54,8 +54,8 @@ class AuthService {
     const encrypted: string = await hash(password, parseInt(SALT_ROUNDS));
     const locKey: string = await hash(userName, parseInt(SALT_ROUNDS));
 
-    const localWallet: LocalWallet = await walletService.createWallet(locKey) as LocalWallet
-
+    const wallets = await walletService.createWallet(locKey)
+    const { localWallet, smartWalletAddress } = wallets
     const signupDate: number = Date.now()
     const suspended: Suspended = { until: null, reason: "" };
 
@@ -76,6 +76,7 @@ class AuthService {
                password: $encrypted,
                localWallet: $localWallet, 
                localWalletKey: $locKey,
+               smartWalletAddress: $smartWalletAddress,
                playerStats: $playerStats,
                suspended: $suspended,
                country: "SOKOR",
@@ -84,7 +85,7 @@ class AuthService {
                profilePictures: []
              })
            `,
-           { signupDate, userId, userName, encrypted, localWallet, locKey, playerStats, suspended, country, deviceId }
+           { signupDate, userId, userName, encrypted, localWallet, smartWalletAddress, locKey, playerStats, suspended, country, deviceId }
          ) 
        )
 
@@ -243,7 +244,8 @@ class AuthService {
       const encrypted: string = await hash(password, parseInt(SALT_ROUNDS));
       const locKey: string = await hash(displayName, parseInt(SALT_ROUNDS));
 
-      const localWallet: LocalWallet = await walletService.createWallet(locKey) as LocalWallet
+      const wallets = await walletService.createWallet(locKey);
+      const { localWallet, smartWalletAddress } = wallets
 
       await session.executeWrite(
         (tx: ManagedTransaction) => tx.run(
@@ -256,6 +258,7 @@ class AuthService {
               password: $encrypted,
               localWallet: $localWallet, 
               localWalletKey: $locKey,
+              smartWalletAddress: $smartWalletAddress, 
               playerStats: $playerStats,
               suspended: $suspended,
               country: "SOKOR",
@@ -264,7 +267,7 @@ class AuthService {
               profilePictures: []
             })
           `,
-          { signupDate, playerId, userName, encrypted, localWallet, locKey, playerStats, suspended, country, deviceId }
+          { signupDate, playerId, userName, encrypted, localWallet, smartWalletAddress, locKey, playerStats, suspended, country, deviceId }
           ) 
         )
   

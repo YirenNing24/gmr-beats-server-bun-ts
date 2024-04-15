@@ -16,17 +16,18 @@ import { WalletData } from "../user.service.interface";
 export default class WalletService {
 
   //** Creates a wallet and returns the wallet data.
-  public async createWallet(password: string): Promise<object> {
+  public async createWallet(password: string): Promise<{ localWallet: string, smartWalletAddress: string }> {
     try {
       // Local signer
       const newWallet: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
       await newWallet.generate();
-      const localWallet: Object = await newWallet.export({
+      const localWallet: string = await newWallet.export({
         strategy: "encryptedJson",
         password: password,
       });
+      const smartWalletAddress: string = await this.getWalletAddress(localWallet, password);
 
-      return localWallet;
+      return { localWallet, smartWalletAddress }
     } catch (error) {
       console.error("Something went wrong: ", error);
       throw error;
