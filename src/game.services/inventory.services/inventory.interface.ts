@@ -22,6 +22,7 @@ export interface CardNFT {
  * Represents the card metadata interface which is the a property of the CardNFT object.
  *
  * @property {breakthrough} Card property that dictates if the card is ready to go the next tier by reaching the breakthrough level.
+ * @property {skillEquipped} Card property that dictates if the card's skill is toggled by the player
  * @property {cardAddress} the contract address that minted the card.
  * @property {description} the higher level description ofthe card meant to be readable for players.
  * @property {era} the era model/design of the card, corresponds to the title track of the group's song.
@@ -58,6 +59,7 @@ export interface CardMetaData {
     boostCount: string;
     awakenCount: string;
     breakthrough: boolean;
+    skiLLequipped: boolean;
     artist: string; 
     position: string;
     position2: string;
@@ -65,7 +67,6 @@ export interface CardMetaData {
     level: string;
     experience: string;
     image: string;
-    equipped: boolean;
     imageByte: string;
 
     uri: string;
@@ -82,6 +83,7 @@ export interface CardMetaData {
     sold: boolean;
     pricePerToken?: number
     currencyName?: string
+    transferred?: string
  };
 
 
