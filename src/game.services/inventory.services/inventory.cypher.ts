@@ -5,7 +5,7 @@
  * @returns {string} - Cypher query string
  */
 export const inventoryOpenCardCypher = `
-  MATCH (u:User{username: $userName})-[:OWNS]->(c:Card)
+  MATCH (u:User{username: $userName})-[:OWNED]->(c:Card)
   RETURN c.uri as uri, c as card`;
 
 /**
@@ -17,6 +17,6 @@ export const inventoryOpenCardCypher = `
  * @returns {string} - Cypher query string
  */
 export const updateInventoryCypher =`
-  MATCH (u:User {username: $userName})-[:OWNS]->(c:Card {uri: $uri})
+  MATCH (u:User {username: $userName})-[:OWNED]->(c:Card {uri: $uri})
     SET c.equipped = $equipped
     RETURN c`;

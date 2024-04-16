@@ -45,7 +45,7 @@ this.driver = driver;
         const cardData: InventoryCardData = result.records.map((record) => {
           const uri: string = record.get("uri");
           const card: CardMetaData = record.get("card").properties;
-          return { [uri]: card };
+          return { [uri]: { ...card, uri } };
         });
     
         return cardData as InventoryCardData;
