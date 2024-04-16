@@ -59,7 +59,7 @@ export interface CardMetaData {
     boostCount: string;
     awakenCount: string;
     breakthrough: boolean;
-    skiLLequipped: boolean;
+    skillEquipped: boolean;
     artist: string; 
     position: string;
     position2: string;
