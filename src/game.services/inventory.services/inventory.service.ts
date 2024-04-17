@@ -60,8 +60,6 @@ this.driver = driver;
           }
         });
 
-
-  
         return [ownedAndBagged, ownedAndEquipped] as InventoryCards
       } catch (error: any) {
         console.error("Error opening user inventory:", error);
