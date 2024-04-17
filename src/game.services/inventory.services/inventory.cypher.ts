@@ -17,16 +17,16 @@
  * @returns {string} - Cypher query string
  */
 export const updateEquippedItemCypher =`
-  MATCH (u:User {username: $userName})-[:OWNED|BAGGED]->(c:Card {uri: $uri})
-  WHERE EXISTS((u)-[:OWNED]->(c)) AND EXISTS((u)-[:BAGGED]->(c))
-  DELETE (u)-[:BAGGED]->(c)
+  MATCH (u:User {username: $userName})-[:OWNED|INVENTORY]->(c:Card {uri: $uri})
+  WHERE EXISTS((u)-[:OWNED]->(c)) AND EXISTS((u)-[:INVENTORY]->(c))
+  DELETE (u)-[:INVENTORY]->(c)
   CREATE (u)-[:EQUIPPED]->(c)
   RETURN c`;
 
 
-
-
-
+export const checkInventorySizeCypher = `
+  MATCH (u:User{username: $userName})
+ RETURN c.inventorySize as inventorySize`
 
 
     

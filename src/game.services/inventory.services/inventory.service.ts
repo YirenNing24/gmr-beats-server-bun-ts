@@ -9,7 +9,7 @@ import TokenService from "../../user.services/token.services/token.service";
 
 //** TYPE INTERFACES
 import { CardMetaData, InventoryCardData , InventoryCards, UpdateInventoryData } from "./inventory.interface";
-import { inventoryOpenCardCypher, updateEquippedItemCypher } from "./inventory.cypher";
+import { checkInventorySizeCypher, inventoryOpenCardCypher, updateEquippedItemCypher } from "./inventory.cypher";
 import { SuccessMessage } from "../../outputs/success.message";
 
 
@@ -53,7 +53,7 @@ this.driver = driver;
     
           // Check the relationship type and add the card to the appropriate array
           const relationshipType: string = record.get("relationshipType");
-          if (relationshipType === "BAGGED") {
+          if (relationshipType === "INVENTORY") {
             ownedAndBagged.push({ [uri]: { ...card, uri } });
           } else if (relationshipType === "EQUIPPED") {
             ownedAndEquipped.push({ [uri]: { ...card, uri } });
@@ -66,7 +66,7 @@ this.driver = driver;
         throw error;
       }
     }
-
+//** replace bagged for items in the inventory with :INVENTORY RELATIONSHIP */
   // Updates inventory data for a user based on the provided access token and update information.
     public async updateEquippedItem(token: string, updateInventoryData: UpdateInventoryData): Promise<SuccessMessage> {
       try {
@@ -96,24 +96,35 @@ this.driver = driver;
     }
 
 
-    private async checkInventorySize(username: string): Promise<boolean>{
+    private async checkInventorySize(username: string): Promise<number | undefined> {
       try {
-      const session: Session | undefined = this.driver?.session();
-
-      // Use a Read Transaction and only return the necessary properties
-      const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
-          (tx: ManagedTransaction) =>
-             tx.run( updateEquippedItemCypher, { 
-              userName, uri, equipped })
-      );
-
-
-
-    } catch(error: any) {
-
-    }
-
-    }
+          const session: Session | undefined = this.driver?.session();
+  
+          // Use a Read Transaction and only return the necessary properties
+          const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
+              (tx: ManagedTransaction) =>
+                  tx.run(checkInventorySizeCypher, {
+                      username
+                  })
+          );
+  
+          await session?.close();
+  
+          // If no records found, return undefined
+          if (!result || result.records.length === 0) {
+              return undefined;
+          }
+  
+          // Extract the inventory size from the result
+          const inventorySize: number = result.records[0].get("inventorySize");
+  
+          return inventorySize;
+      } catch (error: any) {
+          console.error("Error checking inventory size:", error);
+          throw error;
+      }
+  }
+  
 
     // private async getWalletAddress(localWallet: string, localWalletKey: string): Promise<string> {
     //   const walletService: WalletService = new WalletService();
