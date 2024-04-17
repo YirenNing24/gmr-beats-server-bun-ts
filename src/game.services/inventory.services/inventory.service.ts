@@ -21,13 +21,13 @@ this.driver = driver;
 
     //** CARD INVENTORY */
     //Retrieves inventory card data for a user based on the provided access token.
-    public async cardInventoryOpen(token: string): Promise<InventoryCardData>  {
+    public async cardInventoryOpen(token: string): Promise<[ownedAndBagged: InventoryCardData, ownedAndEquipped: InventoryCardData ]>  {
       try {
         const tokenService: TokenService = new TokenService();
         const userName: string = await tokenService.verifyAccessToken(token);
     
         const session: Session | undefined = this.driver?.session();
-
+    
         // Use a Read Transaction and only return the necessary properties
         const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
           (tx: ManagedTransaction) =>
@@ -36,19 +36,33 @@ this.driver = driver;
     
         await session?.close();
     
-        // If no records found, return an empty array
+        // If no records found, return empty arrays
         if (!result || result.records.length === 0) {
-          return [];
+          return [[], []];
         }
     
-        // Map the card data
-        const cardData: InventoryCardData = result.records.map((record) => {
+        // Initialize arrays to store cards with different relationships
+        const ownedAndBagged: InventoryCardData = [];
+        const ownedAndEquipped: InventoryCardData = [];
+    
+        // Iterate over the result records
+        result.records.forEach((record) => {
+          // Extract URI and card data from the record
           const uri: string = record.get("uri");
           const card: CardMetaData = record.get("card").properties;
-          return { [uri]: { ...card, uri } };
-        });
     
-        return cardData as InventoryCardData;
+          // Check the relationship type and add the card to the appropriate array
+          const relationshipType: string = record.get("relationshipType");
+          if (relationshipType === "BAGGED") {
+            ownedAndBagged.push({ [uri]: { ...card, uri } });
+          } else if (relationshipType === "EQUIPPED") {
+            ownedAndEquipped.push({ [uri]: { ...card, uri } });
+          }
+        });
+
+        console.log(ownedAndBagged)
+    
+        return [ownedAndBagged, ownedAndEquipped];
       } catch (error: any) {
         console.error("Error opening user inventory:", error);
         throw error;
