@@ -9,7 +9,7 @@ import TokenService from "../../user.services/token.services/token.service";
 
 //** TYPE INTERFACES
 import { CardMetaData, InventoryCardData , UpdateInventoryData } from "./inventory.interface";
-import { inventoryOpenCardCypher, updateInventoryCypher } from "./inventory.cypher";
+import { inventoryOpenCardCypher, itemEquipCypher } from "./inventory.cypher";
 import { SuccessMessage } from "../../outputs/success.message";
 
 
@@ -81,7 +81,7 @@ this.driver = driver;
              // Use a Read Transaction and only return the necessary properties
              const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
                  (tx: ManagedTransaction) =>
-                    tx.run( updateInventoryCypher, { userName, uri, equipped })
+                    tx.run( itemEquipCypher, { userName, uri, equipped })
              );
     
              await session?.close();

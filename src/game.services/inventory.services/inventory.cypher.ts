@@ -11,16 +11,17 @@
     
 /**
  * Cypher query string for updating a user's card inventory.
- * This query sets the 'equipped' property of a card owned by the user with the specified URI.
+ * This query removes the BAGGED relationship and adds an EQUIPPED relationship for a card owned by the user with the specified URI.
  * @param {string} userName - The username of the user whose inventory is being updated.
  * @param {string} uri - The URI of the card to be updated.
- * @param {boolean} equipped - The new value for the 'equipped' property.
  * @returns {string} - Cypher query string
  */
-export const updateInventoryCypher =`
-  MATCH (u:User {username: $userName})-[:OWNED]->(c:Card {uri: $uri})
-    SET c.equipped = $equipped
-    RETURN c`;
+export const itemEquipCypher =`
+  MATCH (u:User {username: $userName})-[:OWNED|BAGGED]->(c:Card {uri: $uri})
+  WHERE EXISTS((u)-[:OWNED]->(c)) AND EXISTS((u)-[:BAGGED]->(c))
+  DELETE (u)-[:BAGGED]->(c)
+  CREATE (u)-[:EQUIPPED]->(c)
+  RETURN c`;
 
 
 
