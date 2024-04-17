@@ -95,6 +95,26 @@ this.driver = driver;
             }
     }
 
+
+    private async checkInventorySize(username: string): Promise<boolean>{
+      try {
+      const session: Session | undefined = this.driver?.session();
+
+      // Use a Read Transaction and only return the necessary properties
+      const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
+          (tx: ManagedTransaction) =>
+             tx.run( updateEquippedItemCypher, { 
+              userName, uri, equipped })
+      );
+
+
+
+    } catch(error: any) {
+
+    }
+
+    }
+
     // private async getWalletAddress(localWallet: string, localWalletKey: string): Promise<string> {
     //   const walletService: WalletService = new WalletService();
     //   return await walletService.getWalletAddress(localWallet, localWalletKey);
