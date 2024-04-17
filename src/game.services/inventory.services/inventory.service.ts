@@ -66,33 +66,34 @@ this.driver = driver;
         throw error;
       }
     }
-//** replace bagged for items in the inventory with :INVENTORY RELATIONSHIP */
+
+    //** replace bagged for items in the inventory with :INVENTORY RELATIONSHIP */
   // Updates inventory data for a user based on the provided access token and update information.
-    public async updateEquippedItem(token: string, updateInventoryData: UpdateInventoryData): Promise<SuccessMessage> {
+    public async updateEquippedItem(token: string, updateInventoryData: UpdateInventoryData[]): Promise<SuccessMessage> {
       try {
-           const tokenService: TokenService = new TokenService();
-           const userName: string = await tokenService.verifyAccessToken(token);
+          const tokenService: TokenService = new TokenService();
+          const userName: string = await tokenService.verifyAccessToken(token);
 
-           const { uri, equipped } = updateInventoryData as UpdateInventoryData
-           const session: Session | undefined = this.driver?.session();
+          const session: Session | undefined = this.driver?.session();
 
-             // Use a Read Transaction and only return the necessary properties
-             const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
-                 (tx: ManagedTransaction) =>
-                    tx.run( updateEquippedItemCypher, { userName, uri, equipped })
-             );
-    
-             await session?.close();
-             
-             if (result?.records.length === 0) {
-                 throw new ValidationError(`Failed to update inventory.`, "Failed to update inventory");
-             };
-    
-             return new SuccessMessage("Inventory update successful");
-            } catch(error: any) {
-              console.error("Error updating inventory:", error);
-              throw error;
-            }
+          // Iterate over each item in the updateInventoryData array
+          for (const item of updateInventoryData) {
+              const { uri, equipped } = item;
+
+              // Use a Write Transaction to update the equipped status of the item
+              await session?.executeWrite(async (tx: ManagedTransaction) => {
+                  await tx.run(updateEquippedItemCypher, { userName, uri, equipped });
+              });
+          }
+
+          await session?.close();
+
+          // Return success message
+          return new SuccessMessage("Inventory update successful");
+      } catch (error: any) {
+          console.error("Error updating inventory:", error);
+          throw error;
+      }
     }
 
 
@@ -115,15 +116,16 @@ this.driver = driver;
               return undefined;
           }
   
-          // Extract the inventory size from the result
-          const inventorySize: number = result.records[0].get("inventorySize");
+          // Extract the remaining inventory size from the result
+          const remainingSize: number = result.records[0].get("remainingSize");
   
-          return inventorySize;
+          return remainingSize as number
       } catch (error: any) {
           console.error("Error checking inventory size:", error);
           throw error;
       }
-  }
+    }
+  
   
 
     // private async getWalletAddress(localWallet: string, localWalletKey: string): Promise<string> {

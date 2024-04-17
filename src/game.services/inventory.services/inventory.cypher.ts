@@ -24,9 +24,13 @@ export const updateEquippedItemCypher =`
   RETURN c`;
 
 
+/**
+ * Cypher query string for checking the remaining inventory size of a user.
+ * This query counts the number of cards in the user's inventory and calculates the remaining inventory size based on the user's inventorySize property.
+ * @param {string} userName - The username of the user whose inventory size is being checked.
+ * @returns {string} - Cypher query string
+ */
 export const checkInventorySizeCypher = `
-  MATCH (u:User{username: $userName})
- RETURN c.inventorySize as inventorySize`
-
-
-    
+  MATCH (u:User{username: $userName})-[:INVENTORY]->(c:Card)
+  WITH COUNT(c) AS cardCount, u.inventorySize AS inventorySize
+  RETURN inventorySize - cardCount AS remainingSize`;
