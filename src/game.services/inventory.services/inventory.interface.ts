@@ -101,13 +101,12 @@ export interface UpdateInventoryData {
 
 
 /**
- * Interface representing an array of card data indexed by URI.
+ * Type representing inventory card data indexed by URI.
  */
-interface CardDataArray {
-  [uri: string]: CardMetaData;
-}
+export type InventoryCardData = { [uri: string]: CardMetaData };
 
 /**
- * Type alias for an array of inventory card data, indexed by URI.
+ * Type representing an array containing two arrays of inventory card data.
+ * The first array contains owned and bagged cards, and the second array contains owned and equipped cards.
  */
-export type InventoryCardData = CardDataArray[];
+export type InventoryCards = [InventoryCardData[], InventoryCardData[]];

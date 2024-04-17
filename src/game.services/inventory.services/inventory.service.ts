@@ -8,8 +8,8 @@ import ValidationError from "../../outputs/validation.error";
 import TokenService from "../../user.services/token.services/token.service";
 
 //** TYPE INTERFACES
-import { CardMetaData, InventoryCardData , UpdateInventoryData } from "./inventory.interface";
-import { inventoryOpenCardCypher, itemEquipCypher } from "./inventory.cypher";
+import { CardMetaData, InventoryCardData , InventoryCards, UpdateInventoryData } from "./inventory.interface";
+import { inventoryOpenCardCypher, updateEquippedItemCypher } from "./inventory.cypher";
 import { SuccessMessage } from "../../outputs/success.message";
 
 
@@ -21,7 +21,7 @@ this.driver = driver;
 
     //** CARD INVENTORY */
     //Retrieves inventory card data for a user based on the provided access token.
-    public async cardInventoryOpen(token: string): Promise<[ownedAndBagged: InventoryCardData, ownedAndEquipped: InventoryCardData ]>  {
+    public async cardInventoryOpen(token: string): Promise<InventoryCards>  {
       try {
         const tokenService: TokenService = new TokenService();
         const userName: string = await tokenService.verifyAccessToken(token);
@@ -42,8 +42,8 @@ this.driver = driver;
         }
     
         // Initialize arrays to store cards with different relationships
-        const ownedAndBagged: InventoryCardData = [];
-        const ownedAndEquipped: InventoryCardData = [];
+        const ownedAndBagged: InventoryCardData[] = [];
+        const ownedAndEquipped: InventoryCardData[] = [];
     
         // Iterate over the result records
         result.records.forEach((record) => {
@@ -60,9 +60,9 @@ this.driver = driver;
           }
         });
 
-        console.log(ownedAndBagged)
-    
-        return [ownedAndBagged, ownedAndEquipped];
+
+  
+        return [ownedAndBagged, ownedAndEquipped] as InventoryCards
       } catch (error: any) {
         console.error("Error opening user inventory:", error);
         throw error;
@@ -70,7 +70,7 @@ this.driver = driver;
     }
 
   // Updates inventory data for a user based on the provided access token and update information.
-    public async updateInventoryData(token: string, updateInventoryData: UpdateInventoryData): Promise<SuccessMessage> {
+    public async updateEquippedItem(token: string, updateInventoryData: UpdateInventoryData): Promise<SuccessMessage> {
       try {
            const tokenService: TokenService = new TokenService();
            const userName: string = await tokenService.verifyAccessToken(token);
@@ -81,7 +81,7 @@ this.driver = driver;
              // Use a Read Transaction and only return the necessary properties
              const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
                  (tx: ManagedTransaction) =>
-                    tx.run( itemEquipCypher, { userName, uri, equipped })
+                    tx.run( updateEquippedItemCypher, { userName, uri, equipped })
              );
     
              await session?.close();
@@ -90,7 +90,7 @@ this.driver = driver;
                  throw new ValidationError(`Failed to update inventory.`, "Failed to update inventory");
              };
     
-             return new SuccessMessage("Inventory update successfully");
+             return new SuccessMessage("Inventory update successful");
             } catch(error: any) {
               console.error("Error updating inventory:", error);
               throw error;

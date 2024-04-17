@@ -16,7 +16,7 @@
  * @param {string} uri - The URI of the card to be updated.
  * @returns {string} - Cypher query string
  */
-export const itemEquipCypher =`
+export const updateEquippedItemCypher =`
   MATCH (u:User {username: $userName})-[:OWNED|BAGGED]->(c:Card {uri: $uri})
   WHERE EXISTS((u)-[:OWNED]->(c)) AND EXISTS((u)-[:BAGGED]->(c))
   DELETE (u)-[:BAGGED]->(c)
