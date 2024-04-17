@@ -6,7 +6,7 @@ import { Driver } from 'neo4j-driver';
 import { getDriver } from '../db/memgraph';
 
 //** INTERFACE IMPORT
-import { InventoryCardData, UpdateInventoryData } from '../game.services/inventory.services/inventory.interface';
+import { InventoryCards } from '../game.services/inventory.services/inventory.interface';
 
 //** SERVICES IMPORTS
 import InventoryService from '../game.services/inventory.services/inventory.service';
@@ -18,7 +18,7 @@ import { SuccessMessage } from '../outputs/success.message';
 
 
 const inventory = (app: Elysia): void => {
-    app.get('/api/card/inventory/open', async ({ headers }): Promise<InventoryCardData> => {
+    app.get('/api/card/inventory/open', async ({ headers }): Promise<InventoryCards> => {
         try {
             const authorizationHeader = headers.authorization;
             if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
@@ -30,14 +30,14 @@ const inventory = (app: Elysia): void => {
             const inventoryService: InventoryService = new InventoryService(driver);
             const output = await inventoryService.cardInventoryOpen(jwtToken)
 
-            return output as InventoryCardData
+            return output as InventoryCards
             } catch (error: any) {
             return error
             }
         }, authorizationBearerSchema
     )
     
-     .post('/api/card/inventory/update', async ({ headers, body }): Promise<SuccessMessage> => {
+     .post('/api/card/inventory/update-equipped', async ({ headers, body }): Promise<SuccessMessage> => {
          try {
              const authorizationHeader: string = headers.authorization || "";
              if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
@@ -47,7 +47,7 @@ const inventory = (app: Elysia): void => {
 
              const driver: Driver = getDriver();
              const inventoryService: InventoryService = new InventoryService(driver);
-             const output: SuccessMessage = await inventoryService.updateInventoryData(jwtToken, body)
+             const output: SuccessMessage = await inventoryService.updateEquippedItem(jwtToken, body)
 
              return output as SuccessMessage
          } catch (error: any) {
