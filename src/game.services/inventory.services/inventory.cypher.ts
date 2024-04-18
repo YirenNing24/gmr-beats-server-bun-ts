@@ -46,8 +46,8 @@ export const checkInventorySizeCypher = `
  */
 export const removeEquippedItemCypher = `
 MATCH (u:User {username: $userName})-[:EQUIPPED]->(c:Card {uri: $uri})
-WHERE EXISTS((u)-[:EQUIPPED]->(c))
 DELETE (u)-[:EQUIPPED]->(c)
 CREATE (u)-[:INVENTORY]->(c)
-RETURN COUNT(c) as removedCount`;
+RETURN COUNT(c) as removedCount;
+`;
 

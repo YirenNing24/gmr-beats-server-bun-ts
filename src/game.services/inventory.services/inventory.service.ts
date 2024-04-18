@@ -67,7 +67,6 @@ this.driver = driver;
       }
     }
 
-    //** replace bagged for items in the inventory with :INVENTORY RELATIONSHIP */
   // Updates inventory data for a user based on the provided access token and update information.
     public async equipItem(token: string, updateInventoryData: UpdateInventoryData[]): Promise<SuccessMessage> {
       try {
