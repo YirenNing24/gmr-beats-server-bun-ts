@@ -69,7 +69,7 @@ this.driver = driver;
 
     //** replace bagged for items in the inventory with :INVENTORY RELATIONSHIP */
   // Updates inventory data for a user based on the provided access token and update information.
-    public async updateEquippedItem(token: string, updateInventoryData: UpdateInventoryData[]): Promise<SuccessMessage> {
+    public async equipItem(token: string, updateInventoryData: UpdateInventoryData[]): Promise<SuccessMessage> {
       try {
           const tokenService: TokenService = new TokenService();
           const userName: string = await tokenService.verifyAccessToken(token);
@@ -95,7 +95,6 @@ this.driver = driver;
           throw error;
       }
     }
-
 
     public async removeEquippedItem(token: string, updateInventoryData: UpdateInventoryData[]): Promise<SuccessMessage> {
       try {
@@ -147,8 +146,7 @@ this.driver = driver;
           console.error("Error removing equipped items:", error);
           throw error;
       }
-  }
-
+    }
 
 
 

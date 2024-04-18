@@ -10,10 +10,11 @@ import { t } from "elysia";
  * @property {string} body.username - The username for login.
  * @property {string} body.password - The password for login.
  */
-export const updateInventorySchema = {
+export const equipItemSchema = {
     headers: t.Object({ 
         authorization: t.String() }),
-    body: t.Object({ 
+    body: t.Array(Object({ 
         uri: t.String(), 
-        equipped: t.Boolean() })
+        equipped: t.Boolean() }
+    ))
 }

@@ -13,7 +13,7 @@ import InventoryService from '../game.services/inventory.services/inventory.serv
 
 //** VALIDATION SCHEMA IMPORT
 import { authorizationBearerSchema } from './route.schema/schema.auth';
-import { updateInventorySchema } from '../game.services/inventory.services/inventory.schema';
+import { equipItemSchema  } from '../game.services/inventory.services/inventory.schema';
 import { SuccessMessage } from '../outputs/success.message';
 
 
@@ -37,7 +37,7 @@ const inventory = (app: Elysia): void => {
         }, authorizationBearerSchema
     )
     
-     .post('/api/card/inventory/update-equipped', async ({ headers, body }): Promise<SuccessMessage> => {
+     .post('/api/card/inventory/equip-item', async ({ headers, body }): Promise<SuccessMessage> => {
          try {
              const authorizationHeader: string = headers.authorization || "";
              if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
@@ -47,14 +47,15 @@ const inventory = (app: Elysia): void => {
 
              const driver: Driver = getDriver();
              const inventoryService: InventoryService = new InventoryService(driver);
-             const output: SuccessMessage = await inventoryService.updateEquippedItem(jwtToken, body)
+             const output: SuccessMessage = await inventoryService.equipItem(jwtToken, body)
 
              return output as SuccessMessage
          } catch (error: any) {
              return error
              }
-         }, updateInventorySchema
-     )
+         }, equipItemSchema
+        )
+         
 
 };
 
