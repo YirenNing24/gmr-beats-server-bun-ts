@@ -21,7 +21,8 @@ export const updateEquippedItemCypher =`
   WHERE EXISTS((u)-[:OWNED]->(c)) AND EXISTS((u)-[:INVENTORY]->(c))
   DELETE (u)-[:INVENTORY]->(c)
   CREATE (u)-[:EQUIPPED]->(c)
-  RETURN c`;
+  RETURN c;
+  `;
 
 /**
  * Cypher query string for checking the remaining inventory size of a user.
