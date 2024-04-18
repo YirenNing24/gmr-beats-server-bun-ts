@@ -23,7 +23,6 @@ export const updateEquippedItemCypher =`
   CREATE (u)-[:EQUIPPED]->(c)
   RETURN c`;
 
-
 /**
  * Cypher query string for checking the remaining inventory size of a user.
  * This query counts the number of cards in the user's inventory and calculates the remaining inventory size based on the user's inventorySize property.
@@ -34,3 +33,21 @@ export const checkInventorySizeCypher = `
   MATCH (u:User{username: $userName})-[:INVENTORY]->(c:Card)
   WITH COUNT(c) AS cardCount, u.inventorySize AS inventorySize
   RETURN inventorySize - cardCount AS remainingSize`;
+
+  /**
+ * Cypher query string for removing the equipped status of a card and reinstating it in the user's inventory.
+ * This query matches a user who has equipped the card with the specified URI,
+ * removes the EQUIPPED relationship, and creates an INVENTORY relationship.
+ * It returns the count of cards that were removed from the equipped status.
+ * 
+ * @param {string} $userName - The username of the user whose inventory is being updated.
+ * @param {string} $uri - The URI of the card to be updated.
+ * @returns {string} - Cypher query string
+ */
+export const removeEquippedItemCypher = `
+MATCH (u:User {username: $userName})-[:EQUIPPED]->(c:Card {uri: $uri})
+WHERE EXISTS((u)-[:EQUIPPED]->(c))
+DELETE (u)-[:EQUIPPED]->(c)
+CREATE (u)-[:INVENTORY]->(c)
+RETURN COUNT(c) as removedCount`;
+

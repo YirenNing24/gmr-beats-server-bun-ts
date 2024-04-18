@@ -9,7 +9,7 @@ import TokenService from "../../user.services/token.services/token.service";
 
 //** TYPE INTERFACES
 import { CardMetaData, InventoryCardData , InventoryCards, UpdateInventoryData } from "./inventory.interface";
-import { checkInventorySizeCypher, inventoryOpenCardCypher, updateEquippedItemCypher } from "./inventory.cypher";
+import { checkInventorySizeCypher, inventoryOpenCardCypher, removeEquippedItemCypher, updateEquippedItemCypher } from "./inventory.cypher";
 import { SuccessMessage } from "../../outputs/success.message";
 
 
@@ -95,6 +95,62 @@ this.driver = driver;
           throw error;
       }
     }
+
+
+    public async removeEquippedItem(token: string, updateInventoryData: UpdateInventoryData[]): Promise<SuccessMessage> {
+      try {
+          const tokenService: TokenService = new TokenService();
+          const userName: string = await tokenService.verifyAccessToken(token);
+  
+          const session: Session | undefined = this.driver?.session();
+  
+          // Get the remaining inventory size
+          const remainingSize: number | undefined = await this.checkInventorySize(userName);
+  
+          if (remainingSize === undefined) {
+              throw new Error("Failed to retrieve remaining inventory size.");
+          }
+  
+          // Calculate the number of items to be removed
+          const itemsToRemove: number = updateInventoryData.length;
+  
+          // Check if the number of items to be removed exceeds the remaining inventory size
+          if (itemsToRemove > remainingSize) {
+              throw new Error("Insufficient inventory space to remove equipped items.");
+          }
+  
+          let totalRemovedCount: number = 0;
+  
+          // Iterate over each item in the updateInventoryData array
+          for (const item of updateInventoryData) {
+              const { uri } = item;
+  
+              // Use a Write Transaction to remove the equipped status of the item and reinstate it in the inventory
+              const result: QueryResult<RecordShape> | undefined = await session?.executeWrite(
+                  async (tx: ManagedTransaction) => {
+                      return tx.run(removeEquippedItemCypher, { userName, uri });
+                  }
+              );
+  
+              // Extract the removed count from the result
+              const removedCount: number = result?.records[0].get("removedCount");
+  
+              // Update the total removed count
+              totalRemovedCount += removedCount;
+          }
+  
+          await session?.close();
+  
+          // Return success message
+          return new SuccessMessage(`${totalRemovedCount} equipped items removed successfully and reinstated in the inventory.`);
+      } catch (error: any) {
+          console.error("Error removing equipped items:", error);
+          throw error;
+      }
+  }
+
+
+
 
 
     private async checkInventorySize(username: string): Promise<number | undefined> {
