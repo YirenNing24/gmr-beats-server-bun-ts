@@ -13,7 +13,7 @@ import { t } from "elysia";
 export const equipItemSchema = {
     headers: t.Object({ 
         authorization: t.String() }),
-    body: t.Array(Object({ 
+    body: t.Array(t.Object({ 
         uri: t.String(), 
         equipped: t.Boolean() }
     ))
