@@ -55,6 +55,25 @@ const inventory = (app: Elysia): void => {
              }
          }, equipItemSchema
         )
+
+        .post('/api/card/inventory/unequip-item', async ({ headers, body }): Promise<SuccessMessage> => {
+            try {
+                const authorizationHeader: string = headers.authorization || "";
+                if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+                    throw new Error('Bearer token not found in Authorization header');
+                }
+                const jwtToken: string = authorizationHeader.substring(7);
+   
+                const driver: Driver = getDriver();
+                const inventoryService: InventoryService = new InventoryService(driver);
+                const output: SuccessMessage = await inventoryService.equipItem(jwtToken, body)
+   
+                return output as SuccessMessage
+            } catch (error: any) {
+                return error
+                }
+            }, equipItemSchema
+           )
          
 
 };
