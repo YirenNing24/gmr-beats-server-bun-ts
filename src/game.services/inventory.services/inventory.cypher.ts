@@ -16,13 +16,29 @@
  * @param {string} uri - The URI of the card to be updated.
  * @returns {string} - Cypher query string
  */
-export const equipItemCypher =`
+export const equipItemCypher: string =`
   MATCH (u:User {username: $userName})-[o:INVENTORY]->(c:Card {uri: $uri})
   WHERE EXISTS((u)-[:OWNED]->(c)) AND EXISTS((u)-[:INVENTORY]->(c))
   DELETE o
   CREATE (u)-[:EQUIPPED]->(c)
-  RETURN c
   `;
+
+/**
+ * Cypher query string for removing the equipped status of a card and reinstating it in the user's inventory.
+ * This query matches a user who has equipped the card with the specified URI,
+ * removes the EQUIPPED relationship, and creates an INVENTORY relationship.
+ * It returns the count of cards that were removed from the equipped status.
+ * 
+ * @param {string} $userName - The username of the user whose inventory is being updated.
+ * @param {string} $uri - The URI of the card to be updated.
+ * @returns {string} - Cypher query string
+ */
+export const unequipItemCypher: string = `
+  MATCH (u:User {username: $userName})-[e:EQUIPPED]->(c:Card {uri: $uri})
+  DELETE e
+  CREATE (u)-[:INVENTORY]->(c)
+`;
+
 
 
   // MATCH (u:User {username: "nashar4"})-[r:INVENTORY]->(c:Card {id: "5"})
@@ -38,23 +54,5 @@ export const checkInventorySizeCypher = `
   MATCH (u:User{username: $userName})-[:INVENTORY]->(c:Card)
   WITH COUNT(c) AS cardCount, u.inventorySize AS inventorySize
   RETURN inventorySize - cardCount AS remainingSize`;
-
-  /**
- * Cypher query string for removing the equipped status of a card and reinstating it in the user's inventory.
- * This query matches a user who has equipped the card with the specified URI,
- * removes the EQUIPPED relationship, and creates an INVENTORY relationship.
- * It returns the count of cards that were removed from the equipped status.
- * 
- * @param {string} $userName - The username of the user whose inventory is being updated.
- * @param {string} $uri - The URI of the card to be updated.
- * @returns {string} - Cypher query string
- */
-export const removeEquippedItemCypher = `
-MATCH (u:User {username: $userName})-[e:EQUIPPED]->(c:Card {uri: $uri})
-DELETE e;
-CREATE (u)-[:INVENTORY]->(c)
-RETURN COUNT(c) as removedCount;
-`;
-
 
 

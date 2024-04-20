@@ -66,7 +66,7 @@ const inventory = (app: Elysia): void => {
    
                 const driver: Driver = getDriver();
                 const inventoryService: InventoryService = new InventoryService(driver);
-                const output: SuccessMessage = await inventoryService.equipItem(jwtToken, body)
+                const output: SuccessMessage = await inventoryService.unequipItem(jwtToken, body)
    
                 return output as SuccessMessage
             } catch (error: any) {

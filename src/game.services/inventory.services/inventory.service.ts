@@ -1,15 +1,12 @@
 //** MEMGRAPH DRIVER AND TYPES
 import { Driver, ManagedTransaction, QueryResult, RecordShape, Session } from "neo4j-driver";
 
-//** VALIDATION ERROR
-import ValidationError from "../../outputs/validation.error";
-
 //** IMPORTED SERVICES
 import TokenService from "../../user.services/token.services/token.service";
 
 //** TYPE INTERFACES
 import { CardMetaData, InventoryCardData , InventoryCards, UpdateInventoryData } from "./inventory.interface";
-import { checkInventorySizeCypher, equipItemCypher, inventoryOpenCardCypher, removeEquippedItemCypher } from "./inventory.cypher";
+import { checkInventorySizeCypher, equipItemCypher, inventoryOpenCardCypher, unequipItemCypher } from "./inventory.cypher";
 import { SuccessMessage } from "../../outputs/success.message";
 
 
@@ -63,8 +60,6 @@ this.driver = driver;
           }
         });
 
-
-        console.log(ownedAndInventory)
         return [ownedAndInventory, ownedAndEquipped] as InventoryCards
       } catch (error: any) {
         console.error("Error opening user inventory:", error);
@@ -100,10 +95,13 @@ this.driver = driver;
       }
     }
 
-    public async removeEquippedItem(token: string, updateInventoryData: UpdateInventoryData[]): Promise<SuccessMessage> {
+    public async unequipItem(token: string, updateInventoryData: UpdateInventoryData[]): Promise<SuccessMessage> {
       try {
           const tokenService: TokenService = new TokenService();
           const userName: string = await tokenService.verifyAccessToken(token);
+
+
+          console.log(userName)
   
           const session: Session | undefined = this.driver?.session();
   
@@ -131,7 +129,7 @@ this.driver = driver;
               // Use a Write Transaction to remove the equipped status of the item and reinstate it in the inventory
               const result: QueryResult<RecordShape> | undefined = await session?.executeWrite(
                   async (tx: ManagedTransaction) => {
-                      return tx.run(removeEquippedItemCypher, { userName, uri });
+                      return tx.run(unequipItemCypher, { userName, uri });
                   }
               );
   
@@ -152,10 +150,7 @@ this.driver = driver;
       }
     }
 
-
-
-
-    private async checkInventorySize(username: string): Promise<number | undefined> {
+    private async checkInventorySize(userName: string): Promise<number | undefined> {
       try {
           const session: Session | undefined = this.driver?.session();
   
@@ -163,7 +158,7 @@ this.driver = driver;
           const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
               (tx: ManagedTransaction) =>
                   tx.run(checkInventorySizeCypher, {
-                      username
+                      userName
                   })
           );
   
