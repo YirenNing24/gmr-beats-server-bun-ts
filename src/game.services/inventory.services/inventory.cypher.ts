@@ -16,13 +16,17 @@
  * @param {string} uri - The URI of the card to be updated.
  * @returns {string} - Cypher query string
  */
-export const updateEquippedItemCypher =`
-  MATCH (u:User {username: $userName})-[:OWNED|INVENTORY]->(c:Card {uri: $uri})
+export const equipItemCypher =`
+  MATCH (u:User {username: $userName})-[o:INVENTORY]->(c:Card {uri: $uri})
   WHERE EXISTS((u)-[:OWNED]->(c)) AND EXISTS((u)-[:INVENTORY]->(c))
-  DELETE (u)-[:INVENTORY]->(c)
+  DELETE o
   CREATE (u)-[:EQUIPPED]->(c)
-  RETURN c;
+  RETURN c
   `;
+
+
+  // MATCH (u:User {username: "nashar4"})-[r:INVENTORY]->(c:Card {id: "5"})
+// DELETE r;
 
 /**
  * Cypher query string for checking the remaining inventory size of a user.
@@ -46,9 +50,11 @@ export const checkInventorySizeCypher = `
  * @returns {string} - Cypher query string
  */
 export const removeEquippedItemCypher = `
-MATCH (u:User {username: $userName})-[:EQUIPPED]->(c:Card {uri: $uri})
-DELETE (u)-[:EQUIPPED]->(c)
+MATCH (u:User {username: $userName})-[e:EQUIPPED]->(c:Card {uri: $uri})
+DELETE e;
 CREATE (u)-[:INVENTORY]->(c)
 RETURN COUNT(c) as removedCount;
 `;
+
+
 

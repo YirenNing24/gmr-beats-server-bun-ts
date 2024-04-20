@@ -67,7 +67,7 @@ export interface CardMetaData {
     level: string;
     experience: string;
     image: string;
-    imageByte: string;
+    imageByte?: string;
 
     uri: string;
     owner: string;

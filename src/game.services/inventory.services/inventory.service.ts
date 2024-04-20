@@ -9,7 +9,7 @@ import TokenService from "../../user.services/token.services/token.service";
 
 //** TYPE INTERFACES
 import { CardMetaData, InventoryCardData , InventoryCards, UpdateInventoryData } from "./inventory.interface";
-import { checkInventorySizeCypher, inventoryOpenCardCypher, removeEquippedItemCypher, updateEquippedItemCypher } from "./inventory.cypher";
+import { checkInventorySizeCypher, equipItemCypher, inventoryOpenCardCypher, removeEquippedItemCypher } from "./inventory.cypher";
 import { SuccessMessage } from "../../outputs/success.message";
 
 
@@ -42,25 +42,30 @@ this.driver = driver;
         }
     
         // Initialize arrays to store cards with different relationships
-        const ownedAndBagged: InventoryCardData[] = [];
+        const ownedAndInventory: InventoryCardData[] = [];
         const ownedAndEquipped: InventoryCardData[] = [];
     
         // Iterate over the result records
         result.records.forEach((record) => {
           // Extract URI and card data from the record
           const uri: string = record.get("uri");
-          const card: CardMetaData = record.get("card").properties;
-    
+          const cardData: CardMetaData = record.get("card").properties;
+
+          const { imageByte, ...card } = cardData;
+
           // Check the relationship type and add the card to the appropriate array
           const relationshipType: string = record.get("relationshipType");
+
           if (relationshipType === "INVENTORY") {
-            ownedAndBagged.push({ [uri]: { ...card, uri } });
+              ownedAndInventory.push({ [uri]: { ...card, uri } });
           } else if (relationshipType === "EQUIPPED") {
-            ownedAndEquipped.push({ [uri]: { ...card, uri } });
+              ownedAndEquipped.push({ [uri]: { ...card, uri } });
           }
         });
 
-        return [ownedAndBagged, ownedAndEquipped] as InventoryCards
+
+        console.log(ownedAndInventory)
+        return [ownedAndInventory, ownedAndEquipped] as InventoryCards
       } catch (error: any) {
         console.error("Error opening user inventory:", error);
         throw error;
@@ -81,7 +86,7 @@ this.driver = driver;
 
               // Use a Write Transaction to update the equipped status of the item
               await session?.executeWrite(async (tx: ManagedTransaction) => {
-                  await tx.run(updateEquippedItemCypher, { userName, uri, equipped });
+                  await tx.run(equipItemCypher, { userName, uri, equipped });
               });
           }
 
