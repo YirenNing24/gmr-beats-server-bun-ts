@@ -31,23 +31,30 @@ export default class StoreService {
 //Retrieves valid cards from the using the provided access token.
   public async getValidCards(token: string): Promise<StoreCardData[]> {
     try {
-      const tokenService: TokenService = new TokenService();
-      await tokenService.verifyAccessToken(token);
+        const tokenService: TokenService = new TokenService();
+        await tokenService.verifyAccessToken(token);
 
-      const session: Session = this.driver.session();
-      const result: QueryResult = await session.executeRead((tx: ManagedTransaction) =>
-          tx.run(getValidCards)
-      );
-      await session.close();
+        const session: Session = this.driver.session();
+        const result: QueryResult = await session.executeRead((tx: ManagedTransaction) =>
+            tx.run(getValidCards)
+        );
+        await session.close();
 
-      const cards: StoreCardData[] = result.records.map(record => record.get("c").properties);
+        const cards: StoreCardData[] = result.records.map(record => {
+            const cardProperties: any = record.get("c").properties;
+            // Exclude the 'imageByte' property from the card data
+            const { imageByte, ...cardData } = cardProperties;
+            return cardData as StoreCardData
+        });
 
-      return cards as StoreCardData[];
+        return cards as StoreCardData[];
     } catch (error: any) {
-      console.error("Error fetching items:", error);
-      throw error
+        console.error("Error fetching items:", error);
+        throw error
     }
   }
+
+
 //Buys a card using the provided card data and access token.
   public async buyCard(buycardData: BuyCardData, token: string): Promise<any> {
     try {

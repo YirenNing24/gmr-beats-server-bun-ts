@@ -1,81 +1,81 @@
 /**
- * Interface for storing card data.
+ * Represents data of a card in the store.
+ *
+ * @interface StoreCardData
+ * @property {string} name - Name of the card.
+ * @property {string} description - Description of the card.
+ * @property {string} group - Group to which the card belongs.
+ * @property {string} era - Era of the card.
+ * @property {string} scoreBoost - Score boost of the card.
+ * @property {string} healBoost - Heal boost of the card.
+ * @property {string} skill - Skill of the card.
+ * @property {string} stars - Number of stars on the card.
+ * @property {string} slot - Slot of the card.
+ * @property {string} tier - Tier of the card.
+ * @property {string} boostCount - Number of boost counts.
+ * @property {string} awakenCount - Number of awaken counts.
+ * @property {boolean} breakthrough - Indicates if the card has undergone breakthrough.
+ * @property {string} artist - Artist of the card.
+ * @property {string} position - Position of the card.
+ * @property {string} position2 - Secondary position of the card.
+ * @property {string} rarity - Rarity of the card.
+ * @property {string} level - Level of the card.
+ * @property {string} experience - Experience of the card.
+ * @property {string} image - URL of the image of the card.
+ * @property {string} uri - URI of the card.
+ * @property {string} owner - Owner of the card.
+ * @property {string} tokenId - Token ID of the card.
+ * @property {string} id - Unique ID of the card.
+ * @property {number} listingId - Listing ID of the card.
+ * @property {string} cardAddress - Address of the card.
+ * @property {string} uploader - Uploader of the card.
+ * @property {string} supply - Total supply of the card.
+ * @property {string} quantity - Quantity of the card.
+ * @property {string} quantityOwned - Quantity owned of the card.
+ * @property {string} startTime - Start time of the listing.
+ * @property {string} endTime - End time of the listing.
+ * @property {string} lister - Lister of the card.
+ * @property {boolean} sold - Indicates if the card is sold.
+ * @property {number} pricePerToken - Price per token of the card.
+ * @property {string} currencyName - Name of the currency.
  */
 export interface StoreCardData {
-    /** Name of the card. */
     name: string;
-    /** Description of the card. */
     description: string;
-    /** Group to which the card belongs. */
     group: string;
-    /** Era of the card. */
     era: string;
-    /** Score boost of the card. */
     scoreBoost: string;
-    /** Heal boost of the card. */
     healBoost: string;
-    /** Skill of the card. */
     skill: string;
-    /** Number of stars on the card. */
     stars: string;
-    /** Slot of the card. */
     slot: string;
-    /** Tier of the card. */
     tier: string;
-    /** Number of boost counts. */
     boostCount: string;
-    /** Number of awaken counts. */
     awakenCount: string;
-    /** Indicates if the card has undergone breakthrough. */
     breakthrough: boolean;
-    /** Artist of the card. */
     artist: string; 
-    /** Position of the card. */
     position: string;
-    /** Secondary position of the card. */
     position2: string;
-    /** Rarity of the card. */
     rarity: string;
-    /** Level of the card. */
     level: string;
-    /** Experience of the card. */
     experience: string;
-    /** URL of the image of the card. */
     image: string;
-    /** Image data in bytes. */
     imageByte: string;
-
-    /** URI of the card. */
     uri: string;
-    /** Owner of the card. */
     owner: string;
-    /** Token ID of the card. */
     tokenId: string
-    /** Unique ID of the card. */
     id: string;
-    /** Listing ID of the card. */
     listingId: number;
-    /** Address of the card. */
     cardAddress: string;
-    /** Uploader of the card. */
     uploader: string;
-    /** Total supply of the card. */
     supply: string;
-    /** Quantity of the card. */
     quantity: 1
-    /** Quantity owned of the card. */
     quantityOwned: string
-    /** Start time of the listing. */
     startTime?: string;
-    /** End time of the listing. */
     endTime?: string;
-    /** Lister of the card. */
     lister?: string;
-    /** Indicates if the card is sold. */
     sold: true;
-    /** Price per token of the card. */
     pricePerToken?: number
-    /** Name of the currency. */
     currencyName?: string
 }
 

@@ -19,7 +19,7 @@ import { authorizationBearerSchema } from './route.schema/schema.auth';
 
 const store = (app: Elysia) => {
 
-  app.get('/api/store/cards/get', async ({ headers }): Promise<StoreCardData[]> => {
+  app.get('/api/store/cards/valid', async ({ headers }): Promise<StoreCardData[]> => {
       try {
         const authorizationHeader: string = headers.authorization;
         if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {

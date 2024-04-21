@@ -10,6 +10,9 @@ RETURN u, sizeBaggedCards`;
 /**
  * Cypher query to retrieve valid cards that are not packed and have a valid lister.
  */
-export const getValidCards: string = `MATCH (c:Card) 
-WHERE c.packed IS NULL AND c.lister IS NOT NULL
-RETURN c`;
+/**
+ * Cypher query to retrieve valid cards that are listed in the CardStore.
+ */
+export const getValidCards: string = `
+    MATCH (c:Card)-[:LISTED]->(:CardStore)
+    RETURN c`;
