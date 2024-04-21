@@ -99,9 +99,6 @@ this.driver = driver;
       try {
           const tokenService: TokenService = new TokenService();
           const userName: string = await tokenService.verifyAccessToken(token);
-
-
-          console.log(userName)
   
           const session: Session | undefined = this.driver?.session();
   
@@ -119,9 +116,7 @@ this.driver = driver;
           if (itemsToRemove > remainingSize) {
               throw new Error("Insufficient inventory space to remove equipped items.");
           }
-  
-          let totalRemovedCount: number = 0;
-  
+
           // Iterate over each item in the updateInventoryData array
           for (const item of updateInventoryData) {
               const { uri } = item;
@@ -132,18 +127,12 @@ this.driver = driver;
                       return tx.run(unequipItemCypher, { userName, uri });
                   }
               );
-  
-              // Extract the removed count from the result
-              const removedCount: number = result?.records[0].get("removedCount");
-  
-              // Update the total removed count
-              totalRemovedCount += removedCount;
           }
   
           await session?.close();
   
           // Return success message
-          return new SuccessMessage(`${totalRemovedCount} equipped items removed successfully and reinstated in the inventory.`);
+          return new SuccessMessage("Equip removed");
       } catch (error: any) {
           console.error("Error removing equipped items:", error);
           throw error;
