@@ -80,7 +80,6 @@ export interface CardMetaData {
     quantity: 1
     quantityOwned: string
     lister?: string;
-    sold: boolean;
     pricePerToken?: number
     currencyName?: string
     transferred?: string

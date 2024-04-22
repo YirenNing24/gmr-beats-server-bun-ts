@@ -74,7 +74,6 @@ export interface StoreCardData {
     startTime?: string;
     endTime?: string;
     lister?: string;
-    sold: true;
     pricePerToken?: number
     currencyName?: string
 }
