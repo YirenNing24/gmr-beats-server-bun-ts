@@ -47,6 +47,8 @@ export default class StoreService {
             return cardData as StoreCardData
         });
 
+        console.log(cards)
+
         return cards as StoreCardData[];
     } catch (error: any) {
         console.error("Error fetching items:", error);
