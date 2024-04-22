@@ -16,3 +16,4 @@ RETURN u, sizeBaggedCards`;
 export const getValidCards: string = `
     MATCH (c:Card)-[:LISTED]->(:CardStore)
     RETURN c`;
+
