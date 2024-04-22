@@ -106,10 +106,11 @@ export default class StoreService {
       // Loop through each relationship type
       for (const rel of relationship) {
         await session.run(`
-        MATCH (u:User {username: $username}), (c:Card {uri: $uri})
-        MATCH (cs:CardStore)
-        CREATE (u)-[:${rel}]->(c)
-        CREATE (u)-[:SOLD]->(cs)`,
+          MATCH (u:User {username: $username}), (c:Card {uri: $uri})
+          MATCH (c)-[l:LISTED]->(cs:CardStore)
+          DELETE l
+          CREATE (u)-[:${rel}]->(c)
+          CREATE (u)-[:SOLD]->(cs)`,
         { username, uri, rel });    
       }
       await session.close();
