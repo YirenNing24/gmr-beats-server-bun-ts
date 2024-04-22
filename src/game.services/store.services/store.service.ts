@@ -98,16 +98,18 @@ export default class StoreService {
       // Determine the relationship type based on bag and inventory size
       let relationship: string[];
       if (bagSize + 1 <= inventorySize) {
-        relationship = ["BAGGED, OWNS"];
+        relationship = ["BAGGED, OWNED"];
       } else {
-        relationship = ["OWNS"];
+        relationship = ["OWNED", "INVENTORY"];
       }
       const session: Session = this.driver.session();
       // Loop through each relationship type
       for (const rel of relationship) {
         await session.run(`
         MATCH (u:User {username: $username}), (c:Card {uri: $uri})
-        CREATE (u)-[:${rel}]->(c)`,
+        MATCH (cs:CardStore)
+        CREATE (u)-[:${rel}]->(c)
+        CREATE (u)-[:SOLD]->(cs)`,
         { username, uri, rel });    
       }
       await session.close();
