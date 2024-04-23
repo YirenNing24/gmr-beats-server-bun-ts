@@ -82,8 +82,6 @@ export interface StoreCardData {
  * Interface for buying card data.
  */
 export interface BuyCardData {
-    /** URI of the card. */
     uri: string;
-    /** Listing ID of the card. */
     listingId: number
 }

@@ -185,7 +185,7 @@ export interface UserData {
       suspended: Suspended
       country: string;
       deviceId: string;
-      inventorySize: number;
+      inventorySize: any;
     };
   }
   

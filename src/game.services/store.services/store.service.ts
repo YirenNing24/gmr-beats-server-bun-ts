@@ -1,5 +1,5 @@
 //** THIRDWEB IMPORTS
-import { ThirdwebSDK } from "@thirdweb-dev/sdk";
+import { MarketplaceV3, ThirdwebSDK } from "@thirdweb-dev/sdk";
 import { LocalWalletNode } from "@thirdweb-dev/wallets/evm/wallets/local-wallet-node";
 import { SmartWallet } from "@thirdweb-dev/wallets";
 
@@ -27,12 +27,11 @@ import { SuccessMessage } from "../../outputs/success.message";
 
 export default class StoreService {
   driver: Driver;
-
   constructor(driver: Driver) {
     this.driver = driver;
   }
 
-//Retrieves valid cards from the using the provided access token.
+  //Retrieves valid cards from the using the provided access token.
   public async getValidCards(token: string): Promise<StoreCardData[]> {
     try {
         const tokenService: TokenService = new TokenService();
@@ -46,12 +45,9 @@ export default class StoreService {
 
         const cards: StoreCardData[] = result.records.map(record => {
             const cardProperties: any = record.get("c").properties;
-            // Exclude the 'imageByte' property from the card data
             const { imageByte, ...cardData } = cardProperties;
             return cardData as StoreCardData
         });
-
-        console.log(cards)
 
         return cards as StoreCardData[];
     } catch (error: any) {
@@ -60,9 +56,8 @@ export default class StoreService {
     }
   }
 
-
-//Buys a card using the provided card data and access token.
-  public async buyCard(buycardData: BuyCardData, token: string): Promise<any> {
+  //Buys a card using the provided card data and access token.
+  public async buyCard(buycardData: BuyCardData, token: string): Promise<SuccessMessage> {
     try {
       const tokenService: TokenService = new TokenService();
       const username: string = await tokenService.verifyAccessToken(token);
@@ -84,27 +79,50 @@ export default class StoreService {
       await this.cardPurchase(localWallet, localWalletKey, listingId)
 
       // Decide the relationship type based on inventory and bag size
-      const inventorySize: number = userData.properties.inventorySize
-      const bagSize: number = result.records[0].get("sizeBaggedCards");
+      const inventorySize: number = userData.properties.inventorySize.toNumber()
+      const inventoryCurrentSize: number = result.records[0].get("inventoryCurrentSize").toNumber()
 
       // Create relationship using a separate Cypher query
-      await this.createRelationship(username, uri, bagSize, inventorySize );
+      await this.createRelationship(username, uri, inventoryCurrentSize, inventorySize );
 
-      return new SuccessMessage("Purchase was successfull");
+      return new SuccessMessage("Purchase was successful");
     } catch (error: any) {
       throw error
     }
   }
 
-//Creates a relationship between a user and a card based on provided parameters.
-  private async createRelationship(username: string, uri: string, bagSize: number, inventorySize: number): Promise<void> {
+  //Initiates a card purchase using the provided wallet information and listing ID.
+  private async cardPurchase(localWallet: string, localWalletKey: string, listingId: number): Promise<void | Error> {
+      try {
+      const walletLocal: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
+      await walletLocal.import({
+        encryptedJson: localWallet,
+        password: localWalletKey,
+      });
+      const smartWallet: SmartWallet = new SmartWallet(SMART_WALLET_CONFIG);
+      await smartWallet.connect({
+        personalWallet: walletLocal,
+      });
+  
+      const sdk: ThirdwebSDK = await ThirdwebSDK.fromWallet(smartWallet, CHAIN);
+      const contract: MarketplaceV3 = await sdk.getContract(CARD_MARKETPLACE, "marketplace-v3");
+      await contract.directListings.buyFromListing(listingId, 1);
+  
+    } catch(error: any) {
+      console.log(error)
+      return error
+        }
+  }
+  
+  //Creates a relationship between a user and a card based on provided parameters.
+  private async createRelationship(username: string, uri: string, inventoryCurrentSize: number, inventorySize: number): Promise<void> {
     try {
       // Determine the relationship type based on bag and inventory size
       let relationship: string[];
-      if (bagSize + 1 <= inventorySize) {
-        relationship = ["BAGGED, OWNED"];
+      if (inventorySize < inventoryCurrentSize + 1) {
+        relationship = ["BAGGED", "OWNED"];
       } else {
-        relationship = ["OWNED", "INVENTORY"];
+        relationship = ["INVENTORY", "OWNED"];
       }
       const session: Session = this.driver.session();
       // Loop through each relationship type
@@ -124,30 +142,8 @@ export default class StoreService {
     }
   }
   
-  //Initiates a card purchase using the provided wallet information and listing ID.
-    private async cardPurchase(localWallet: string, localWalletKey: string, listingId: number): Promise<void> {
-    try {
-    const walletLocal: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
-    await walletLocal.import({
-      encryptedJson: localWallet,
-      password: localWalletKey,
-    });
-    const smartWallet: SmartWallet = new SmartWallet(SMART_WALLET_CONFIG);
-    await smartWallet.connect({
-      personalWallet: walletLocal,
-    });
 
-    const sdk: ThirdwebSDK = await ThirdwebSDK.fromWallet(smartWallet, CHAIN);
-    const contract = await sdk.getContract(CARD_MARKETPLACE, "marketplace-v3");
-    await contract.directListings.buyFromListing(listingId, 1);
-  } catch(error: any) {
-    console.error("Error purchasing card:", error);
-    throw error
-      }
-  }
 }
-
-  
 
   // async getBundles(itemType: string, token: string): Promise<any[]> {
   //   try {
