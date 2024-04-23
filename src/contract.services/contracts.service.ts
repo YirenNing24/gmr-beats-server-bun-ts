@@ -6,7 +6,6 @@ import { getRethinkDB } from '../db/rethink';
 import { Contracts } from '../contract.services/contracts.interface'
 
 //** TOKEN SERVICE IMPORT
-import TokenService from '../user.services/token.services/token.service';
 
 
 class ContractService {
