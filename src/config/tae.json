@@ -20,10 +20,12 @@
                 "notes":[
                    {
                       "pos":690, 
-                      "slanted": true,
-                      "len":915,
+                      "len":115,
                       "member":null,
-                      "layer": 0
+                      "layer": 0,
+                      "slanted": true,
+                      "next_slanted_bar_index": 1,
+                      "next_slanted_note_index": 0
                       
                    }
                 ]
@@ -774,7 +776,8 @@
                    {
                       "pos":1265,
                       "len":115,
-                      "member":null
+                      "member":null 
+
                    }
                 ]
              },
