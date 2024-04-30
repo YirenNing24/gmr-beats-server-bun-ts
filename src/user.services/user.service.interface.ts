@@ -195,8 +195,7 @@ export interface UserData {
    * @interface WalletData
    * @property {string} smartWalletAddress - The address of the smart wallet.
    * @property {string} beatsBalance - The balance in beats.
-   * @property {string} kmrBalance - The balance in kmr.
-   * @property {string} thumpBalance - The balance in thump.
+   * @property {string} gmrBalance - The balance in kmr.
    * @property {string} nativeBalance - The native balance.
    */
 export interface WalletData {
