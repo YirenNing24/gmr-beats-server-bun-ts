@@ -137,7 +137,7 @@ class AuthService {
         const encryptedPassword: string = user.properties.password;
         const correct: boolean = await compare(unencryptedPassword, encryptedPassword);
         if (!correct) {
-            throw new ValidationError('Incorrect password.', "");
+            throw new ValidationError('Incorrect password.', "Incorrect password");
         }
         // Return User Details
         const { password, localWallet, localWalletKey, playerStats, userId, username, ...safeProperties } = user.properties
