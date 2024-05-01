@@ -66,6 +66,7 @@ export interface CardMetaData {
     rarity: string;
     level: string;
     experience: string;
+    currentExperience: string;
     image: string;
     imageByte?: string;
 
