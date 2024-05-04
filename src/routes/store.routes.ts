@@ -11,7 +11,7 @@ import StoreService from '../game.services/store.services/store.service';
 //** TYPE INTERFACES
 import { SuccessMessage } from '../outputs/success.message';
 import { buyCardSchema } from './route.schema/store.schema';
-import { StoreCardData } from '../game.services/store.services/store.interface';
+import { StoreCardData, StoreCardUpgradeData } from '../game.services/store.services/store.interface';
 
 //** SCHEMA IMPORT
 import { authorizationBearerSchema } from './route.schema/schema.auth';
@@ -59,36 +59,28 @@ const store = (app: Elysia) => {
       }
     }, buyCardSchema
   )
-//   .post('/api/store/bundles/get', async (context) => {
-//     try {
 
-//       const authorizationHeader = context.headers.authorization;
-//       if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
-//         throw new Error('Bearer token not found in Authorization header');
-//       }
+  app.get('/api/store/card-upgrades/valid', async ({ headers }): Promise<StoreCardUpgradeData[]> => {
+    try {
+      const authorizationHeader: string = headers.authorization;
+      if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+        throw new Error('Bearer token not found in Authorization header');
+      }
 
-//       const jwtToken: string = authorizationHeader.substring(7);
-//       // Extract the "tokenId", and "username" from the request body
-//       const { tokenId, cardName, username } = 
-//       context.body as {tokenId: number, cardName: string, username: string}
+      const jwtToken: string = authorizationHeader.substring(7);
 
+      const driver: Driver = getDriver();
+      const storeService: StoreService = new StoreService(driver);
 
-//       // Create an instance of the StoreService to handle store-related operations
-//       const driver = getDriver();
-//       const storeService = new StoreService(driver);
-      
-//       // Call the "buyCard" method of the StoreService to perform the card purchase transaction
-//       const output = await storeService.getBundles('bundles', jwtToken)
+      const output: StoreCardUpgradeData[] = await storeService.getvalidCardUpgrade(jwtToken)
 
-//       // Send the result of the card purchase transaction as the response
-//       return(output);
-//     } catch (error) {
-//       // If an error occurs while processing the card purchase transaction,
-//       // send an error response with status code 401 (Unauthorized) or an appropriate status code.
-//       return(error);
-//     }
-//   }
-// );
+      return output as StoreCardUpgradeData[]
+    } catch (error: any) {
+      throw error
+    }
+  }, authorizationBearerSchema
+)
+
 
 
 

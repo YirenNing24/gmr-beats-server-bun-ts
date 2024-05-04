@@ -15,7 +15,7 @@ import ValidationError from "../../outputs/validation.error";
 
 //** SERVICE IMPORTS
 import TokenService from "../../user.services/token.services/token.service";
-import { BuyCardData, StoreCardData } from "./store.interface";
+import { BuyCardData, StoreCardData, StoreCardUpgradeData } from "./store.interface";
 import { UserData } from "../../user.services/user.service.interface";
 
 //** CYPHER IMPORTS
@@ -142,9 +142,7 @@ export default class StoreService {
     }
   }
 
-
-
-  public async getvalidCardUpgrade(token: string) {
+  public async getvalidCardUpgrade(token: string): Promise<StoreCardUpgradeData[]> {
     try {
       const tokenService: TokenService = new TokenService();
       await tokenService.verifyAccessToken(token);
@@ -155,41 +153,15 @@ export default class StoreService {
       );
       await session.close();
 
-      const cards: StoreCardData[] = result.records.map(record => {
-          const cardProperties: any = record.get("c").properties;
-          const { imageByte, ...cardData } = cardProperties;
-          return cardData as StoreCardData
-      });
+      const cardUpgrade: StoreCardUpgradeData[] = result.records.map(record => record.get("c").properties);
 
-      return cards as StoreCardData[];
-  } catch (error: any) {
-      console.error("Error fetching items:", error);
-      throw error
-  }
-
+      return cardUpgrade as StoreCardUpgradeData[];
+    } catch (error: any) {
+        console.error("Error fetching items:", error);
+        throw error
+    }
   }
   
-
 }
 
-  // async getBundles(itemType: string, token: string): Promise<any[]> {
-  //   try {
-
-  //     const tokenService: TokenService = new TokenService();
-  //     await tokenService.verifyAccessToken(token);
-
-  //     if (itemType === "bundles") {
-  //       const tx = await app.redis.get("bundleStore");
-  //       if (tx === null) {
-  //         return [];
-  //       }
-  //       //@ts-ignore
-  //       return tx;
-  //     }
-  //     return [];
-  //   } catch (error) {
-  //     console.error("Error fetching items:", error);
-  //     throw new Error("Failed to fetch items.");
-  //   }
-  // }
 
