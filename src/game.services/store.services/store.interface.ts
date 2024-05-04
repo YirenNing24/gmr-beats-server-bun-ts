@@ -85,3 +85,56 @@ export interface BuyCardData {
     uri: string;
     listingId: number
 }
+
+
+/**
+ * Represents data of a card upgrade in the store.
+ *
+ * @interface StoreCardUpgradeData
+ * @property {string} currencyName - Name of the currency.
+ * @property {string} editionAddress - Address of the edition.
+ * @property {string} endTime - End time of the upgrade.
+ * @property {number} experience - Experience of the upgrade.
+ * @property {string} id - Unique ID of the upgrade.
+ * @property {string} image - URL of the image of the upgrade.
+ * @property {string} lister - Lister of the upgrade.
+ * @property {number} listingId - Listing ID of the upgrade.
+ * @property {boolean} minted - Indicates if the upgrade is minted.
+ * @property {string} owner - Owner of the upgrade.
+ * @property {number} pricePerToken - Price per token of the upgrade.
+ * @property {number} quantity - Quantity of the upgrade.
+ * @property {string} quantityOwned - Quantity owned of the upgrade.
+ * @property {boolean} skillEquipped - Indicates if a skill is equipped for the upgrade.
+ * @property {string} startTime - Start time of the upgrade.
+ * @property {string} supply - Total supply of the upgrade.
+ * @property {string} tier - Tier of the upgrade.
+ * @property {string} tokenId - Token ID of the upgrade.
+ * @property {string} type - Type of the upgrade.
+ * @property {string} uploader - Uploader of the upgrade.
+ * @property {string} uploaderBeats - Uploader beats of the upgrade.
+ * @property {string} uri - URI of the upgrade.
+ */
+export interface StoreCardUpgradeData {
+    currencyName: string;
+    editionAddress: string;
+    endTime: string;
+    experience: number;
+    id: string;
+    image: string;
+    lister: string;
+    listingId: number;
+    minted: boolean;
+    owner: string;
+    pricePerToken: number;
+    quantity: number;
+    quantityOwned: string;
+    skillEquipped: boolean;
+    startTime: string;
+    supply: string;
+    tier: string;
+    tokenId: string;
+    type: string;
+    uploader: string;
+    uploaderBeats: string;
+    uri: string;
+}

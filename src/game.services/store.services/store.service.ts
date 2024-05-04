@@ -19,7 +19,7 @@ import { BuyCardData, StoreCardData } from "./store.interface";
 import { UserData } from "../../user.services/user.service.interface";
 
 //** CYPHER IMPORTS
-import { buyCardCypher, getValidCards } from "./store.cypher";
+import { buyCardCypher, getValidCardUpgrades, getValidCards } from "./store.cypher";
 
 //** SUCCESS MESSAGE IMPORT
 import { SuccessMessage } from "../../outputs/success.message";
@@ -151,7 +151,7 @@ export default class StoreService {
 
       const session: Session = this.driver.session();
       const result: QueryResult = await session.executeRead((tx: ManagedTransaction) =>
-          tx.run(getValidCards)
+          tx.run(getValidCardUpgrades)
       );
       await session.close();
 
