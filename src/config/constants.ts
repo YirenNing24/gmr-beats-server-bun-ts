@@ -1,6 +1,6 @@
 import { ArbitrumSepolia } from "@thirdweb-dev/chains";
 import { SmartWalletConfig } from "@thirdweb-dev/wallets";
-import { arbitrumSepolia } from "thirdweb/chains";
+
 
 // API Configuration
 export const API_PREFIX: string = process.env.API_PREFIX || '/api';
@@ -34,7 +34,7 @@ export const KDB: { host: string | undefined; port: string | number; password: s
 // Thirdweb SDK Configuration
 export const SECRET_KEY: string = process.env.SECRET_KEY || ""
 // Chain and Wallet Factory Configuration
-export const CHAIN: typeof arbitrumSepolia  = arbitrumSepolia;
+export const CHAIN: typeof ArbitrumSepolia  = ArbitrumSepolia;
 export const FACTORIES: Record<number, string> = { [ArbitrumSepolia.chainId]: "0x514f1d6B8d22911eE84f97eDececE0479e38E1b6" };
 // Contract Addresses
 export const BEATS_TOKEN: string = '0xAA95DA3D6EbdAb099630b6d4Cf0fcb904a44C2ab';
