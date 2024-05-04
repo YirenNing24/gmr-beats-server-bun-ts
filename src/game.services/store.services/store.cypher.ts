@@ -8,9 +8,7 @@ OPTIONAL MATCH (u)-[:INVENTORY]->(c:Card)
 WITH u, COUNT(c) as inventoryCurrentSize
 RETURN u, inventoryCurrentSize`;
 
-/**
- * Cypher query to retrieve valid cards that are not packed and have a valid lister.
- */
+
 /**
  * Cypher query to retrieve valid cards that are listed in the CardStore.
  */
@@ -18,3 +16,9 @@ export const getValidCards: string = `
     MATCH (c:Card)-[:LISTED]->(:CardStore)
     RETURN c`;
 
+/**
+ * Cypher query to retrieve valid card upgrade items that are not packed and have a valid lister.
+ */
+export const getValidCardUpgrades: string = `
+    MATCH (c:CardUpgrade)-[:LISTED]->(:CardUpgradeStore)
+    RETURN c`;

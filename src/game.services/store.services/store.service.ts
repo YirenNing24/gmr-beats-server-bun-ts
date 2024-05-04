@@ -141,6 +141,33 @@ export default class StoreService {
       throw error;
     }
   }
+
+
+
+  public async getvalidCardUpgrade(token: string) {
+    try {
+      const tokenService: TokenService = new TokenService();
+      await tokenService.verifyAccessToken(token);
+
+      const session: Session = this.driver.session();
+      const result: QueryResult = await session.executeRead((tx: ManagedTransaction) =>
+          tx.run(getValidCards)
+      );
+      await session.close();
+
+      const cards: StoreCardData[] = result.records.map(record => {
+          const cardProperties: any = record.get("c").properties;
+          const { imageByte, ...cardData } = cardProperties;
+          return cardData as StoreCardData
+      });
+
+      return cards as StoreCardData[];
+  } catch (error: any) {
+      console.error("Error fetching items:", error);
+      throw error
+  }
+
+  }
   
 
 }
