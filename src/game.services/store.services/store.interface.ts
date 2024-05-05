@@ -87,6 +87,14 @@ export interface BuyCardData {
 }
 
 
+export interface BuyCardUpgradeData {
+    uri: string;
+    listingId: number
+    quantity: string
+}
+
+
+
 /**
  * Represents data of a card upgrade in the store.
  *

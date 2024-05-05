@@ -15,7 +15,7 @@ import ValidationError from "../../outputs/validation.error";
 
 //** SERVICE IMPORTS
 import TokenService from "../../user.services/token.services/token.service";
-import { BuyCardData, StoreCardData, StoreCardUpgradeData } from "./store.interface";
+import { BuyCardData, BuyCardUpgradeData, StoreCardData, StoreCardUpgradeData } from "./store.interface";
 import { UserData } from "../../user.services/user.service.interface";
 
 //** CYPHER IMPORTS
@@ -162,12 +162,12 @@ export default class StoreService {
     }
   }
 
-  public async buyCardUpgrade(buyCardUpgradeData: any, token: string) {
+  public async buyCardUpgrade(buyCardUpgradeData: BuyCardUpgradeData, token: string) {
     try {
       const tokenService: TokenService = new TokenService();
       const username: string = await tokenService.verifyAccessToken(token);
 
-      const { listingId, uri } = buyCardUpgradeData as BuyCardData
+      const { listingId, uri, quantity } = buyCardUpgradeData as BuyCardUpgradeData
 
       const session: Session = this.driver.session();
       const result: QueryResult<RecordShape> = await session.executeRead((tx: ManagedTransaction) =>
@@ -181,7 +181,7 @@ export default class StoreService {
       const userData: UserData = result.records[0].get("u");
       const { localWallet, localWalletKey } = userData.properties;
 
-      await this.cardUpgradePurchase(localWallet, localWalletKey, listingId);
+      await this.cardUpgradePurchase(localWallet, localWalletKey, listingId, quantity);
 
       return new SuccessMessage("Purchase was successful");
     } catch(error: any) {
