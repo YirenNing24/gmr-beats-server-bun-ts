@@ -4,7 +4,7 @@ import { LocalWalletNode } from "@thirdweb-dev/wallets/evm/wallets/local-wallet-
 import { SmartWallet } from "@thirdweb-dev/wallets";
 
 //** MEMGRAPH IMPORTS
-import { CARD_MARKETPLACE } from "../../config/constants";
+import { CARD_MARKETPLACE, CARD_UPGRADE_MARKETPLACE } from "../../config/constants";
 import { Driver, Session, ManagedTransaction, QueryResult, RecordShape } from "neo4j-driver-core";
 
 //** CONFIG IMPORTs
@@ -19,7 +19,7 @@ import { BuyCardData, StoreCardData, StoreCardUpgradeData } from "./store.interf
 import { UserData } from "../../user.services/user.service.interface";
 
 //** CYPHER IMPORTS
-import { buyCardCypher, getValidCardUpgrades, getValidCards } from "./store.cypher";
+import { buyCardCypher, buyCardUpgradeCypher, getValidCardUpgrades, getValidCards } from "./store.cypher";
 
 //** SUCCESS MESSAGE IMPORT
 import { SuccessMessage } from "../../outputs/success.message";
@@ -161,6 +161,56 @@ export default class StoreService {
         throw error
     }
   }
+
+  public async buyCardUpgrade(buyCardUpgradeData: any, token: string) {
+    try {
+      const tokenService: TokenService = new TokenService();
+      const username: string = await tokenService.verifyAccessToken(token);
+
+      const { listingId, uri } = buyCardUpgradeData as BuyCardData
+
+      const session: Session = this.driver.session();
+      const result: QueryResult<RecordShape> = await session.executeRead((tx: ManagedTransaction) =>
+        tx.run(buyCardUpgradeCypher, { username }) 
+      );
+      await session.close();
+
+      if (result.records.length === 0) {
+        throw new ValidationError(`User with username '${username}' not found.`, '');
+      }
+      const userData: UserData = result.records[0].get("u");
+      const { localWallet, localWalletKey } = userData.properties;
+
+      await this.cardUpgradePurchase(localWallet, localWalletKey, listingId);
+
+      return new SuccessMessage("Purchase was successful");
+    } catch(error: any) {
+      
+    }
+
+  }
+
+  private async cardUpgradePurchase(localWallet: string, localWalletKey: string, listingId: number, quantity: string): Promise<void | Error> {
+    try {
+    const walletLocal: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
+    await walletLocal.import({
+      encryptedJson: localWallet,
+      password: localWalletKey,
+    });
+    const smartWallet: SmartWallet = new SmartWallet(SMART_WALLET_CONFIG);
+    await smartWallet.connect({
+      personalWallet: walletLocal,
+    });
+
+    const sdk: ThirdwebSDK = await ThirdwebSDK.fromWallet(smartWallet, CHAIN);
+    const contract: MarketplaceV3 = await sdk.getContract(CARD_UPGRADE_MARKETPLACE, "marketplace-v3");
+    await contract.directListings.buyFromListing(listingId, 1, quantity);
+
+  } catch(error: any) {
+    console.log(error)
+    return error
+      }
+}
   
 }
 

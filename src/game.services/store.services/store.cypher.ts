@@ -22,3 +22,7 @@ export const getValidCards: string = `
 export const getValidCardUpgrades: string = `
     MATCH (c:CardUpgrade)-[:LISTED]->(:CardUpgradeStore)
     RETURN c`;
+
+export const buyCardUpgradeCypher: string = `
+    MATCH (u:User {username: $username})
+    RETURN u`
