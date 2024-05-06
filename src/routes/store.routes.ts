@@ -94,8 +94,6 @@ const store = (app: Elysia) => {
       
       const output: SuccessMessage = await storeService.buyCardUpgrade(body, jwtToken);
 
-      console.log("burat: ", output)
-
       return output as SuccessMessage;
     } catch (error: any) {
       throw error

@@ -181,11 +181,10 @@ export default class StoreService {
       const userData: UserData = result.records[0].get("u");
       const { localWallet, localWalletKey } = userData.properties;
       
-      const transaction = await this.cardUpgradePurchase(localWallet, localWalletKey, listingId, quantity);
+      // const transaction = await this.cardUpgradePurchase(localWallet, localWalletKey, listingId, quantity);
       await this.createCardUpgradeRelationship(username, listingId);
       
-
-      return new SuccessMessage("Card upgrade purchase was successful");
+      return new SuccessMessage("Card Upgrade purchase successful")
     } catch(error: any) {
       return error;
     }
