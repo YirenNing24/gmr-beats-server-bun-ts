@@ -181,13 +181,13 @@ export default class StoreService {
       const userData: UserData = result.records[0].get("u");
       const { localWallet, localWalletKey } = userData.properties;
       
-      await this.cardUpgradePurchase(localWallet, localWalletKey, listingId, quantity);
+      const transaction = await this.cardUpgradePurchase(localWallet, localWalletKey, listingId, quantity);
       await this.createCardUpgradeRelationship(username, listingId);
       
 
       return new SuccessMessage("Card upgrade purchase was successful");
     } catch(error: any) {
-      throw error;
+      return error;
     }
   }
   
@@ -218,7 +218,8 @@ export default class StoreService {
   private async createCardUpgradeRelationship(username: string, listingId: number): Promise<void> {
   try {
     const session: Session = this.driver.session();
-    await session.executeWrite((tx: ManagedTransaction) =>
+
+    const result: QueryResult<RecordShape> = await session.executeWrite((tx: ManagedTransaction) =>
       tx.run(`
         MATCH (u:User {username: $username}), (c:CardUpgrade {listingId: $listingId}), 
         (c)-[l:LISTED]->(cu:CardUpgradeStore)
@@ -227,8 +228,7 @@ export default class StoreService {
         CREATE (c)-[:SOLD]->(cu)
       `, { username, listingId }) 
     );
-    
-    await session.close();
+
     
   } catch (error: any) {
     console.error("Error creating relationship:", error);

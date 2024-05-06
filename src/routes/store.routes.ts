@@ -79,7 +79,7 @@ const store = (app: Elysia) => {
       throw error
     }
   }, authorizationBearerSchema
-)
+  )
 
   .post('/api/store/card-upgrade/buy', async ({ headers, body }): Promise<SuccessMessage> => {
     try {
@@ -94,7 +94,7 @@ const store = (app: Elysia) => {
       
       const output: SuccessMessage = await storeService.buyCardUpgrade(body, jwtToken);
 
-      console.log(SuccessMessage)
+      console.log("burat: ", output)
 
       return output as SuccessMessage;
     } catch (error: any) {
