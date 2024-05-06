@@ -25,4 +25,4 @@ export const getValidCardUpgrades: string = `
 
 export const buyCardUpgradeCypher: string = `
     MATCH (u:User {username: $username})
-    RETURN u`
+    RETURN u`;

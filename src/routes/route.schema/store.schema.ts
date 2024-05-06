@@ -13,3 +13,15 @@ export const buyCardSchema = {
         listingId: t.Number(), 
         uri: t.String() })
 }
+
+
+export const buyCardUpgradeSchema = {
+    headers: t.Object({ 
+        authorization: t.String() }), 
+    body: t.Object({ 
+        listingId: t.Number(), 
+        uri: t.String(),
+        quantity: t.String() 
+    }),
+        
+}

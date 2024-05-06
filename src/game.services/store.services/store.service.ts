@@ -83,7 +83,7 @@ export default class StoreService {
       const inventoryCurrentSize: number = result.records[0].get("inventoryCurrentSize").toNumber()
 
       // Create relationship using a separate Cypher query
-      await this.createRelationship(username, uri, inventoryCurrentSize, inventorySize );
+      await this.createCardRelationship(username, uri, inventoryCurrentSize, inventorySize );
 
       return new SuccessMessage("Purchase was successful");
     } catch (error: any) {
@@ -115,7 +115,7 @@ export default class StoreService {
   }
   
   //Creates a relationship between a user and a card based on provided parameters.
-  private async createRelationship(username: string, uri: string, inventoryCurrentSize: number, inventorySize: number): Promise<void> {
+  private async createCardRelationship(username: string, uri: string, inventoryCurrentSize: number, inventorySize: number): Promise<void> {
     try {
       // Determine the relationship type based on bag and inventory size
       let relationship: string[];
@@ -162,7 +162,7 @@ export default class StoreService {
     }
   }
 
-  public async buyCardUpgrade(buyCardUpgradeData: BuyCardUpgradeData, token: string) {
+  public async buyCardUpgrade(buyCardUpgradeData: BuyCardUpgradeData, token: string): Promise<SuccessMessage> {
     try {
       const tokenService: TokenService = new TokenService();
       const username: string = await tokenService.verifyAccessToken(token);
@@ -183,8 +183,11 @@ export default class StoreService {
 
       await this.cardUpgradePurchase(localWallet, localWalletKey, listingId, quantity);
 
-      return new SuccessMessage("Purchase was successful");
+      await this.createCardUpgradeRelationship(username, uri);
+
+      return new SuccessMessage("Card upgrade purchase was successful");
     } catch(error: any) {
+      throw error
       
     }
 
@@ -210,6 +213,28 @@ export default class StoreService {
     console.log(error)
     return error
       }
+}
+
+
+  private async createCardUpgradeRelationship(username: string, uri: string): Promise<void> {
+  try {
+    // Determine the relationship type based on bag and inventory size
+
+    const session: Session = this.driver.session();
+    await session.executeRead((tx: ManagedTransaction) =>
+      tx.run(`MATCH (u:User {username: $username}), (c:CardUpgrade {uri: $uri})
+              MATCH (c)-[l:LISTED]->(cu:CardUpgradeStore)
+              DELETE l
+              CREATE (u)-[:OWNED}]->(c)
+              CREATE (u)-[:SOLD]->(cu)`, { username, uri }) 
+    );
+
+
+    await session.close();
+  } catch (error: any) {
+    console.error("Error creating relationship:", error);
+    throw error;
+  }
 }
   
 }
