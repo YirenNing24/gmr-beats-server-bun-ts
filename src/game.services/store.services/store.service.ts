@@ -132,7 +132,7 @@ export default class StoreService {
           MATCH (c)-[l:LISTED]->(cs:CardStore)
           DELETE l
           CREATE (u)-[:${rel}]->(c)
-          CREATE (u)-[:SOLD]->(cs)`,
+          CREATE (c)-[:SOLD]->(cs)`,
         { username, uri, rel });    
       }
       await session.close();
@@ -181,8 +181,7 @@ export default class StoreService {
       const userData: UserData = result.records[0].get("u");
       const { localWallet, localWalletKey } = userData.properties;
 
-      await this.cardUpgradePurchase(localWallet, localWalletKey, listingId, quantity);
-
+      // await this.cardUpgradePurchase(localWallet, localWalletKey, listingId, quantity);
       await this.createCardUpgradeRelationship(username, uri);
 
       return new SuccessMessage("Card upgrade purchase was successful");
@@ -218,21 +217,19 @@ export default class StoreService {
 
   private async createCardUpgradeRelationship(username: string, uri: string): Promise<void> {
   try {
-    // Determine the relationship type based on bag and inventory size
-
     const session: Session = this.driver.session();
-    await session.executeRead((tx: ManagedTransaction) =>
+    await session.executeWrite((tx: ManagedTransaction) =>
       tx.run(`
-        MATCH (u:User {username: $username}), (c:CardUpgrade {uri: $uri}), (c)-[l:LISTED]->(cu:CardUpgradeStore)
+        MATCH (u:User {username: $username}), (c:CardUpgrade {uri: $uri}), 
+        (c)-[l:LISTED]->(cu:CardUpgradeStore)
         DELETE l
         CREATE (u)-[:OWNED]->(c)
-        CREATE (u)-[:SOLD]->(cu)
+        CREATE (c)-[:SOLD]->(cu)
       `, { username, uri }) 
     );
     
-
-
     await session.close();
+
   } catch (error: any) {
     console.error("Error creating relationship:", error);
     throw error;
