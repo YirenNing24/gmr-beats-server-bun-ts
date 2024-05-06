@@ -181,7 +181,7 @@ export default class StoreService {
       const userData: UserData = result.records[0].get("u");
       const { localWallet, localWalletKey } = userData.properties;
       
-      // const transaction = await this.cardUpgradePurchase(localWallet, localWalletKey, listingId, quantity);
+      await this.cardUpgradePurchase(localWallet, localWalletKey, listingId, quantity);
       await this.createCardUpgradeRelationship(username, listingId);
       
       return new SuccessMessage("Card Upgrade purchase successful")
@@ -190,7 +190,6 @@ export default class StoreService {
     }
   }
   
-
   private async cardUpgradePurchase(localWallet: string, localWalletKey: string, listingId: number, quantity: string): Promise<void | Error> {
     try {
     const walletLocal: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
@@ -218,10 +217,10 @@ export default class StoreService {
   try {
     const session: Session = this.driver.session();
 
-    const result: QueryResult<RecordShape> = await session.executeWrite((tx: ManagedTransaction) =>
+    await session.executeWrite((tx: ManagedTransaction) =>
       tx.run(`
-        MATCH (u:User {username: $username}), (c:CardUpgrade {listingId: $listingId}), 
-        (c)-[l:LISTED]->(cu:CardUpgradeStore)
+        MATCH (u:User {username: "nashar4"}), (c:CardUpgrade {listingId: listingId}), (cu:CardUpgradeStore)
+        MATCH (c)-[l:LISTED]->(cu)
         DELETE l
         CREATE (u)-[:OWNED]->(c)
         CREATE (c)-[:SOLD]->(cu)
