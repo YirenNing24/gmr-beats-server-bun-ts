@@ -207,7 +207,7 @@ export default class StoreService {
 
     const sdk: ThirdwebSDK = await ThirdwebSDK.fromWallet(smartWallet, CHAIN);
     const contract: MarketplaceV3 = await sdk.getContract(CARD_UPGRADE_MARKETPLACE, "marketplace-v3");
-    await contract.directListings.buyFromListing(listingId, 1, quantity);
+    await contract.directListings.buyFromListing(listingId, quantity);
 
   } catch(error: any) {
     console.log(error)
@@ -222,12 +222,14 @@ export default class StoreService {
 
     const session: Session = this.driver.session();
     await session.executeRead((tx: ManagedTransaction) =>
-      tx.run(`MATCH (u:User {username: $username}), (c:CardUpgrade {uri: $uri})
-              MATCH (c)-[l:LISTED]->(cu:CardUpgradeStore)
-              DELETE l
-              CREATE (u)-[:OWNED}]->(c)
-              CREATE (u)-[:SOLD]->(cu)`, { username, uri }) 
+      tx.run(`
+        MATCH (u:User {username: $username}), (c:CardUpgrade {uri: $uri}), (c)-[l:LISTED]->(cu:CardUpgradeStore)
+        DELETE l
+        CREATE (u)-[:OWNED]->(c)
+        CREATE (u)-[:SOLD]->(cu)
+      `, { username, uri }) 
     );
+    
 
 
     await session.close();
