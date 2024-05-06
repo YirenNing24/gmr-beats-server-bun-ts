@@ -60,7 +60,7 @@ const store = (app: Elysia) => {
     }, buyCardSchema
   )
 
-  app.get('/api/store/card-upgrades/valid', async ({ headers }): Promise<StoreCardUpgradeData[]> => {
+  .get('/api/store/card-upgrades/valid', async ({ headers }): Promise<StoreCardUpgradeData[]> => {
     try {
       const authorizationHeader: string = headers.authorization;
       if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
@@ -81,26 +81,28 @@ const store = (app: Elysia) => {
   }, authorizationBearerSchema
 )
 
-.post('/api/store/card-upgrade/buy', async ({ headers, body }): Promise<SuccessMessage> => {
-  try {
-    const authorizationHeader: string = headers.authorization;
-    if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
-      throw new Error('Bearer token not found in Authorization header');
+  .post('/api/store/card-upgrade/buy', async ({ headers, body }): Promise<SuccessMessage> => {
+    try {
+      const authorizationHeader: string = headers.authorization;
+      if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+        throw new Error('Bearer token not found in Authorization header');
+      }
+      const jwtToken: string = authorizationHeader.substring(7);
+
+      const driver: Driver = getDriver();
+      const storeService: StoreService = new StoreService(driver);
+      
+      const output: SuccessMessage = await storeService.buyCardUpgrade(body, jwtToken);
+
+      console.log(SuccessMessage)
+
+      return output as SuccessMessage;
+    } catch (error: any) {
+      throw error
+
     }
-    const jwtToken: string = authorizationHeader.substring(7);
-
-    const driver: Driver = getDriver();
-    const storeService: StoreService = new StoreService(driver);
-    
-    const output: SuccessMessage = await storeService.buyCardUpgrade(body, jwtToken)
-
-    return output as SuccessMessage;
-  } catch (error: any) {
-    throw error
-
-  }
-}, buyCardUpgradeSchema
-)
+  }, buyCardUpgradeSchema
+  )
 
 
 

@@ -1,5 +1,5 @@
 //** THIRDWEB IMPORTS
-import { MarketplaceV3, ThirdwebSDK } from "@thirdweb-dev/sdk";
+import { Edition, MarketplaceV3, ThirdwebSDK } from "@thirdweb-dev/sdk";
 import { LocalWalletNode } from "@thirdweb-dev/wallets/evm/wallets/local-wallet-node";
 import { SmartWallet } from "@thirdweb-dev/wallets";
 
@@ -166,31 +166,31 @@ export default class StoreService {
     try {
       const tokenService: TokenService = new TokenService();
       const username: string = await tokenService.verifyAccessToken(token);
-
-      const { listingId, uri, quantity } = buyCardUpgradeData as BuyCardUpgradeData
-
+  
+      const { listingId, quantity } = buyCardUpgradeData as BuyCardUpgradeData;
+  
       const session: Session = this.driver.session();
       const result: QueryResult<RecordShape> = await session.executeRead((tx: ManagedTransaction) =>
-        tx.run(buyCardUpgradeCypher, { username }) 
+        tx.run(buyCardUpgradeCypher, { username })
       );
       await session.close();
-
+  
       if (result.records.length === 0) {
         throw new ValidationError(`User with username '${username}' not found.`, '');
       }
       const userData: UserData = result.records[0].get("u");
       const { localWallet, localWalletKey } = userData.properties;
-
-      // await this.cardUpgradePurchase(localWallet, localWalletKey, listingId, quantity);
-      await this.createCardUpgradeRelationship(username, uri);
+      
+      await this.cardUpgradePurchase(localWallet, localWalletKey, listingId, quantity);
+      await this.createCardUpgradeRelationship(username, listingId);
+      
 
       return new SuccessMessage("Card upgrade purchase was successful");
     } catch(error: any) {
-      throw error
-      
+      throw error;
     }
-
   }
+  
 
   private async cardUpgradePurchase(localWallet: string, localWalletKey: string, listingId: number, quantity: string): Promise<void | Error> {
     try {
@@ -215,21 +215,21 @@ export default class StoreService {
 }
 
 
-  private async createCardUpgradeRelationship(username: string, uri: string): Promise<void> {
+  private async createCardUpgradeRelationship(username: string, listingId: number): Promise<void> {
   try {
     const session: Session = this.driver.session();
     await session.executeWrite((tx: ManagedTransaction) =>
       tx.run(`
-        MATCH (u:User {username: $username}), (c:CardUpgrade {uri: $uri}), 
+        MATCH (u:User {username: $username}), (c:CardUpgrade {listingId: $listingId}), 
         (c)-[l:LISTED]->(cu:CardUpgradeStore)
         DELETE l
         CREATE (u)-[:OWNED]->(c)
         CREATE (c)-[:SOLD]->(cu)
-      `, { username, uri }) 
+      `, { username, listingId }) 
     );
     
     await session.close();
-
+    
   } catch (error: any) {
     console.error("Error creating relationship:", error);
     throw error;
@@ -237,5 +237,3 @@ export default class StoreService {
 }
   
 }
-
-
