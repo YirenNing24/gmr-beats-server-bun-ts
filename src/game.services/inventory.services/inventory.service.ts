@@ -6,8 +6,9 @@ import TokenService from "../../user.services/token.services/token.service";
 
 //** TYPE INTERFACES
 import { CardMetaData, InventoryCardData , InventoryCards, UpdateInventoryData } from "./inventory.interface";
-import { checkInventorySizeCypher, equipItemCypher, inventoryOpenCardCypher, unequipItemCypher } from "./inventory.cypher";
+import { checkInventorySizeCypher, equipItemCypher, inventoryOpenCardCypher, openCardUpgradeCypher, unequipItemCypher } from "./inventory.cypher";
 import { SuccessMessage } from "../../outputs/success.message";
+import { StoreCardUpgradeData } from "../store.services/store.interface";
 
 
 class InventoryService {
@@ -94,6 +95,38 @@ this.driver = driver;
           throw error;
       }
     }
+
+
+    public async upgradeInventoryOpen(token: string): Promise<StoreCardUpgradeData[]> {
+      try {
+        const tokenService: TokenService = new TokenService();
+        const userName: string = await tokenService.verifyAccessToken(token);
+    
+        const session: Session | undefined = this.driver?.session();
+    
+        // Use a Read Transaction and only return the necessary properties
+        const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
+          (tx: ManagedTransaction) =>
+            tx.run(openCardUpgradeCypher, { userName })
+        );
+    
+        await session?.close();
+    
+        // If no records found, return an empty array
+        if (!result || result.records.length === 0) {
+          return [];
+        }
+    
+        // Extract card upgrade nodes from the result and return them in an array
+        const cardUpgrades: StoreCardUpgradeData[]  = result.records.map((record: RecordShape) => record.get("cardUpgrade"));
+    
+        return cardUpgrades;
+      } catch (error: any) {
+        console.error("Error opening user inventory:", error);
+        throw error;
+      }
+    }
+    
 
     public async unequipItem(token: string, updateInventoryData: UpdateInventoryData[]): Promise<SuccessMessage> {
       try {

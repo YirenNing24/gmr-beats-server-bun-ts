@@ -15,6 +15,7 @@ import InventoryService from '../game.services/inventory.services/inventory.serv
 import { authorizationBearerSchema } from './route.schema/schema.auth';
 import { equipItemSchema  } from '../game.services/inventory.services/inventory.schema';
 import { SuccessMessage } from '../outputs/success.message';
+import { StoreCardUpgradeData } from '../game.services/store.services/store.interface';
 
 
 const inventory = (app: Elysia): void => {
@@ -37,7 +38,7 @@ const inventory = (app: Elysia): void => {
         }, authorizationBearerSchema
     )
     
-     .post('/api/card/inventory/equip-item', async ({ headers, body }): Promise<SuccessMessage> => {
+    .post('/api/card/inventory/equip-item', async ({ headers, body }): Promise<SuccessMessage> => {
          try {
              const authorizationHeader: string = headers.authorization || "";
              if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
@@ -56,7 +57,7 @@ const inventory = (app: Elysia): void => {
          }, equipItemSchema
         )
 
-        .post('/api/card/inventory/unequip-item', async ({ headers, body }): Promise<SuccessMessage> => {
+    .post('/api/card/inventory/unequip-item', async ({ headers, body }): Promise<SuccessMessage> => {
             try {
                 const authorizationHeader: string = headers.authorization || "";
                 if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
@@ -73,8 +74,28 @@ const inventory = (app: Elysia): void => {
                 return error
                 }
             }, equipItemSchema
-           )
-         
+        )
+
+    .get('/api/upgrade/inventory/open', async ({ headers }): Promise<StoreCardUpgradeData[]> => {
+        try {
+            const authorizationHeader: string = headers.authorization;
+            if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+                throw new Error('Bearer token not found in Authorization header');
+            }
+            const jwtToken: string = authorizationHeader.substring(7);
+
+            const driver: Driver = getDriver();
+            const inventoryService: InventoryService = new InventoryService(driver);
+            const output: StoreCardUpgradeData[] = await inventoryService.upgradeInventoryOpen(jwtToken)
+
+            return output as StoreCardUpgradeData[]
+            } catch (error: any) {
+            return error
+            }
+        }, authorizationBearerSchema
+    )
+
+        
 
 };
 
