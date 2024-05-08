@@ -118,7 +118,9 @@ this.driver = driver;
         }
     
         // Extract card upgrade nodes from the result and return them in an array
-        const cardUpgrades: StoreCardUpgradeData[]  = result.records.map((record: RecordShape) => record.get("cardUpgrade"));
+        const cardUpgrades: StoreCardUpgradeData[]  = result.records.map((record: RecordShape) => record.get("cardUpgrade").properties);
+
+        console.log(cardUpgrades)
     
         return cardUpgrades as StoreCardUpgradeData[];
       } catch (error: any) {
