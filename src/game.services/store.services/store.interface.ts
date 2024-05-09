@@ -112,7 +112,6 @@ export interface BuyCardUpgradeData {
  * @property {number} pricePerToken - Price per token of the upgrade.
  * @property {number} quantity - Quantity of the upgrade.
  * @property {string} quantityOwned - Quantity owned of the upgrade.
- * @property {boolean} skillEquipped - Indicates if a skill is equipped for the upgrade.
  * @property {string} startTime - Start time of the upgrade.
  * @property {string} supply - Total supply of the upgrade.
  * @property {string} tier - Tier of the upgrade.
@@ -136,7 +135,6 @@ export interface StoreCardUpgradeData {
     pricePerToken: number;
     quantity: number;
     quantityOwned: string;
-    skillEquipped: boolean;
     startTime: string;
     supply: string;
     tier: string;
