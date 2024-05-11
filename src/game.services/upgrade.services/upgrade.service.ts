@@ -156,7 +156,8 @@ class UpgradeService {
             // Update metadata using ERC1155 contract
             const edition: Edition = await sdk.getContract(EDITION_ADDRESS, "edition");
             await edition.erc1155.updateMetadata(tokenId, metadata);
-    
+            
+        await this this.updateCardUpgradeChain
         } catch(error: any) {
             // Handle errors appropriately, e.g., log or throw custom errors
             console.error("Error updating card metadata:", error);
@@ -180,6 +181,39 @@ class UpgradeService {
         } catch(error: any) {
             throw error;
         }
+    }
+
+    private async updateCardUpgradeChain(tokenId: string, walletData: string, password: string) {
+        try {
+
+            // Import local wallet
+            const localWallet: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
+            await localWallet.import({
+                encryptedJson: walletData,
+                password: password,
+            });
+    
+            // Connect the smart wallet
+            const smartWallet: SmartWallet = new SmartWallet(SMART_WALLET_CONFIG);
+            await smartWallet.connect({
+                personalWallet: localWallet,
+            });
+
+                        // Use the SDK normally
+            const sdk: ThirdwebSDK = await ThirdwebSDK.fromWallet(smartWallet, CHAIN, {
+                secretKey: SECRET_KEY,
+            });
+
+            const metadata = { newMetadata }
+    
+            // Update metadata using ERC1155 contract
+            const edition: Edition = await sdk.getContract(EDITION_ADDRESS, "edition");
+            await edition.erc1155.burn();
+
+        } catch(error: any) {
+
+        }
+
     }
     
     
