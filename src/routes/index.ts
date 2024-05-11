@@ -12,7 +12,7 @@ import social from './social.routes'
 import store from './store.routes'
 
 import chat from './chat.routes'
-
+import upgrade from './upgrade.routes'
 
 const routes = (app: Elysia): void => {
 
@@ -26,6 +26,7 @@ const routes = (app: Elysia): void => {
     app.use(store)
     app.use(inventory)
     app.use(chat)
+    app.use(upgrade)
 
 }
 

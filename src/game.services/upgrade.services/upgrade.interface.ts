@@ -16,3 +16,15 @@ export interface UpgradeCardData {
 export interface CanLevelUp {
     levelUp: boolean
 }
+
+
+export interface CardUpgradeItem {
+    uri: string;
+    id: string;
+    quantityConsumed: number;
+}
+
+export interface CardUpgradeData {
+    cardUri: string;
+    cardUpgrade: CardUpgradeItem[];
+}
