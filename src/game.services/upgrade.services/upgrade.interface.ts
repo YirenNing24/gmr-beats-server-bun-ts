@@ -28,3 +28,10 @@ export interface CardUpgradeData {
     cardUri: string;
     cardUpgrade: CardUpgradeItem[];
 }
+
+export interface CardUpgradeUpdate {
+    id: string;
+    uri: string;
+    remainingQuantity: number;
+    quantityConsumed: number;
+}

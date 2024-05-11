@@ -7,7 +7,7 @@ import { Driver, QueryResult, Session,  ManagedTransaction, RecordShape } from '
 import TokenService from "../../user.services/token.services/token.service";
 
 //** TYPE INTERFACES
-import { CardUpgradeData } from './upgrade.interface';
+import { CardUpgradeData, CardUpgradeUpdate } from './upgrade.interface';
 import { CardMetaData } from '../inventory.services/inventory.interface';
 
 //** CYPHER IMPORT
@@ -22,7 +22,7 @@ import { StoreCardUpgradeData } from '../store.services/store.interface';
 
 //** IMPORT THIRDWEB
 import { Edition, ThirdwebSDK } from '@thirdweb-dev/sdk';
-import { CHAIN, EDITION_ADDRESS, SECRET_KEY, SMART_WALLET_CONFIG } from '../../config/constants';
+import { CARD_UPGRADE, CHAIN, EDITION_ADDRESS, SECRET_KEY, SMART_WALLET_CONFIG } from '../../config/constants';
 import { LocalWalletNode } from '@thirdweb-dev/wallets/evm/wallets/local-wallet-node';
 import { SmartWallet } from '@thirdweb-dev/wallets';
 
@@ -42,7 +42,7 @@ class UpgradeService {
     
             let card: CardMetaData | undefined;
             const cardUpgradeItem: StoreCardUpgradeData[] = [];
-            const cardUpgradeUpdate = []
+            const cardUpgradeUpdate: CardUpgradeUpdate[] = []
             // Iterate over each cardUpgrade item
             for (const item of cardUpgrade) {
                 const { uri, id, quantityConsumed } = item;
@@ -66,7 +66,7 @@ class UpgradeService {
                         throw new Error("Quantity consumed exceeds available quantity.");
                     }
                     cardUpgrade.quantity = remainingQuantity;
-                    const cardUpgradeItemtoDB = { id, uri, remainingQuantity };
+                    const cardUpgradeItemtoDB = { id, uri, remainingQuantity, quantityConsumed } as CardUpgradeUpdate
                     // Multiply the experience by the quantity consumed
                     cardUpgrade.experience *= quantityConsumed;
                     cardUpgradeUpdate.push(cardUpgradeItemtoDB)
@@ -99,12 +99,13 @@ class UpgradeService {
                 cardExperienceRequired = requiredExp;
             }
 
-            const stringLevel: string = JSON.stringify(cardLevel)
-            const stringExperience: string = JSON.stringify(cardExperience)
-            const newMetadata = { ...card, level: stringLevel, experience: stringExperience}
+            const stringLevel: string = JSON.stringify(cardLevel);
+            const stringExperience: string = JSON.stringify(cardExperience);
+            const newMetadata = { ...card, level: stringLevel, experience: stringExperience};
            
-            await this.updateCardMetaDataChain(id, newMetadata, userName)
-            await this.updateCardMetaDataDB(userName, newMetadata)
+            await this.updateCardMetaDataChain(id, newMetadata, userName, cardUpgradeUpdate);
+            await this.updateCardMetaDataDB(userName, newMetadata);
+            await this.updateCardUpgradeDB(cardUpgradeUpdate, userName);
             
             return new SuccessMessage("Card Upgrade successful");
         } catch (error: any) {
@@ -122,7 +123,7 @@ class UpgradeService {
         return { newLevel: cardLevel, requiredExp }
     }
 
-    private async updateCardMetaDataChain(tokenId: string, newMetadata: CardMetaData, userName: string) {
+    private async updateCardMetaDataChain(tokenId: string, newMetadata: CardMetaData, userName: string, cardUpgradeUpdate: CardUpgradeUpdate[]) {
         const session: Session | undefined = this.driver?.session();
         try {
             // Fetch wallet data and password from the database
@@ -156,8 +157,9 @@ class UpgradeService {
             // Update metadata using ERC1155 contract
             const edition: Edition = await sdk.getContract(EDITION_ADDRESS, "edition");
             await edition.erc1155.updateMetadata(tokenId, metadata);
+            await this.updateCardUpgradeChain(cardUpgradeUpdate, walletData, password);
             
-        await this this.updateCardUpgradeChain
+
         } catch(error: any) {
             // Handle errors appropriately, e.g., log or throw custom errors
             console.error("Error updating card metadata:", error);
@@ -183,9 +185,8 @@ class UpgradeService {
         }
     }
 
-    private async updateCardUpgradeChain(tokenId: string, walletData: string, password: string) {
+    private async updateCardUpgradeChain(cardUpgradeUpdate: CardUpgradeUpdate[], walletData: string, password: string) {
         try {
-
             // Import local wallet
             const localWallet: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
             await localWallet.import({
@@ -198,23 +199,53 @@ class UpgradeService {
             await smartWallet.connect({
                 personalWallet: localWallet,
             });
-
-                        // Use the SDK normally
+    
+            // Use the SDK normally
             const sdk: ThirdwebSDK = await ThirdwebSDK.fromWallet(smartWallet, CHAIN, {
                 secretKey: SECRET_KEY,
             });
-
-            const metadata = { newMetadata }
     
             // Update metadata using ERC1155 contract
-            const edition: Edition = await sdk.getContract(EDITION_ADDRESS, "edition");
-            await edition.erc1155.burn();
-
+            const edition: Edition = await sdk.getContract(CARD_UPGRADE, "edition");
+    
+            for (const update of cardUpgradeUpdate) {
+                await edition.erc1155.burn(update.id, update.quantityConsumed);
+            }
+    
         } catch(error: any) {
-
+            console.error("Error occurred during card upgrade:", error);
+            throw error
         }
-
     }
+
+    private async updateCardUpgradeDB(cardUpgradeUpdate: CardUpgradeUpdate[], userName: string) {
+        try {
+            const session: Session | undefined = this.driver?.session();
+    
+            for (const update of cardUpgradeUpdate) {
+                await session.executeWrite(async tx => {
+                    if (update.remainingQuantity === 0) {
+                        await tx.run(`
+                            MATCH (u:User {username: $userName})-[:OWNED]->(c:CardUpgrade {uri: $uri})
+                            DELETE (u)-[:OWNED]->(c)`, 
+                            { userName, uri: update.uri }
+                        );
+                    } else {
+                        await tx.run(`
+                            MATCH (u:User {username: $userName})-[:OWNED]->(c:CardUpgrade {uri: $uri})
+                            SET c.quantity = $remainingQuantity`, 
+                            { userName, uri: update.uri, remainingQuantity: update.remainingQuantity }
+                        );
+                    }
+                });
+            }
+    
+        } catch(error: any) {
+            throw error;
+        }
+    }
+    
+    
     
     
 
