@@ -130,19 +130,7 @@ constructor(driver?: Driver) {
     }
   }
   
-  private async sendRewards(walletAddress: string, rewardAmount: number): Promise<void> {
-    try {
-      const sdk: ThirdwebSDK = new ThirdwebSDK("mumbai", {
-        secretKey: SECRET_KEY,
-      });
-  
-      const contract: Token = await sdk.getContract("0x63F8Cb0ffc1DeB782E84B9C68b2F85260fbd497d", "token");
-  
-      await contract.erc20.transfer(walletAddress, rewardAmount);
-    } catch (error: any) {
-      throw error;
-    }
-  }
+
   
 }
 

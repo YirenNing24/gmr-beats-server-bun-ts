@@ -20,6 +20,11 @@ import ValidationError from '../../outputs/validation.error';
 import { SuccessMessage } from '../../outputs/success.message';
 import { StoreCardUpgradeData } from '../store.services/store.interface';
 
+//** IMPORT THIRDWEB
+import { Edition, ThirdwebSDK } from '@thirdweb-dev/sdk';
+import { CHAIN, EDITION_ADDRESS, SECRET_KEY, SMART_WALLET_CONFIG } from '../../config/constants';
+import { LocalWalletNode } from '@thirdweb-dev/wallets/evm/wallets/local-wallet-node';
+import { SmartWallet } from '@thirdweb-dev/wallets';
 
 class UpgradeService {
     driver: Driver
@@ -27,7 +32,7 @@ class UpgradeService {
       this.driver = driver
       }
 
-      public async cardGainExperience(token: string, cardUpgradeData: CardUpgradeData): Promise<SuccessMessage> {
+    public async cardGainExperience(token: string, cardUpgradeData: CardUpgradeData): Promise<SuccessMessage> {
         const tokenService: TokenService = new TokenService();
         const userName: string = await tokenService.verifyAccessToken(token);
     
@@ -68,12 +73,12 @@ class UpgradeService {
                     cardUpgradeItem.push(cardUpgrade);
                 }
             }
-    
+
             if (!card) {
                 throw new ValidationError("Card not found", "Card not found");
             }
     
-            const { level, experience } = card as CardMetaData;
+            const { level, experience, id } = card as CardMetaData;
     
             // Calculate total experience gained from all card upgrade items
             let experienceGain: number = cardUpgradeItem.reduce((total, item) => total + item.experience, 0);
@@ -93,15 +98,19 @@ class UpgradeService {
                 cardLevel = newLevel;
                 cardExperienceRequired = requiredExp;
             }
+
+            const stringLevel: string = JSON.stringify(cardLevel)
+            const stringExperience: string = JSON.stringify(cardExperience)
+            const newMetadata = { ...card, level: stringLevel, experience: stringExperience}
+           
+            await this.updateCardMetaDataChain(id, newMetadata, userName)
+            await this.updateCardMetaDataDB(userName, newMetadata)
             
-            console.log(cardUpgradeUpdate);
             return new SuccessMessage("Card Upgrade successful");
         } catch (error: any) {
             throw error;
         }
     }
-    
-    
     
     private async getRequiredCardExperience(level: number): Promise<number> {
         return Math.round(Math.pow(level, 1.8) + level * 4);
@@ -112,6 +121,68 @@ class UpgradeService {
         const requiredExp = await this.getRequiredCardExperience(cardLevel + 1);
         return { newLevel: cardLevel, requiredExp }
     }
+
+    private async updateCardMetaDataChain(tokenId: string, newMetadata: CardMetaData, userName: string) {
+        const session: Session | undefined = this.driver?.session();
+        try {
+            // Fetch wallet data and password from the database
+            const result: QueryResult = await session.executeRead(tx =>
+                tx.run('MATCH (u:User {username: $userName}) RETURN u.localWallet as localWallet, u.localWalletKey as localWalletKey', { userName })
+            );
+            await session.close()
+            const walletData: string = result.records[0].get('localWallet');
+            const password: string = result.records[0].get('localWalletKey');
+            
+            // Import local wallet
+            const localWallet: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
+            await localWallet.import({
+                encryptedJson: walletData,
+                password: password,
+            });
+    
+            // Connect the smart wallet
+            const smartWallet: SmartWallet = new SmartWallet(SMART_WALLET_CONFIG);
+            await smartWallet.connect({
+                personalWallet: localWallet,
+            });
+    
+            // Use the SDK normally
+            const sdk: ThirdwebSDK = await ThirdwebSDK.fromWallet(smartWallet, CHAIN, {
+                secretKey: SECRET_KEY,
+            });
+
+            const metadata = { newMetadata }
+    
+            // Update metadata using ERC1155 contract
+            const edition: Edition = await sdk.getContract(EDITION_ADDRESS, "edition");
+            await edition.erc1155.updateMetadata(tokenId, metadata);
+    
+        } catch(error: any) {
+            // Handle errors appropriately, e.g., log or throw custom errors
+            console.error("Error updating card metadata:", error);
+            throw error;
+        }
+    }
+
+    private async updateCardMetaDataDB(userName: string, newMetadata: CardMetaData) {
+        try {
+            const session: Session | undefined = this.driver?.session();
+            const { uri } = newMetadata;
+            await session.executeWrite(tx =>
+                tx.run(`
+                    MATCH (u:User {username: $userName})-[:OWNED]->(c:Card {uri: $uri})
+                    SET c += $newMetadata`, 
+                    { userName, uri, newMetadata }
+                )
+            );
+
+            await session.close()
+        } catch(error: any) {
+            throw error;
+        }
+    }
+    
+    
 
 }
 
