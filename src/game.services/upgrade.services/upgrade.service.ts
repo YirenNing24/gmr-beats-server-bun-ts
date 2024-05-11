@@ -156,7 +156,9 @@ class UpgradeService {
     
             // Update metadata using ERC1155 contract
             const edition: Edition = await sdk.getContract(EDITION_ADDRESS, "edition");
-            await edition.erc1155.updateMetadata(tokenId, metadata);
+            const results = await edition.erc1155.updateMetadata(tokenId, metadata);
+
+            console.log(results)
             await this.updateCardUpgradeChain(cardUpgradeUpdate, walletData, password);
             
 
@@ -226,15 +228,15 @@ class UpgradeService {
                 await session.executeWrite(async tx => {
                     if (update.remainingQuantity === 0) {
                         await tx.run(`
-                            MATCH (u:User {username: $userName})-[:OWNED]->(c:CardUpgrade {uri: $uri})
-                            DELETE (u)-[:OWNED]->(c)`, 
-                            { userName, uri: update.uri }
+                            MATCH (u:User {username: $userName})-[o:OWNED]->(c:CardUpgrade {id: $id})
+                            DELETE o`, 
+                            { userName, uri: update.id }
                         );
                     } else {
                         await tx.run(`
-                            MATCH (u:User {username: $userName})-[:OWNED]->(c:CardUpgrade {uri: $uri})
+                            MATCH (u:User {username: $userName})-[:OWNED]->(c:CardUpgrade {id: $id})
                             SET c.quantity = $remainingQuantity`, 
-                            { userName, uri: update.uri, remainingQuantity: update.remainingQuantity }
+                            { userName, id: update.id, remainingQuantity: update.remainingQuantity }
                         );
                     }
                 });
