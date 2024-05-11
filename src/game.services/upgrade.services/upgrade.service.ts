@@ -20,6 +20,9 @@ import ValidationError from '../../outputs/validation.error';
 import { SuccessMessage } from '../../outputs/success.message';
 
 
+
+
+
 class UpgradeService {
     driver: Driver
     constructor(driver: Driver) {
@@ -80,6 +83,28 @@ class UpgradeService {
         } catch(error: any) {
             throw error;
         }
+    }
+
+
+    public async cardGainExperience(token: string, upgradeCardData: any) {
+        const tokenService: TokenService = new TokenService();
+        const userName: string = await tokenService.verifyAccessToken(token);
+        try {
+
+
+
+
+            const cardExperienceRequired =  await this.getRequiredCardExperience()
+
+        } catch(error: any) {
+
+        }
+    }
+
+
+
+    private async getRequiredCardExperience(level: number): Promise<number> {
+        return Math.round(Math.pow(level, 1.8) + level * 4);
     }
 
 }
