@@ -125,16 +125,18 @@ export default class StoreService {
       }
 
       console.log(relationship)
-      const session: Session = this.driver.session();
+      
       // Loop through each relationship type
       for (const rel of relationship) {
+        const session: Session = this.driver.session();
         await session.run(`
-          MATCH (u:User {username: $username}), (c:Card {uri: $uri})
-          MATCH (c)-[l:LISTED]->(cs:CardStore)
-          DELETE l
-          CREATE (u)-[:${rel}]->(c)
-          CREATE (c)-[:SOLD]->(cs)`,
-        { username, uri, rel });    
+        MATCH (u:User {username: $username}), (c:Card {uri: $uri})
+        MATCH (c)-[l:LISTED]->(cs:CardStore)
+        DELETE l
+        CREATE (u)-[:relationshipType]->(c)
+        CREATE (c)-[:SOLD]->(cs)`,
+        { username, uri, relationshipType: rel }); 
+        await session.close()     
 
       }
 
