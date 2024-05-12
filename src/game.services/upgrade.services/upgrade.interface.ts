@@ -26,6 +26,7 @@ export interface CardUpgradeItem {
 
 export interface CardUpgradeData {
     cardUri: string;
+    cardId: string;
     cardUpgrade: CardUpgradeItem[];
 }
 

@@ -119,9 +119,9 @@ export default class StoreService {
       // Determine the relationship type based on bag and inventory size
       let relationship: string[];
       if (inventorySize < inventoryCurrentSize + 1) {
-        relationship = ["BAGGED", "OWNED"];
+        relationship = ["BAGGED"];
       } else {
-        relationship = ["INVENTORY", "OWNED"];
+        relationship = ["INVENTORY"];
       }
 
       console.log(relationship)
@@ -133,11 +133,10 @@ export default class StoreService {
         MATCH (u:User {username: $username}), (c:Card {uri: $uri})
         MATCH (c)-[l:LISTED]->(cs:CardStore)
         DELETE l
-        CREATE (u)-[:relationshipType]->(c)
+        CREATE (u)-[:${rel}]->(c)
         CREATE (c)-[:SOLD]->(cs)`,
-        { username, uri, relationshipType: rel }); 
+        { username, uri }); 
         await session.close()     
-
       }
 
     } catch (error: any) {

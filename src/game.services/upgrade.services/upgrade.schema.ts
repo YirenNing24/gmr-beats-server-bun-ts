@@ -18,6 +18,7 @@ import { t } from "elysia";
 export const cardUpgradeSchema = {
     body: t.Object({
         cardUri: t.String(),
+        cardId: t.String(),
         cardUpgrade: t.Array(
             t.Object({
                 uri: t.String(),

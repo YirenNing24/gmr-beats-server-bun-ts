@@ -37,7 +37,7 @@ class UpgradeService {
         const userName: string = await tokenService.verifyAccessToken(token);
     
         try {
-            const { cardUri, cardUpgrade } = cardUpgradeData;
+            const { cardUri, cardUpgrade, cardId } = cardUpgradeData;
             const session: Session | undefined = this.driver?.session();
     
             let card: CardMetaData | undefined;
@@ -51,7 +51,7 @@ class UpgradeService {
                 const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
                     (tx: ManagedTransaction) =>
                         tx.run(upgradeCardDataCypher,
-                            { userName, cardUri, uri, id }
+                            { userName, cardUri, uri, id, cardId, }
                         )
                 );
     
@@ -73,7 +73,7 @@ class UpgradeService {
                     cardUpgradeItem.push(cardUpgrade);
                 }
             }
-
+            console.log(card)
             if (!card) {
                 throw new ValidationError("Card not found", "Card not found");
             }
@@ -104,8 +104,8 @@ class UpgradeService {
             const newMetadata = { ...card, level: stringLevel, experience: stringExperience};
            
             await this.updateCardMetaDataChain(id, newMetadata, userName, cardUpgradeUpdate);
-            this.updateCardMetaDataDB(userName, newMetadata);
-            this.updateCardUpgradeDB(cardUpgradeUpdate, userName);
+            await this.updateCardMetaDataDB(userName, newMetadata);
+            await this.updateCardUpgradeDB(cardUpgradeUpdate, userName);
             
             return new SuccessMessage("Card Upgrade successful");
         } catch (error: any) {
