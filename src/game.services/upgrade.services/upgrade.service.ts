@@ -22,7 +22,7 @@ import { StoreCardUpgradeData } from '../store.services/store.interface';
 
 //** IMPORT THIRDWEB
 import { Edition, ThirdwebSDK } from '@thirdweb-dev/sdk';
-import { CARD_UPGRADE, CHAIN, EDITION_ADDRESS, SECRET_KEY, SMART_WALLET_CONFIG } from '../../config/constants';
+import { CARD_UPGRADE, CHAIN, EDITION_ADDRESS, PRIVATE_KEY, SECRET_KEY, SMART_WALLET_CONFIG } from '../../config/constants';
 import { LocalWalletNode } from '@thirdweb-dev/wallets/evm/wallets/local-wallet-node';
 import { SmartWallet } from '@thirdweb-dev/wallets';
 
@@ -134,29 +134,17 @@ class UpgradeService {
             const walletData: string = result.records[0].get('localWallet');
             const password: string = result.records[0].get('localWalletKey');
             
-            // Import local wallet
-            const localWallet: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
-            await localWallet.import({
-                encryptedJson: walletData,
-                password: password,
-            });
-    
-            // Connect the smart wallet
-            const smartWallet: SmartWallet = new SmartWallet(SMART_WALLET_CONFIG);
-            await smartWallet.connect({
-                personalWallet: localWallet,
-            });
-    
             // Use the SDK normally
-            const sdk: ThirdwebSDK = await ThirdwebSDK.fromWallet(smartWallet, CHAIN, {
+            const sdk: ThirdwebSDK = ThirdwebSDK.fromPrivateKey(PRIVATE_KEY, CHAIN, {
                 secretKey: SECRET_KEY,
             });
 
-            const metadata = { newMetadata }
+            // const metadata = { newMetadata }
     
             // Update metadata using ERC1155 contract
             const edition: Edition = await sdk.getContract(EDITION_ADDRESS, "edition");
-            const results = await edition.erc1155.updateMetadata(tokenId, metadata);
+            //@ts-ignore
+            const results = await edition.erc1155.updateMetadata(tokenId, newMetadata);
 
             console.log(results)
             await this.updateCardUpgradeChain(cardUpgradeUpdate, walletData, password);

@@ -48,6 +48,7 @@ this.driver = driver;
           // Extract URI and card data from the record
           const uri: string = record.get("uri");
           const cardData: CardMetaData = record.get("card").properties;
+          console.log(cardData)
 
           const { imageByte, ...card } = cardData;
 

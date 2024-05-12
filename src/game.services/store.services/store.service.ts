@@ -134,8 +134,9 @@ export default class StoreService {
           CREATE (u)-[:${rel}]->(c)
           CREATE (c)-[:SOLD]->(cs)`,
         { username, uri, rel });    
+        await session.close();
       }
-      await session.close();
+      
     } catch (error: any) {
       console.error("Error creating relationship:", error);
       throw error;
