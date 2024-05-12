@@ -69,7 +69,6 @@ export default class StoreService {
         tx.run(buyCardCypher, { username }) 
       );
       await session.close();
-
       if (result.records.length === 0) {
         throw new ValidationError(`User with username '${username}' not found.`, '');
       }
@@ -124,6 +123,8 @@ export default class StoreService {
       } else {
         relationship = ["INVENTORY", "OWNED"];
       }
+
+      console.log(relationship)
       const session: Session = this.driver.session();
       // Loop through each relationship type
       for (const rel of relationship) {
@@ -134,9 +135,9 @@ export default class StoreService {
           CREATE (u)-[:${rel}]->(c)
           CREATE (c)-[:SOLD]->(cs)`,
         { username, uri, rel });    
-        await session.close();
+
       }
-      
+
     } catch (error: any) {
       console.error("Error creating relationship:", error);
       throw error;
@@ -174,7 +175,7 @@ export default class StoreService {
       const result: QueryResult<RecordShape> = await session.executeRead((tx: ManagedTransaction) =>
         tx.run(buyCardUpgradeCypher, { username })
       );
-      await session.close();
+
   
       if (result.records.length === 0) {
         throw new ValidationError(`User with username '${username}' not found.`, '');
