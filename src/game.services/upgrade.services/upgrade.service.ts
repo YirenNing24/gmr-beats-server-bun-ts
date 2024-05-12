@@ -104,8 +104,8 @@ class UpgradeService {
             const newMetadata = { ...card, level: stringLevel, experience: stringExperience};
            
             await this.updateCardMetaDataChain(id, newMetadata, userName, cardUpgradeUpdate);
-            await this.updateCardMetaDataDB(userName, newMetadata);
-            await this.updateCardUpgradeDB(cardUpgradeUpdate, userName);
+            this.updateCardMetaDataDB(userName, newMetadata);
+            this.updateCardUpgradeDB(cardUpgradeUpdate, userName);
             
             return new SuccessMessage("Card Upgrade successful");
         } catch (error: any) {
@@ -144,12 +144,9 @@ class UpgradeService {
             // Update metadata using ERC1155 contract
             const edition: Edition = await sdk.getContract(EDITION_ADDRESS, "edition");
             //@ts-ignore
-            const results = await edition.erc1155.updateMetadata(tokenId, newMetadata);
-
-            console.log(results)
-            await this.updateCardUpgradeChain(cardUpgradeUpdate, walletData, password);
+            await edition.erc1155.updateMetadata(tokenId, newMetadata);
+            this.updateCardUpgradeChain(cardUpgradeUpdate, walletData, password);
             
-
         } catch(error: any) {
             // Handle errors appropriately, e.g., log or throw custom errors
             console.error("Error updating card metadata:", error);
