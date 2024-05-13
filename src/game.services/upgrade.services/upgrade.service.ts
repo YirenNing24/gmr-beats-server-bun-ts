@@ -175,7 +175,7 @@ class UpgradeService {
         }
     }
 
-    private async updateCardUpgradeChain(cardUpgradeUpdate: CardUpgradeUpdate[], walletData: string, password: string) {
+    private async updateCardUpgradeChain(cardUpgradeUpdate: CardUpgradeUpdate[]) {
         try {
             // Use the SDK normally
             const sdk: ThirdwebSDK = ThirdwebSDK.fromPrivateKey(PRIVATE_KEY, CHAIN, {
