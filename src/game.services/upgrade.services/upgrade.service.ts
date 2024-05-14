@@ -145,7 +145,7 @@ class UpgradeService {
             const edition: Edition = await sdk.getContract(EDITION_ADDRESS, "edition");
 
             await edition.erc1155.updateMetadata(tokenId, metadata);
-            await this.updateCardUpgradeChain(cardUpgradeUpdate, walletData, password);
+            await this.updateCardUpgradeChain(cardUpgradeUpdate);
             
         } catch(error: any) {
             // Handle errors appropriately, e.g., log or throw custom errors
