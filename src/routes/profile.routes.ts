@@ -9,7 +9,7 @@ import { Driver } from 'neo4j-driver'
 import ProfileService from '../game.services/profile.services/profile.service'
 
 //** TYPE INTERFACES
-import { ProfilePicture ,StatPoints, UpdateStatsFailed } from '../game.services/profile.services/profile.interface'
+import { ProfilePicture ,SoulMetaData,StatPoints, UpdateStatsFailed } from '../game.services/profile.services/profile.interface'
 
 //** CONFIG IMPORT
 import { SuccessMessage } from '../outputs/success.message'
@@ -84,7 +84,7 @@ const router = (app: Elysia) => {
     }, authorizationBearerSchema
   )
 
-  .post('/api/profile/preference', async ({ headers, body }): Promise<SuccessMessage> => {
+  .post('/api/profile/preference/save', async ({ headers, body }): Promise<SuccessMessage> => {
     try {
       const authorizationHeader: string | null = headers.authorization;
       if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
@@ -102,7 +102,27 @@ const router = (app: Elysia) => {
       }
     }, soulMetaDataSchema
   )
+
+  .get('api/profile/preference/soul', async ({ headers }): Promise<SoulMetaData>=> {
+    try{
+      const authorizationHeader: string | null = headers.authorization;
+      if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+        throw new Error('Bearer token not found in Authorization header');
+      }
+      const jwtToken: string = authorizationHeader.substring(7);
   
+      const driver: Driver = getDriver();
+      const profileService: ProfileService = new ProfileService(driver);
+      const output: SoulMetaData = await profileService.getSoul(jwtToken);
+
+      return output
+    } catch(error: any) {
+      throw error
+
+    }
+
+    }
+  )
   
 };
 

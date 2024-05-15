@@ -31,7 +31,6 @@ class ProfileService {
     this.driver = driver;
   }
 
-  //Updates the statistics of a user based on the provided stat points.
   public async updateStats(statPoints: StatPoints, token: string): Promise<any | UpdateStatsFailed> {
     try {
         const tokenService: TokenService = new TokenService();
@@ -81,9 +80,8 @@ class ProfileService {
         console.error("Error updating stats:", error);
         return { success: false, message: 'Error updating stats.' } as UpdateStatsFailed;
     }
-    };
+    }
 
-  //Retrieves the statistics of a player from the database.
   public async getStats(username: string): Promise<PlayerStats> {
     try {
 
@@ -112,9 +110,8 @@ class ProfileService {
         console.error("Error getting stats:", error);
         throw error;
       }
-    };
+    }
 
-  //Uploads a profile picture for the user
   public async uploadProfilePic(bufferData: number[], token: string): Promise<SuccessMessage> {
       try {
         const tokenService: TokenService = new TokenService();
@@ -149,9 +146,8 @@ class ProfileService {
           console.error("Error updating profile picture:", error);
           throw error
       }
-    };
+    }
 
-  // Retrieves profile pictures for the user.
   public async getProfilePic(token: string): Promise<ProfilePicture[]> {
       try {
         const tokenService: TokenService = new TokenService();
@@ -180,7 +176,6 @@ class ProfileService {
       }
     }
   
-  // Retrieves display pictures for the specified user names.
   public async getDisplayPic(userNames: string[]): Promise<{ profilePicture: ProfilePicture }[]> {
     try {
         const session: Session | undefined = this.driver?.session();
@@ -218,7 +213,6 @@ class ProfileService {
     }
     }
 
-  //Retrieves the count of profile pictures for the specified user.
   private async getProfilePicsCount(userName: string): Promise<number> {
       const connection: rt.Connection = await getRethinkDB();
       try {
@@ -367,7 +361,6 @@ class ProfileService {
     
   
     }
-
 
   public async getSoul(token: string): Promise<SoulMetaData> {
       const tokenService: TokenService = new TokenService();
