@@ -314,9 +314,9 @@ class ProfileService {
       } catch (error: any) {
         throw error;
     }
-  }
+    }
 
-  public async saveSoul(userName: string, soulMetadata: SoulMetaData) {
+  private async saveSoul(userName: string, soulMetadata: SoulMetaData): Promise<void> {
       const session: Session | undefined = this.driver?.session();
       try {
         const result: QueryResult | undefined = await session?.executeRead(tx =>
@@ -367,5 +367,34 @@ class ProfileService {
     
   
     }
+
+
+  public async getSoul(token: string): Promise<SoulMetaData> {
+      const tokenService: TokenService = new TokenService();
+      try {
+          // Verify the access token and get the username
+          const userName: string = await tokenService.verifyAccessToken(token);
+          
+          const session: Session | undefined = this.driver?.session();
+          const result: QueryResult | undefined = await session?.executeRead(tx =>
+              tx.run(`
+                  MATCH (u:User { username: $userName })-[:SOUL]->(s:Soul)
+                  RETURN s
+              `, { userName })
+          );
+
+          await session?.close();
+  
+          if (result && result.records.length < 0) {
+            throw new ValidationError("No records found", "No records found");
+          };
+            
+          const soulNode: SoulMetaData = result?.records[0].get('s').properties;
+          return soulNode;
+      } catch(error: any) {
+        throw error;
+      } 
+    }
+  
 }
 export default ProfileService
