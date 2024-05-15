@@ -178,7 +178,7 @@ class ProfileService {
       } catch (error: any) {
         throw new ValidationError(`Error processing the image ${error.message}.`, "");
       }
-    };
+    }
   
   // Retrieves display pictures for the specified user names.
   public async getDisplayPic(userNames: string[]): Promise<{ profilePicture: ProfilePicture }[]> {
@@ -216,7 +216,7 @@ class ProfileService {
         console.error("Error getting profile pictures:", error);
         throw new ValidationError(`Error retrieving the profile pictures: ${error.message}.`, "");
     }
-    };
+    }
 
   //Retrieves the count of profile pictures for the specified user.
   private async getProfilePicsCount(userName: string): Promise<number> {
@@ -234,10 +234,10 @@ class ProfileService {
       } catch (error: any) {
         throw new ValidationError(`Get profile pic error.`, "");
       }
-    };
+    }
 
 
-    public async saveSoulPreferences(token: string, soulMetadata: any): Promise<SuccessMessage> {
+  public async saveSoulPreferences(token: string, soulMetadata: any): Promise<SuccessMessage> {
       const session: Session | undefined = this.driver?.session();
       const tokenService: TokenService = new TokenService();
       const userName: string = await tokenService.verifyAccessToken(token);
@@ -272,9 +272,9 @@ class ProfileService {
         throw error
       }
 
-  }
+    }
 
-    private async createSoul(userName: string, walletAddress: string | undefined, soulMetadata: any) {
+  private async createSoul(userName: string, walletAddress: string | undefined, soulMetadata: any) {
       const session: Session | undefined = this.driver?.session();
       try {
         const sdk: ThirdwebSDK = ThirdwebSDK.fromPrivateKey(PRIVATE_KEY, CHAIN, {
@@ -311,7 +311,7 @@ class ProfileService {
       }
     }
 
-    private async saveSoul(userName: string, soulMetadata: any) {
+  private async saveSoul(userName: string, soulMetadata: any) {
       const session: Session | undefined = this.driver?.session();
       try {
 

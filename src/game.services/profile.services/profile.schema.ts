@@ -10,10 +10,14 @@ import { t } from "elysia";
  * @property {string} animal1 - The first animal.
  * @property {string} horoscope - The horoscope.
  */
-export const soulMetaDataSchema = t.Object({
-	genre1: t?.String(),
-	genre2: t?.String(),
-	genre3: t?.String(),
-	animal1: t?.String(),
-	horoscope: t?.String(),
-});
+export const soulMetaDataSchema = {
+    headers: t.Object({ 
+        authorization: t.String() }), 
+    body: t.Object({
+        genre1: t?.String(),
+        genre2: t?.String(),
+        genre3: t?.String(),
+        animal1: t?.String(),
+        horoscope: t?.String(),
+    })
+}
