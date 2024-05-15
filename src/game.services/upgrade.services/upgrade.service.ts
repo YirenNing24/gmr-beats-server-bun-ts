@@ -22,9 +22,8 @@ import { StoreCardUpgradeData } from '../store.services/store.interface';
 
 //** IMPORT THIRDWEB
 import { Edition, ThirdwebSDK } from '@thirdweb-dev/sdk';
-import { CARD_UPGRADE, CHAIN, EDITION_ADDRESS, PRIVATE_KEY, SECRET_KEY, SMART_WALLET_CONFIG } from '../../config/constants';
-import { LocalWalletNode } from '@thirdweb-dev/wallets/evm/wallets/local-wallet-node';
-import { SmartWallet } from '@thirdweb-dev/wallets';
+import { CARD_UPGRADE, CHAIN, EDITION_ADDRESS, PRIVATE_KEY, SECRET_KEY } from '../../config/constants';
+
 
 class UpgradeService {
     driver: Driver
@@ -130,16 +129,14 @@ class UpgradeService {
             const result: QueryResult = await session.executeRead(tx =>
                 tx.run('MATCH (u:User {username: $userName}) RETURN u.localWallet as localWallet, u.localWalletKey as localWalletKey', { userName })
             );
-            await session.close()
-            const walletData: string = result.records[0].get('localWallet');
-            const password: string = result.records[0].get('localWalletKey');
+            await session.close();
             
             // Use the SDK normally
             const sdk: ThirdwebSDK = ThirdwebSDK.fromPrivateKey(PRIVATE_KEY, CHAIN, {
                 secretKey: SECRET_KEY,
             });
 
-            const metadata = { newMetadata }
+            const metadata = { newMetadata };
     
             // Update metadata using ERC1155 contract
             const edition: Edition = await sdk.getContract(EDITION_ADDRESS, "edition");
@@ -222,6 +219,10 @@ class UpgradeService {
             throw error;
         }
     }
+    
+
+
+
     
     
     

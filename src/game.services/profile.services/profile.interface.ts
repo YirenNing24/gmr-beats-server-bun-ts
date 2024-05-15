@@ -73,3 +73,11 @@ export interface ProfilePicture {
     uploadedAt: number;
     fileSize: number;
 }
+
+export interface SoulMetaData {
+	genre1: string;
+	genre2: string;
+	genre3: string;
+	animal1: string;
+	horoscope: string;
+}
