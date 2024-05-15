@@ -122,15 +122,9 @@ class UpgradeService {
         return { newLevel: cardLevel, requiredExp }
     }
 
-    private async updateCardMetaDataChain(tokenId: string, newMetadata: CardMetaData, userName: string, cardUpgradeUpdate: CardUpgradeUpdate[]) {
-        const session: Session | undefined = this.driver?.session();
+    private async updateCardMetaDataChain(tokenId: string, newMetadata: CardMetaData, cardUpgradeUpdate: CardUpgradeUpdate[]) {
         try {
-            // Fetch wallet data and password from the database
-            const result: QueryResult = await session.executeRead(tx =>
-                tx.run('MATCH (u:User {username: $userName}) RETURN u.localWallet as localWallet, u.localWalletKey as localWalletKey', { userName })
-            );
-            await session.close();
-            
+  
             // Use the SDK normally
             const sdk: ThirdwebSDK = ThirdwebSDK.fromPrivateKey(PRIVATE_KEY, CHAIN, {
                 secretKey: SECRET_KEY,
@@ -145,9 +139,7 @@ class UpgradeService {
             await this.updateCardUpgradeChain(cardUpgradeUpdate);
             
         } catch(error: any) {
-            // Handle errors appropriately, e.g., log or throw custom errors
-            console.error("Error updating card metadata:", error);
-            throw error;
+          throw error;
         }
     }
 
@@ -184,7 +176,6 @@ class UpgradeService {
     
             for (const update of cardUpgradeUpdate) {
                 const res = await edition.erc1155.burn(update.id, update.quantityConsumed);
-                console.log(res)
             }
     
         } catch(error: any) {

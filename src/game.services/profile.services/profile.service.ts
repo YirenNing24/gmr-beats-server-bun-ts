@@ -14,7 +14,7 @@ import { SuccessMessage } from "../../outputs/success.message";
 import TokenService from "../../user.services/token.services/token.service";
 
 //** TYPE INTERFACES
-import { UpdateStatsFailed, ProfilePicture, StatPoints } from "./profile.interface";
+import { UpdateStatsFailed, ProfilePicture, StatPoints, SoulMetaData } from "./profile.interface";
 import { PlayerStats } from "../../user.services/user.service.interface";
 import { uploadProfilePicCypher } from "./profile.cypher";
 
@@ -245,7 +245,7 @@ class ProfileService {
 
           const result: QueryResult | undefined = await session?.executeRead(tx =>
               tx.run(`
-              MATCH (u:User)-[:SOUL]->(s:Soul) 
+              MATCH (u:User {username: $userName})-[:SOUL]->(s:Soul) 
               RETURN s, u.smartWalletAddress as smartWalletAddress`, { userName })
           );
           await session?.close();
@@ -263,7 +263,7 @@ class ProfileService {
             await this.createSoul(userName, smartWalletAddress, soulMetadata);
           }
           else {
-            await this,this.saveSoul(userName, soulMetadata)
+            await this.saveSoul(userName, soulMetadata)
     
           };
 
@@ -274,7 +274,7 @@ class ProfileService {
 
     }
 
-  private async createSoul(userName: string, walletAddress: string | undefined, soulMetadata: any) {
+  private async createSoul(userName: string, walletAddress: string | undefined, soulMetadata: SoulMetaData) {
       const session: Session | undefined = this.driver?.session();
       try {
         const sdk: ThirdwebSDK = ThirdwebSDK.fromPrivateKey(PRIVATE_KEY, CHAIN, {
@@ -311,9 +311,27 @@ class ProfileService {
       }
     }
 
-  private async saveSoul(userName: string, soulMetadata: any) {
+  public async saveSoul(userName: string, soulMetadata: any) {
       const session: Session | undefined = this.driver?.session();
       try {
+        const result: QueryResult | undefined = await session?.executeRead(tx =>
+          tx.run(`
+          MATCH (u:User {username: $userName})-[:SOUL]->(s:Soul) 
+          RETURN s.tokenId as tokenId`, { userName })
+      );
+      await session?.close();
+
+        const sdk: ThirdwebSDK = ThirdwebSDK.fromPrivateKey(PRIVATE_KEY, CHAIN, {
+          secretKey: SECRET_KEY,
+      });
+
+      const metadata = { soulMetadata };
+
+      // Update metadata using ERC1155 contract
+      const edition: Edition = await sdk.getContract(EDITION_ADDRESS, "edition");
+
+      await edition.erc1155.updateMetadata(tokenId, metadata);
+
 
         
 
