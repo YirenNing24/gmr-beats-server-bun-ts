@@ -236,7 +236,7 @@ class ProfileService {
       }
     }
 
-  public async createSoulPreferences(token: string, soulMetadata: any): Promise<SuccessMessage> {
+  public async createSoulPreferences(token: string, soulMetadata: SoulMetaData): Promise<SuccessMessage> {
       const session: Session | undefined = this.driver?.session();
       const tokenService: TokenService = new TokenService();
       const userName: string = await tokenService.verifyAccessToken(token);
@@ -244,7 +244,8 @@ class ProfileService {
 
           const result: QueryResult | undefined = await session?.executeRead(tx =>
               tx.run(`
-              MATCH (u:User {username: $userName})-[:SOUL]->(s:Soul) 
+              MATCH (u:User {username: $userName})
+              OPTIONAL MATCH (u)-[:SOUL]->(s:Soul) 
               RETURN s, u.smartWalletAddress as smartWalletAddress`, { userName })
           );
           await session?.close();
@@ -275,6 +276,7 @@ class ProfileService {
 
   private async createSoul(userName: string, walletAddress: string | undefined, soulMetadata: SoulMetaData) {
       const session: Session | undefined = this.driver?.session();
+
       try {
         const sdk: ThirdwebSDK = ThirdwebSDK.fromPrivateKey(PRIVATE_KEY, CHAIN, {
           secretKey: SECRET_KEY,
@@ -283,32 +285,36 @@ class ProfileService {
         // Update metadata using ERC1155 contract
         const soul: NFTCollection = await sdk.getContract(SOUL_ADDRESS, "nft-collection");
 
+        const lastUpdated: string = new Date().toISOString();
+        const metadata = {...soulMetadata, lastUpdated}
         //@ts-ignore
-        await soul.erc721.mintTo(walletAddress, soulMetadata);
+        await soul.erc721.mintTo(walletAddress, metadata);
 
         const ownedSouls = await soul.getOwned(walletAddress);
 
         ///@ts-ignore
-        const newSoulMetadata = ownedSouls.metadata; 
+        const newSoulMetadata: SoulMetaData = ownedSouls[ownedSouls.length - 1].metadata;
         await session?.executeWrite(tx =>
           tx.run(
             `
-            MATCH (u:User { userName: $userName })
+            MATCH (u:User { username: $userName })
             CREATE (s:Soul)
-            SET s += $newMetadata
             MERGE (u)-[:SOUL]->(s)
+
+            SET s = $newSoulMetadata
+            
             
             `,
             { userName, newSoulMetadata }
           )
         );
+
+        await session?.close();
   
       } catch (error: any) {
         throw error;
-      } finally {
-        await session?.close();
-      }
     }
+  }
 
   public async saveSoul(userName: string, soulMetadata: SoulMetaData) {
       const session: Session | undefined = this.driver?.session();
@@ -317,7 +323,7 @@ class ProfileService {
           tx.run(
             `
             MATCH (u:User {username: $userName})-[:SOUL]->(s:Soul) 
-            RETURN s.tokenId as tokenId`,
+            RETURN s.id as id`,
             { userName }
           )
         );
@@ -326,7 +332,7 @@ class ProfileService {
           throw new Error(`No tokenId found for user: ${userName}`);
         }
     
-        const tokenId: string = result.records[0].get('tokenId');
+        const tokenId: string = result.records[0].get('id');
         
         await session?.close(); 
     
@@ -335,6 +341,8 @@ class ProfileService {
         });
     
         const metadata = { ...soulMetadata };
+
+        console.log(metadata, "hehehe")
         // Update metadata using ERC1155 contract
         const edition: NFTCollection = await sdk.getContract(SOUL_ADDRESS, "nft-collection");
         await edition.erc721.updateMetadata(tokenId, metadata);
