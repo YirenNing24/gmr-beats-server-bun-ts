@@ -236,8 +236,7 @@ class ProfileService {
       }
     }
 
-
-  public async saveSoulPreferences(token: string, soulMetadata: any): Promise<SuccessMessage> {
+  public async createSoulPreferences(token: string, soulMetadata: any): Promise<SuccessMessage> {
       const session: Session | undefined = this.driver?.session();
       const tokenService: TokenService = new TokenService();
       const userName: string = await tokenService.verifyAccessToken(token);
@@ -311,36 +310,54 @@ class ProfileService {
       }
     }
 
-  public async saveSoul(userName: string, soulMetadata: any) {
+  public async saveSoul(userName: string, soulMetadata: SoulMetaData) {
       const session: Session | undefined = this.driver?.session();
       try {
         const result: QueryResult | undefined = await session?.executeRead(tx =>
-          tx.run(`
-          MATCH (u:User {username: $userName})-[:SOUL]->(s:Soul) 
-          RETURN s.tokenId as tokenId`, { userName })
-      );
-      await session?.close();
-
+          tx.run(
+            `
+            MATCH (u:User {username: $userName})-[:SOUL]->(s:Soul) 
+            RETURN s.tokenId as tokenId`,
+            { userName }
+          )
+        );
+    
+        if (!result || result.records.length === 0) {
+          throw new Error(`No tokenId found for user: ${userName}`);
+        }
+    
+        const tokenId: string = result.records[0].get('tokenId');
+        
+        await session?.close(); 
+    
         const sdk: ThirdwebSDK = ThirdwebSDK.fromPrivateKey(PRIVATE_KEY, CHAIN, {
           secretKey: SECRET_KEY,
-      });
-
-      const metadata = { soulMetadata };
-
-      // Update metadata using ERC1155 contract
-      const edition: Edition = await sdk.getContract(EDITION_ADDRESS, "edition");
-
-      await edition.erc1155.updateMetadata(tokenId, metadata);
-
-
-        
-
-      } catch(error: any) {
-        throw error
-      }
-
+        });
+    
+        const metadata = { ...soulMetadata };
+        // Update metadata using ERC1155 contract
+        const edition: NFTCollection = await sdk.getContract(SOUL_ADDRESS, "nft-collection");
+        await edition.erc721.updateMetadata(tokenId, metadata);
+    
+        const sessionWrite: Session | undefined = this.driver?.session(); 
+        await sessionWrite?.executeWrite(tx =>
+          tx.run(
+            `
+            MATCH (u:User {username: $userName})-[:SOUL]->(s:Soul) 
+            SET s += $soulMetadata`,
+            { userName, soulMetadata }
+          )
+        );
+    
+        await sessionWrite?.close();
+    
+      } catch (error: any) {
+        throw error;
+      } finally {
+        await session?.close();
     }
+    
   
+    }
 }
-
 export default ProfileService

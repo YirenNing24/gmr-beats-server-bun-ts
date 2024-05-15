@@ -102,7 +102,7 @@ class UpgradeService {
             const stringExperience: string = JSON.stringify(cardExperience);
             const newMetadata = { ...card, level: stringLevel, experience: stringExperience};
            
-            await this.updateCardMetaDataChain(id, newMetadata, userName, cardUpgradeUpdate);
+            await this.updateCardMetaDataChain(id, newMetadata, cardUpgradeUpdate);
             await this.updateCardMetaDataDB(userName, newMetadata);
             await this.updateCardUpgradeDB(cardUpgradeUpdate, userName);
             
