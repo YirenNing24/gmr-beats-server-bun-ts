@@ -118,10 +118,8 @@ const router = (app: Elysia) => {
       return output
     } catch(error: any) {
       throw error
-
-    }
-
-    }
+      }
+    }, authorizationBearerSchema
   )
   
 };
