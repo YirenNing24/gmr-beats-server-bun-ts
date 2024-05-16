@@ -9,7 +9,7 @@ import { Driver } from 'neo4j-driver'
 import ProfileService from '../game.services/profile.services/profile.service'
 
 //** TYPE INTERFACES
-import { ProfilePicture ,SoulMetaData,StatPoints, UpdateStatsFailed } from '../game.services/profile.services/profile.interface'
+import { GroupCardCount, ProfilePicture ,SoulMetaData,StatPoints, UpdateStatsFailed } from '../game.services/profile.services/profile.interface'
 
 //** CONFIG IMPORT
 import { SuccessMessage } from '../outputs/success.message'
@@ -114,6 +114,25 @@ const router = (app: Elysia) => {
       const driver: Driver = getDriver();
       const profileService: ProfileService = new ProfileService(driver);
       const output: SoulMetaData = await profileService.getSoul(jwtToken);
+
+      return output
+    } catch(error: any) {
+      throw error
+      }
+    }, authorizationBearerSchema
+  )
+
+  .get('api/profile/card/count', async ({ headers }) => {
+    try{
+      const authorizationHeader: string | null = headers.authorization;
+      if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+        throw new Error('Bearer token not found in Authorization header');
+      }
+      const jwtToken: string = authorizationHeader.substring(7);
+  
+      const driver: Driver = getDriver();
+      const profileService: ProfileService = new ProfileService(driver);
+      const output: GroupCardCount = await profileService.getOwnedCardCount(jwtToken);
 
       return output
     } catch(error: any) {

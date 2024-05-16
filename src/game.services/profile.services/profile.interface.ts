@@ -81,3 +81,8 @@ export interface SoulMetaData {
 	animal1: string;
 	horoscope: string;
 }
+
+
+export interface GroupCardCount {
+	[group: string]: number;
+}

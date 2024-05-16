@@ -14,7 +14,7 @@ import { SuccessMessage } from "../../outputs/success.message";
 import TokenService from "../../user.services/token.services/token.service";
 
 //** TYPE INTERFACES
-import { UpdateStatsFailed, ProfilePicture, StatPoints, SoulMetaData } from "./profile.interface";
+import { UpdateStatsFailed, ProfilePicture, StatPoints, SoulMetaData, GroupCardCount } from "./profile.interface";
 import { PlayerStats } from "../../user.services/user.service.interface";
 import { uploadProfilePicCypher } from "./profile.cypher";
 
@@ -388,6 +388,41 @@ class ProfileService {
         throw error;
       } 
     }
+
+    public async getOwnedCardCount(token: string): Promise<{ [groupName: string]: number }> {
+      const tokenService: TokenService = new TokenService();
+      try {
+          // Verify the access token and get the username
+          const userName: string = await tokenService.verifyAccessToken(token);
+          
+          const session: Session | undefined = this.driver?.session();
+          const result: QueryResult | undefined = await session?.executeRead(tx =>
+              tx.run(`
+                  MATCH (u:User { username: $userName })-[:INVENTORY|EQUIPPED]->(c:Card)
+                  WITH c.group AS groupName, count(c) AS cardCount
+                  RETURN groupName, cardCount
+              `, { userName })
+          );
+          await session?.close();
+  
+          if (result) {
+              const counts: { [groupName: string]: number } = {};
+              result.records.forEach(record => {
+                  const groupName = record.get('groupName');
+                  const cardCount = record.get('cardCount').toNumber();
+                  counts[groupName] = cardCount;
+              });
+              return counts;
+          } else {
+              throw new Error('Failed to retrieve card counts');
+          }
+      } catch (error: any) {
+          throw error;
+      }
+  }
+  
+    
+    
   
 }
 export default ProfileService
