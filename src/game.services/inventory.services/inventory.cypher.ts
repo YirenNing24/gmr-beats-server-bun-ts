@@ -25,7 +25,7 @@ export const openCardUpgradeCypher = `
  */
 export const equipItemCypher: string =`
   MATCH (u:User {username: $userName})-[o:INVENTORY]->(c:Card {uri: $uri})
-  WHERE EXISTS((u)-[:OWNED]->(c)) AND EXISTS((u)-[:INVENTORY]->(c))
+  WHERE EXISTS((u)-[:INVENTORY]->(c))
   DELETE o
   CREATE (u)-[:EQUIPPED]->(c)
   `;

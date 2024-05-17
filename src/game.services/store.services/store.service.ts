@@ -23,6 +23,7 @@ import { buyCardCypher, buyCardUpgradeCypher, getValidCardUpgrades, getValidCard
 
 //** SUCCESS MESSAGE IMPORT
 import { SuccessMessage } from "../../outputs/success.message";
+import RewardService from "../rewards.services/rewards.service";
 
 
 export default class StoreService {
@@ -116,6 +117,8 @@ export default class StoreService {
   //Creates a relationship between a user and a card based on provided parameters.
   private async createCardRelationship(username: string, uri: string, inventoryCurrentSize: number, inventorySize: number): Promise<void> {
     try {
+
+      const rewardService: RewardService = new RewardService()
       // Determine the relationship type based on bag and inventory size
       let relationship: string[];
       if (inventorySize < inventoryCurrentSize + 1) {
@@ -123,27 +126,47 @@ export default class StoreService {
       } else {
         relationship = ["INVENTORY"];
       }
-
-      console.log(relationship)
       
+      // Get the card's name
+      const session: Session = this.driver.session();
+      const cardNameResult = await session.run(`
+        MATCH (c:Card {uri: $uri})
+        RETURN c.Name AS name
+      `, { uri });
+      const cardName = cardNameResult.records[0].get("name");
+  
+      // Check for uniqueness of the card's name among BAGGED or INVENTORY relationships
+      const uniquenessCheck = await session.run(`
+        MATCH (u:User {username: $username})-[:BAGGED|INVENTORY]->(c:Card)
+        WHERE c.Name = $cardName
+        RETURN COUNT(c) AS count, c.id as id
+      `, { username, cardName });
+      const count: number = uniquenessCheck.records[0].get("count").toInt();
+      const id: string = uniquenessCheck.records[0].get("id");
+  
+      // If the card's name is unique, call the firstCardType function
+      if (count === 0) {
+        await rewardService.firstCardType(uri, id)
+      }
+  
       // Loop through each relationship type
       for (const rel of relationship) {
-        const session: Session = this.driver.session();
         await session.run(`
-        MATCH (u:User {username: $username}), (c:Card {uri: $uri})
-        MATCH (c)-[l:LISTED]->(cs:CardStore)
-        DELETE l
-        CREATE (u)-[:${rel}]->(c)
-        CREATE (c)-[:SOLD]->(cs)`,
-        { username, uri }); 
-        await session.close()     
+          MATCH (u:User {username: $username}), (c:Card {uri: $uri})
+          MATCH (c)-[l:LISTED]->(cs:CardStore)
+          DELETE l
+          CREATE (u)-[:${rel}]->(c)
+          CREATE (c)-[:SOLD]->(cs)
+        `, { username, uri });
       }
-
+      await session.close();
     } catch (error: any) {
       console.error("Error creating relationship:", error);
       throw error;
     }
   }
+  
+
 
   public async getvalidCardUpgrade(token: string): Promise<StoreCardUpgradeData[]> {
     try {
@@ -213,8 +236,7 @@ export default class StoreService {
     console.log(error)
     return error
       }
-}
-
+  }
 
   private async createCardUpgradeRelationship(username: string, listingId: number): Promise<void> {
   try {
@@ -235,6 +257,6 @@ export default class StoreService {
     console.error("Error creating relationship:", error);
     throw error;
   }
-}
+  }
   
 }

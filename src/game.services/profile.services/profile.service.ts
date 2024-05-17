@@ -19,9 +19,8 @@ import { PlayerStats } from "../../user.services/user.service.interface";
 import { uploadProfilePicCypher } from "./profile.cypher";
 
 //** IMPORT THIRDWEB
-import { Edition, NFTCollection, ThirdwebSDK } from '@thirdweb-dev/sdk';
-import { create } from "domain";
-import { CHAIN, EDITION_ADDRESS, PRIVATE_KEY, SECRET_KEY, SOUL_ADDRESS } from "../../config/constants";
+import { NFTCollection, ThirdwebSDK } from '@thirdweb-dev/sdk';
+import { CHAIN, PRIVATE_KEY, SECRET_KEY, SOUL_ADDRESS } from "../../config/constants";
 
 
 
