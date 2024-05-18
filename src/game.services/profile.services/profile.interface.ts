@@ -86,3 +86,8 @@ export interface SoulMetaData {
 export interface GroupCardCount {
 	[group: string]: number;
 }
+
+
+export interface GroupCollection {
+    group: string
+}

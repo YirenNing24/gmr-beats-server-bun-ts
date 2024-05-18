@@ -14,7 +14,7 @@ import { SuccessMessage } from "../../outputs/success.message";
 import TokenService from "../../user.services/token.services/token.service";
 
 //** TYPE INTERFACES
-import { UpdateStatsFailed, ProfilePicture, StatPoints, SoulMetaData, GroupCardCount } from "./profile.interface";
+import { UpdateStatsFailed, ProfilePicture, StatPoints, SoulMetaData, GroupCardCount, GroupCollection } from "./profile.interface";
 import { PlayerStats } from "../../user.services/user.service.interface";
 import { uploadProfilePicCypher } from "./profile.cypher";
 
@@ -388,7 +388,7 @@ class ProfileService {
       } 
     }
 
-    public async getOwnedCardCount(token: string): Promise<{ [groupName: string]: number }> {
+  public async getOwnedCardCount(token: string): Promise<{ [groupName: string]: number }> {
       const tokenService: TokenService = new TokenService();
       try {
           // Verify the access token and get the username
@@ -418,7 +418,41 @@ class ProfileService {
       } catch (error: any) {
           throw error;
       }
-  }
+    }
+
+  public async getCardCollection(token: string, group: GroupCollection) {
+      try {
+          const tokenService: TokenService = new TokenService();
+          const userName: string = await tokenService.verifyAccessToken(token);
+  
+          const session: Session | undefined = this.driver?.session();
+  
+          const getCardCollectionCypher = `
+              MATCH (u:User {username: $userName})-[:EQUIPPED|INVENTORY|BAGGED]->(c:Card{group: $group})
+              WITH c.name AS cardName, collect(c) AS cards
+              RETURN cardName, cards[0] AS card, size(cards) AS count
+          `;
+  
+          const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
+              (tx: ManagedTransaction) =>
+                  tx.run(getCardCollectionCypher , { userName, group })
+          );
+  
+          const cardCollection = result?.records.map(record => ({
+              name: record.get('cardName'),
+              card: record.get('card').properties,
+              count: record.get('count').toInt()
+          }));
+  
+          await session?.close();
+          
+          return cardCollection;
+  
+      } catch(error: any) {
+          throw error;
+      }
+    }
+  
   
     
     

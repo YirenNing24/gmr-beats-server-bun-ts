@@ -10,3 +10,6 @@ export const uploadProfilePicCypher: string = `
     SET u.profilePictures = coalesce(u.profilePictures, []) + $profilePictures
     RETURN u
 `;
+
+
+

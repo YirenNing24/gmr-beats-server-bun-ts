@@ -200,13 +200,6 @@ this.driver = driver;
           throw error;
       }
     }
-  
-  
-
-    // private async getWalletAddress(localWallet: string, localWalletKey: string): Promise<string> {
-    //   const walletService: WalletService = new WalletService();
-    //   return await walletService.getWalletAddress(localWallet, localWalletKey);
-    //   }
 
 
   }
