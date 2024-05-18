@@ -140,6 +140,25 @@ const router = (app: Elysia) => {
       }
     }, authorizationBearerSchema
   )
+
+  .get('api/profile/card/collection', async ({ headers }) => {
+    try{
+      const authorizationHeader: string | null = headers.authorization;
+      if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+        throw new Error('Bearer token not found in Authorization header');
+      }
+      const jwtToken: string = authorizationHeader.substring(7);
+  
+      const driver: Driver = getDriver();
+      const profileService: ProfileService = new ProfileService(driver);
+      const output = await profileService.getCardCollection(jwtToken);
+
+      return output
+    } catch(error: any) {
+      throw error
+      }
+    }, authorizationBearerSchema
+  )
   
 };
 

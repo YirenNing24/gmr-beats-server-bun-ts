@@ -420,7 +420,7 @@ class ProfileService {
       }
     }
 
-  public async getCardCollection(token: string, group: GroupCollection) {
+  public async getCardCollection(token: string) {
       try {
           const tokenService: TokenService = new TokenService();
           const userName: string = await tokenService.verifyAccessToken(token);
@@ -428,14 +428,14 @@ class ProfileService {
           const session: Session | undefined = this.driver?.session();
   
           const getCardCollectionCypher = `
-              MATCH (u:User {username: $userName})-[:EQUIPPED|INVENTORY|BAGGED]->(c:Card {group: $group})
+              MATCH (u:User {username: $userName})-[:EQUIPPED|INVENTORY|BAGGED]->(c:Card)
               WITH c.name AS cardName, collect(c) AS cards
               RETURN cardName, cards[0] AS card, size(cards) AS count
           `;
   
           const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
               (tx: ManagedTransaction) =>
-                  tx.run(getCardCollectionCypher , { userName, group })
+                  tx.run(getCardCollectionCypher , { userName})
           );
   
           const cardCollection = result?.records.map(record => ({
