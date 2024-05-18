@@ -9,7 +9,7 @@ import { Driver } from 'neo4j-driver'
 import ProfileService from '../game.services/profile.services/profile.service'
 
 //** TYPE INTERFACES
-import { GroupCardCount, ProfilePicture ,SoulMetaData,StatPoints, UpdateStatsFailed } from '../game.services/profile.services/profile.interface'
+import { CardCollection, GroupCardCount, ProfilePicture ,SoulMetaData,StatPoints, UpdateStatsFailed } from '../game.services/profile.services/profile.interface'
 
 //** CONFIG IMPORT
 import { SuccessMessage } from '../outputs/success.message'
@@ -141,7 +141,7 @@ const router = (app: Elysia) => {
     }, authorizationBearerSchema
   )
 
-  .get('api/profile/card/collection', async ({ headers }) => {
+  .get('api/profile/card/collection', async ({ headers }): Promise<CardCollection[]> => {
     try{
       const authorizationHeader: string | null = headers.authorization;
       if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
@@ -151,9 +151,9 @@ const router = (app: Elysia) => {
   
       const driver: Driver = getDriver();
       const profileService: ProfileService = new ProfileService(driver);
-      const output = await profileService.getCardCollection(jwtToken);
+      const output: CardCollection[] = await profileService.getCardCollection(jwtToken);
 
-      return output
+      return output as  CardCollection[] 
     } catch(error: any) {
       throw error
       }

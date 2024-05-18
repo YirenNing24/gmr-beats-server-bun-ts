@@ -14,13 +14,14 @@ import { SuccessMessage } from "../../outputs/success.message";
 import TokenService from "../../user.services/token.services/token.service";
 
 //** TYPE INTERFACES
-import { UpdateStatsFailed, ProfilePicture, StatPoints, SoulMetaData, GroupCardCount, GroupCollection } from "./profile.interface";
+import { UpdateStatsFailed, ProfilePicture, StatPoints, SoulMetaData, GroupCardCount, GroupCollection, CardCollection } from "./profile.interface";
 import { PlayerStats } from "../../user.services/user.service.interface";
 import { uploadProfilePicCypher } from "./profile.cypher";
 
 //** IMPORT THIRDWEB
 import { NFTCollection, ThirdwebSDK } from '@thirdweb-dev/sdk';
 import { CHAIN, PRIVATE_KEY, SECRET_KEY, SOUL_ADDRESS } from "../../config/constants";
+import { CardMetaData } from "../inventory.services/inventory.interface";
 
 
 
@@ -420,38 +421,44 @@ class ProfileService {
       }
     }
 
-  public async getCardCollection(token: string) {
+    public async getCardCollection(token: string): Promise<CardCollection[]> {
       try {
-          const tokenService: TokenService = new TokenService();
-          const userName: string = await tokenService.verifyAccessToken(token);
-  
-          const session: Session | undefined = this.driver?.session();
-  
-          const getCardCollectionCypher = `
-              MATCH (u:User {username: $userName})-[:EQUIPPED|INVENTORY|BAGGED]->(c:Card)
-              WITH c.name AS cardName, collect(c) AS cards
-              RETURN cardName, cards[0] AS card, size(cards) AS count
-          `;
-  
-          const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
-              (tx: ManagedTransaction) =>
-                  tx.run(getCardCollectionCypher , { userName})
-          );
-  
-          const cardCollection = result?.records.map(record => ({
-              name: record.get('cardName'),
-              card: record.get('card').properties,
-              count: record.get('count').toInt()
-          }));
-  
-          await session?.close();
-          
-          return cardCollection;
-  
-      } catch(error: any) {
-          throw error;
+        const tokenService: TokenService = new TokenService();
+        const userName: string = await tokenService.verifyAccessToken(token);
+    
+        const session: Session | undefined = this.driver?.session();
+    
+        const getCardCollectionCypher = `
+          MATCH (u:User {username: $userName})-[:EQUIPPED|INVENTORY|BAGGED]->(c:Card)
+          WITH c.name AS cardName, collect(c) AS cards
+          RETURN cardName, cards[0] AS card, size(cards) AS count
+        `;
+    
+        const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
+          (tx: ManagedTransaction) =>
+            tx.run(getCardCollectionCypher, { userName })
+        );
+    
+        const cardCollection = result?.records.map(record => {
+          const card: CardMetaData = record.get('card').properties;
+          delete card.imageByte;
+    
+          return {
+            name: record.get('cardName'),
+            card: card,
+            count: record.get('count').toInt()
+          };
+        });
+    
+        await session?.close();
+        
+        return cardCollection as CardCollection[]
+    
+      } catch (error: any) {
+        throw error;
       }
     }
+    
   
   
     

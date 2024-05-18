@@ -1,3 +1,5 @@
+import { CardMetaData } from "../inventory.services/inventory.interface";
+
 /**
  * Represents the status of a player.
  *
@@ -74,6 +76,16 @@ export interface ProfilePicture {
     fileSize: number;
 }
 
+/**
+ * Represents metadata for a soul.
+ *
+ * @interface SoulMetaData
+ * @property {string} genre1 - The primary genre of the soul.
+ * @property {string} genre2 - The secondary genre of the soul.
+ * @property {string} genre3 - The tertiary genre of the soul.
+ * @property {string} animal1 - The associated animal of the soul.
+ * @property {string} horoscope - The associated horoscope of the soul.
+ */
 export interface SoulMetaData {
 	genre1: string;
 	genre2: string;
@@ -82,12 +94,36 @@ export interface SoulMetaData {
 	horoscope: string;
 }
 
-
+/**
+ * Represents the count of cards in different groups.
+ *
+ * @interface GroupCardCount
+ * @property {number} [group] - The count of cards in the specified group.
+ */
 export interface GroupCardCount {
 	[group: string]: number;
 }
 
-
+/**
+ * Represents a collection of cards belonging to a group.
+ *
+ * @interface GroupCollection
+ * @property {string} group - The name of the group.
+ */
 export interface GroupCollection {
-    group: string
+	group: string;
+}
+
+/**
+ * Represents a collection of cards with metadata and count.
+ *
+ * @interface CardCollection
+ * @property {CardMetaData} card - The metadata of the card.
+ * @property {string} name - The name of the card.
+ * @property {number} count - The count of cards with the same name.
+ */
+export interface CardCollection {
+	card: CardMetaData;
+	name: string;
+	count: number;
 }
