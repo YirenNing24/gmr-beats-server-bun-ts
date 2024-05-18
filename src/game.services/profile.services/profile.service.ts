@@ -428,7 +428,7 @@ class ProfileService {
           const session: Session | undefined = this.driver?.session();
   
           const getCardCollectionCypher = `
-              MATCH (u:User {username: $userName})-[:EQUIPPED|INVENTORY|BAGGED]->(c:Card{group: $group})
+              MATCH (u:User {username: $userName})-[:EQUIPPED|INVENTORY|BAGGED]->(c:Card {group: $group})
               WITH c.name AS cardName, collect(c) AS cards
               RETURN cardName, cards[0] AS card, size(cards) AS count
           `;
