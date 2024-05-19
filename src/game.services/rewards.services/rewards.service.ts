@@ -29,6 +29,51 @@ constructor(driver?: Driver) {
     this.driver = driver;
 }
 
+
+public async checkAvailableCardReward(token: string) {
+	const tokenService: TokenService = new TokenService();
+	const userName: string = await tokenService.verifyAccessToken(token);
+  
+	try {
+		const session: Session | undefined = this.driver?.session();
+
+		const getCardRewardNodeCypher = `
+			MATCH (u:User {username: $userName})-[:EQUIPPED|INVENTORY]->(c:Card)
+			MATCH (r:CardReward)
+			OPTIONAL MATCH (u)-[:SOUL]->(s:Soul)-[:CLAIMED]->(r)
+			WHERE NOT EXISTS(s)
+			RETURN r, c
+		`;
+
+		const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
+			(tx: ManagedTransaction) =>
+				tx.run(getCardRewardNodeCypher, { userName })
+		);
+
+		// Process the result to find unclaimed rewards
+		const rewards: any = result?.records.map(record => {
+			const cardReward = record.get('r').properties;
+			const card = record.get('c').properties;
+			
+			return {
+				cardReward,
+				card
+			};
+		}).filter(item => item.cardReward.ownership); // Filter to only return items with ownership property
+
+		await session?.close();
+		
+		return {
+			canClaim: rewards.length > 0,
+			rewards
+		};
+
+	} catch (error: any) {
+		throw error;
+	}
+}
+
+
 public async firstCardType(uri: string, tokenId: string) {
   try {
 

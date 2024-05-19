@@ -438,6 +438,8 @@ class ProfileService {
           (tx: ManagedTransaction) =>
             tx.run(getCardCollectionCypher, { userName })
         );
+
+        await session?.close();
     
         const cardCollection = result?.records.map(record => {
           const card: CardMetaData = record.get('card').properties;
@@ -450,7 +452,7 @@ class ProfileService {
           };
         });
     
-        await session?.close();
+
         
         return cardCollection as CardCollection[]
     
