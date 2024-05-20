@@ -64,7 +64,7 @@ public async getAvailableCardReward(token: string) {
         const cards = result.records.map(record => {
             const { name, id } = record.get('Card').properties;
             return { name, id } as {name: string, id: string};
-        }).filter(card => !soul?.ownership.includes(card.name));
+        }).filter(card => !soul?.ownership?.includes(card.name));
 
         // Extract rewards
         const rewards = result.records.map(record => {
@@ -79,7 +79,7 @@ public async getAvailableCardReward(token: string) {
             soul
         };
 
-        console.log(response);
+
         return response;
 
     } catch (error: any) {
@@ -87,6 +87,7 @@ public async getAvailableCardReward(token: string) {
         throw error;
     }
 }
+
 
 
 
