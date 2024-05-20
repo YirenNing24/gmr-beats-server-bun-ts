@@ -21,6 +21,7 @@ export const soulMetaDataSchema = {
         animal2: t?.String(),
         animal3: t?.String(),
         horoscope: t?.String(),
+        ownership: t.Array(t.String())
     })
 }
 

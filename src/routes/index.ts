@@ -10,9 +10,12 @@ import profile from './profile.routes'
 import scores from './scores.routes'
 import social from './social.routes'
 import store from './store.routes'
+import upgrade from './upgrade.routes'
+import rewards from './rewards.routes'
 
 import chat from './chat.routes'
-import upgrade from './upgrade.routes'
+
+
 
 const routes = (app: Elysia): void => {
 
@@ -27,6 +30,7 @@ const routes = (app: Elysia): void => {
     app.use(inventory)
     app.use(chat)
     app.use(upgrade)
+    app.use(rewards)
 
 }
 

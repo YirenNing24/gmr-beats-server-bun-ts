@@ -21,6 +21,7 @@ import { SECRET_KEY } from "../../config/constants";
 //** SERVICE IMPORTS
 import TokenService from "../../user.services/token.services/token.service";
 import { CardMetaData } from "../inventory.services/inventory.interface";
+import { SoulMetaData } from "../profile.services/profile.interface";
 
 class RewardService {
 
@@ -30,48 +31,68 @@ constructor(driver?: Driver) {
 }
 
 
-public async checkAvailableCardReward(token: string) {
-	const tokenService: TokenService = new TokenService();
-	const userName: string = await tokenService.verifyAccessToken(token);
-  
-	try {
-		const session: Session | undefined = this.driver?.session();
+public async getAvailableCardReward(token: string) {
+    const tokenService: TokenService = new TokenService();
+    const userName: string = await tokenService.verifyAccessToken(token);
 
-		const getCardRewardNodeCypher = `
-			MATCH (u:User {username: $userName})-[:EQUIPPED|INVENTORY]->(c:Card)
-			MATCH (r:CardReward)
-			OPTIONAL MATCH (u)-[:SOUL]->(s:Soul)-[:CLAIMED]->(r)
-			WHERE NOT EXISTS(s)
-			RETURN r, c
-		`;
+    try {
+        const session: Session | undefined = this.driver?.session();
 
-		const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
-			(tx: ManagedTransaction) =>
-				tx.run(getCardRewardNodeCypher, { userName })
-		);
+        const getCardRewardNodeCypher = `
+            MATCH (u:User {username: $userName})-[:EQUIPPED|INVENTORY]->(c:Card)
+            OPTIONAL MATCH (u)-[:SOUL]->(s:Soul)
+            OPTIONAL MATCH (c)-[:REWARD]->(cr:CardReward)
+            RETURN cr as CardReward, s as Soul, c as Card
+        `;
 
-		// Process the result to find unclaimed rewards
-		const rewards: any = result?.records.map(record => {
-			const cardReward = record.get('r').properties;
-			const card = record.get('c').properties;
-			
-			return {
-				cardReward,
-				card
-			};
-		}).filter(item => item.cardReward.ownership); // Filter to only return items with ownership property
+        const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
+            (tx: ManagedTransaction) =>
+                tx.run(getCardRewardNodeCypher, { userName })
+        );
 
-		await session?.close();
-		
-		return {
-			canClaim: rewards.length > 0,
-			rewards
-		};
+        await session?.close();
 
-	} catch (error: any) {
-		throw error;
-	}
+        if (!result) {
+            return [];
+        }
+
+        // Extract soul
+        const soulNode = result.records.length > 0 ? result.records[0].get('Soul') : null;
+        const soul: SoulMetaData = soulNode ? soulNode.properties : null;
+
+        // Filter out cards whose names are in the soul's ownership array
+        const cards = result.records.map(record => {
+            const { name, id } = record.get('Card').properties;
+            return { name, id } as {name: string, id: string};
+        }).filter(card => !soul?.ownership.includes(card.name));
+
+        // Extract rewards
+        const rewards = result.records.map(record => {
+            const rewardNode = record.get('CardReward');
+            return rewardNode ? rewardNode.properties : null;
+        }).filter(reward => reward !== null);
+
+        // Construct the final result
+        const response = {
+            cards,
+            rewards,
+            soul
+        };
+
+        console.log(response);
+        return response;
+
+    } catch (error: any) {
+        console.error(error);
+        throw error;
+    }
 }
+
+
+
+
+
+
 
 
 public async firstCardType(uri: string, tokenId: string) {

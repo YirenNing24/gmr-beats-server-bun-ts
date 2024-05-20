@@ -12,18 +12,20 @@ import { SuccessMessage } from "../../outputs/success.message";
 
 //** SERVICE IMPORT
 import TokenService from "../../user.services/token.services/token.service";
+import RewardService from "../rewards.services/rewards.service";
 
 //** TYPE INTERFACES
 import { UpdateStatsFailed, ProfilePicture, StatPoints, SoulMetaData, GroupCardCount, GroupCollection, CardCollection } from "./profile.interface";
 import { PlayerStats } from "../../user.services/user.service.interface";
-import { uploadProfilePicCypher } from "./profile.cypher";
+
 
 //** IMPORT THIRDWEB
 import { NFTCollection, ThirdwebSDK } from '@thirdweb-dev/sdk';
 import { CHAIN, PRIVATE_KEY, SECRET_KEY, SOUL_ADDRESS } from "../../config/constants";
 import { CardMetaData } from "../inventory.services/inventory.interface";
 
-
+//** CYPHER IMPORTS
+import { uploadProfilePicCypher } from "./profile.cypher";
 
 class ProfileService {
   driver?: Driver;
@@ -280,7 +282,9 @@ class ProfileService {
         const soul: NFTCollection = await sdk.getContract(SOUL_ADDRESS, "nft-collection");
 
         const lastUpdated: string = new Date().toISOString();
-        const metadata = {...soulMetadata, lastUpdated}
+
+        const ownership: String[] = []
+        const metadata = {...soulMetadata, lastUpdated, ownership}
         //@ts-ignore
         await soul.erc721.mintTo(walletAddress, metadata);
 
@@ -294,10 +298,7 @@ class ProfileService {
             MATCH (u:User { username: $userName })
             CREATE (s:Soul)
             MERGE (u)-[:SOUL]->(s)
-
             SET s = $newSoulMetadata
-            
-            
             `,
             { userName, newSoulMetadata }
           )
@@ -333,21 +334,23 @@ class ProfileService {
         const sdk: ThirdwebSDK = ThirdwebSDK.fromPrivateKey(PRIVATE_KEY, CHAIN, {
           secretKey: SECRET_KEY,
         });
-    
-        const metadata = { ...soulMetadata };
+        const lastUpdated: string = new Date().toISOString();
+        const ownership: String[] = []
+        const metadata = { ...soulMetadata, lastUpdated, ownership };
 
-        console.log(metadata, "hehehe")
+        
         // Update metadata using ERC1155 contract
         const edition: NFTCollection = await sdk.getContract(SOUL_ADDRESS, "nft-collection");
         await edition.erc721.updateMetadata(tokenId, metadata);
-    
+
+
         const sessionWrite: Session | undefined = this.driver?.session(); 
         await sessionWrite?.executeWrite(tx =>
           tx.run(
             `
             MATCH (u:User {username: $userName})-[:SOUL]->(s:Soul) 
-            SET s += $soulMetadata`,
-            { userName, soulMetadata }
+            SET s += $metadata`,
+            { userName, metadata }
           )
         );
     
@@ -421,7 +424,7 @@ class ProfileService {
       }
     }
 
-    public async getCardCollection(token: string): Promise<CardCollection[]> {
+  public async getCardCollection(token: string): Promise<CardCollection[]> {
       try {
         const tokenService: TokenService = new TokenService();
         const userName: string = await tokenService.verifyAccessToken(token);
@@ -440,6 +443,8 @@ class ProfileService {
         );
 
         await session?.close();
+
+
     
         const cardCollection = result?.records.map(record => {
           const card: CardMetaData = record.get('card').properties;
