@@ -362,7 +362,6 @@ class ProfileService {
         await session?.close();
     }
     
-  
     }
 
   public async getSoul(token: string): Promise<SoulMetaData> {
@@ -381,17 +380,20 @@ class ProfileService {
 
           await session?.close();
   
-          if (result && result.records.length < 0) {
-            throw new ValidationError("No records found", "No records found");
-          };
-            
-          const soulNode: SoulMetaData = result?.records[0].get('s').properties;
-          return soulNode;
-      } catch(error: any) {
-        throw error;
+          if (!result || result.records.length === 0) {
+              throw new ValidationError("No records found", "No records found");
+          }
+  
+          const soul: SoulMetaData = result.records[0].get('s').properties;
+  
+          const { ownership, ...filteredSoulNode } = soul;
+  
+          return filteredSoulNode as SoulMetaData;
+      } catch (error: any) {
+          throw error;
       } 
     }
-
+  
   public async getOwnedCardCount(token: string): Promise<{ [groupName: string]: number }> {
       const tokenService: TokenService = new TokenService();
       try {
