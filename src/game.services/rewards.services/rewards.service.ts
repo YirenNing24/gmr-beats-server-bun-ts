@@ -17,34 +17,29 @@ import { NFTCollection, ThirdwebSDK, Token } from "@thirdweb-dev/sdk";
 //** CONFIGS
 import { BEATS_TOKEN, CHAIN, PRIVATE_KEY, SECRET_KEY, SOUL_ADDRESS } from "../../config/constants";
 
-
 //** SERVICE IMPORTS
 import TokenService from "../../user.services/token.services/token.service";
 import { CardMetaData } from "../inventory.services/inventory.interface";
 import { SoulMetaData } from "../profile.services/profile.interface";
 
-
-
 interface CardOwned {
     name: string;
-
 }
-
 
 class RewardService {
-
-driver?: Driver;
-constructor(driver?: Driver) {
-    this.driver = driver;
-}
-
+    driver?: Driver;
+    constructor(driver?: Driver) {
+        this.driver = driver;
+    }
 
     public async getAvailableCardReward(token: string) {
         const tokenService: TokenService = new TokenService();
         const userName: string = await tokenService.verifyAccessToken(token);
 
+        let session: Session | undefined;
+
         try {
-            const session: Session | undefined = this.driver?.session();
+            session = this.driver?.session();
 
             const getCardRewardNodeCypher = `
                 MATCH (u:User {username: $userName})-[:EQUIPPED|INVENTORY]->(c:Card)
@@ -58,8 +53,6 @@ constructor(driver?: Driver) {
                     tx.run(getCardRewardNodeCypher, { userName })
             );
 
-            await session?.close();
-
             if (!result) {
                 return [];
             }
@@ -71,7 +64,7 @@ constructor(driver?: Driver) {
             // Filter out cards whose names are in the soul's ownership array
             const cards = result.records.map(record => {
                 const { name, id } = record.get('Card').properties;
-                return { name, id } as {name: string, id: string};
+                return { name, id } as { name: string, id: string };
             }).filter(card => !soul?.ownership?.includes(card.name));
 
             // Extract rewards
@@ -87,15 +80,17 @@ constructor(driver?: Driver) {
                 soul
             };
 
-
-            console.log(response)
-
+            console.log(response);
 
             return response;
 
         } catch (error: any) {
             console.error(error);
             throw error;
+        } finally {
+            if (session) {
+                await session.close();
+            }
         }
     }
 
@@ -103,10 +98,12 @@ constructor(driver?: Driver) {
         const tokenService: TokenService = new TokenService();
         const userName: string = await tokenService.verifyAccessToken(token);
 
+        let session: Session | undefined;
+
         try {
             const { name } = cardName;
 
-            const session: Session | undefined = this.driver?.session();
+            session = this.driver?.session();
             const getCardRewardNodeCypher = `
                 MATCH (u:User {username: $userName})-[:EQUIPPED|INVENTORY]->(c:Card {name: $name})
                 OPTIONAL MATCH (u)-[:SOUL]->(s:Soul)
@@ -119,9 +116,7 @@ constructor(driver?: Driver) {
                     tx.run(getCardRewardNodeCypher, { userName, name })
             );
 
-            await session?.close();
-
-            if (!result) {
+            if (!result || result.records.length === 0) {
                 throw new ValidationError("No matches found", "No matches found");
             }
 
@@ -132,7 +127,7 @@ constructor(driver?: Driver) {
             // Filter out cards whose names are in the soul's ownership array
             const cards = result?.records.map(record => {
                 const { name, id } = record.get('Card').properties;
-                return { name, id } as {name: string, id: string};
+                return { name, id } as { name: string, id: string };
             }).filter(card => !soul?.ownership?.includes(card.name));
 
             // Check if the card name is in the soul's ownership array and call provideOwnershipReward
@@ -145,6 +140,10 @@ constructor(driver?: Driver) {
         } catch (error: any) {
             console.error(error);
             throw error;
+        } finally {
+            if (session) {
+                await session.close();
+            }
         }
     }
 
@@ -175,12 +174,10 @@ constructor(driver?: Driver) {
 
             const soul: SoulMetaData = soulNode.properties;
             const smartWalletAddress: string = result.records[0].get('smartWalletAddress');
-            
 
-            let updatedOwnership: string[]
             if (Array.isArray(soul.ownership)) {
                 // Add the cardName to the ownership array
-                updatedOwnership = [...soul.ownership, cardName];
+                const updatedOwnership = [...soul.ownership, cardName];
 
                 // Update the Soul node with the new ownership array
                 const updateOwnershipCypher = `
@@ -192,12 +189,11 @@ constructor(driver?: Driver) {
                     (tx: ManagedTransaction) =>
                         tx.run(updateOwnershipCypher, { userName, updatedOwnership })
                 );
+
+                await this.sendRewardToken(smartWalletAddress, soul, updatedOwnership);
             } else {
                 throw new ValidationError("Invalid ownership data", "Invalid ownership data");
-            };
-
-
-            await this.sendRewardToken(smartWalletAddress, soul, updatedOwnership)
+            }
 
         } catch (error: any) {
             console.error(error);
@@ -211,7 +207,6 @@ constructor(driver?: Driver) {
 
     private async sendRewardToken(smartWalletAddress: string, soulMetadata: SoulMetaData, ownership: string[]) {
         try {
-
             const sdk: ThirdwebSDK = ThirdwebSDK.fromPrivateKey(PRIVATE_KEY, CHAIN, {
                 secretKey: SECRET_KEY,
             });
@@ -219,19 +214,14 @@ constructor(driver?: Driver) {
             const beats: Token = await sdk.getContract(BEATS_TOKEN, "token");
             await beats.erc20.transfer(smartWalletAddress, 100);
 
-
-            const metadata = {...soulMetadata , ownership}
+            const metadata = { ...soulMetadata, ownership };
             const edition: NFTCollection = await sdk.getContract(SOUL_ADDRESS, "nft-collection");
             await edition.erc721.updateMetadata(soulMetadata.id, metadata);
 
-        } catch(error: any) {
-            throw error
-
+        } catch (error: any) {
+            throw error;
         }
     }
-  
 }
 
-
-
-export default RewardService
+export default RewardService;
