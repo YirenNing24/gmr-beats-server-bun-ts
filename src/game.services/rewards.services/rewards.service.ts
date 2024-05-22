@@ -15,12 +15,13 @@ import { UserData } from "../../user.services/user.service.interface";
 import { NFTCollection, ThirdwebSDK, Token } from "@thirdweb-dev/sdk";
 
 //** CONFIGS
-import { BEATS_TOKEN, CHAIN, PRIVATE_KEY, SECRET_KEY, SOUL_ADDRESS } from "../../config/constants";
+import { BEATS_TOKEN, CARD_UPGRADE, CHAIN, PRIVATE_KEY, SECRET_KEY, SOUL_ADDRESS } from "../../config/constants";
 
 //** SERVICE IMPORTS
 import TokenService from "../../user.services/token.services/token.service";
 import { CardMetaData } from "../inventory.services/inventory.interface";
 import { SoulMetaData } from "../profile.services/profile.interface";
+import { SuccessMessage } from "../../outputs/success.message";
 
 interface CardOwned {
     name: string;
@@ -79,11 +80,10 @@ class RewardService {
                 rewards,
                 soul
             };
-
-            console.log(response);
+            //@ts-ignore
+            console.log(response.rewards[0])
 
             return response;
-
         } catch (error: any) {
             console.error(error);
             throw error;
@@ -94,7 +94,7 @@ class RewardService {
         }
     }
 
-    public async getCardOwnershipReward(token: string, cardName: CardOwned) {
+    public async ClaimCardOwnershipReward(token: string, cardName: CardOwned) {
         const tokenService: TokenService = new TokenService();
         const userName: string = await tokenService.verifyAccessToken(token);
 
@@ -124,19 +124,14 @@ class RewardService {
             const soulNode = result?.records?.length > 0 ? result?.records[0].get('Soul') : null;
             const soul: SoulMetaData = soulNode ? soulNode.properties : null;
 
-            // Filter out cards whose names are in the soul's ownership array
-            const cards = result?.records.map(record => {
-                const { name, id } = record.get('Card').properties;
-                return { name, id } as { name: string, id: string };
-            }).filter(card => !soul?.ownership?.includes(card.name));
+            console.log(soul.ownership)
 
             // Check if the card name is in the soul's ownership array and call provideOwnershipReward
-            if (soul?.ownership?.includes(name)) {
-                await this.provideOwnershipReward(userName, name);
+            if (!soul?.ownership?.includes(name)) {
+                await this.provideOwnershipReward(userName, name); 
             }
 
-            return { cards, soul };
-
+            return new SuccessMessage("Rewards received")
         } catch (error: any) {
             console.error(error);
             throw error;
@@ -154,7 +149,7 @@ class RewardService {
                 MATCH (u:User {username: $userName})-[:EQUIPPED|INVENTORY]->(c:Card {name: $cardName})
                 OPTIONAL MATCH (u)-[:SOUL]->(s:Soul)
                 OPTIONAL MATCH (c)-[:REWARD]->(cr:CardReward)
-                RETURN cr as CardReward, s as Soul, c as Card, u.smartwalletAddress as smartWalletAddress
+                RETURN cr as CardReward, s as Soul, c as Card, u.smartWalletAddress as smartWalletAddress
             `;
 
             const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
@@ -217,6 +212,9 @@ class RewardService {
             const metadata = { ...soulMetadata, ownership };
             const edition: NFTCollection = await sdk.getContract(SOUL_ADDRESS, "nft-collection");
             await edition.erc721.updateMetadata(soulMetadata.id, metadata);
+
+            const ownershipBadge = await sdk.getContract(CARD_UPGRADE, "edition");
+            ownershipBadge.transfer(smartWalletAddress, 8, 1);
 
         } catch (error: any) {
             throw error;
