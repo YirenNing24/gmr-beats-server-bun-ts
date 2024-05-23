@@ -15,7 +15,7 @@ import { UserData } from "../../user.services/user.service.interface";
 import { NFTCollection, ThirdwebSDK, Token } from "@thirdweb-dev/sdk";
 
 //** CONFIGS
-import { BEATS_TOKEN, CARD_UPGRADE, CHAIN, PRIVATE_KEY, SECRET_KEY, SOUL_ADDRESS } from "../../config/constants";
+import { BEATS_TOKEN, CARD_UPGRADE, CHAIN, PRIVATE_KEY, SECRET_KEY, SOCIAL_BADGES_ADDRESS, SOUL_ADDRESS } from "../../config/constants";
 
 //** SERVICE IMPORTS
 import TokenService from "../../user.services/token.services/token.service";
@@ -213,8 +213,11 @@ class RewardService {
             const edition: NFTCollection = await sdk.getContract(SOUL_ADDRESS, "nft-collection");
             await edition.erc721.updateMetadata(soulMetadata.id, metadata);
 
-            const ownershipBadge = await sdk.getContract(CARD_UPGRADE, "edition");
-            ownershipBadge.transfer(smartWalletAddress, 8, 1);
+            const ownershipBadge = await sdk.getContract(SOCIAL_BADGES_ADDRESS, "edition");
+
+            const tokenId: string = "0"
+            const tokenAmount: string = "1"
+            ownershipBadge.transfer(smartWalletAddress, tokenId, tokenAmount);
 
         } catch (error: any) {
             throw error;
