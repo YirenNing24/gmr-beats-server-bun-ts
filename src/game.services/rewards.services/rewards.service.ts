@@ -81,8 +81,6 @@ class RewardService {
                 soul
             };
             //@ts-ignore
-            console.log(response.rewards[0])
-
             return response;
         } catch (error: any) {
             console.error(error);
@@ -123,8 +121,6 @@ class RewardService {
             // Extract soul
             const soulNode = result?.records?.length > 0 ? result?.records[0].get('Soul') : null;
             const soul: SoulMetaData = soulNode ? soulNode.properties : null;
-
-            console.log(soul.ownership)
 
             // Check if the card name is in the soul's ownership array and call provideOwnershipReward
             if (!soul?.ownership?.includes(name)) {
@@ -222,6 +218,10 @@ class RewardService {
         } catch (error: any) {
             throw error;
         }
+    }
+
+    private async sendOwnershipBadge() {
+        
     }
 }
 

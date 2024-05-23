@@ -374,7 +374,7 @@ class ProfileService {
           const result: QueryResult | undefined = await session?.executeRead(tx =>
               tx.run(`
                   MATCH (u:User { username: $userName })-[:SOUL]->(s:Soul)
-                  RETURN s
+                  RETURN soul
               `, { userName })
           );
 
@@ -384,9 +384,9 @@ class ProfileService {
               throw new ValidationError("No records found", "No records found");
           }
   
-          const soul: SoulMetaData = result.records[0].get('s').properties;
+          const soul: SoulMetaData = result.records[0].get('soul').properties;
   
-          const { ownership, ...filteredSoulNode } = soul;
+          const { ...filteredSoulNode } = soul;
   
           return filteredSoulNode as SoulMetaData;
       } catch (error: any) {
