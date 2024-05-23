@@ -21,18 +21,5 @@ export const soulMetaDataSchema = {
         animal2: t?.String(),
         animal3: t?.String(),
         horoscope: t?.String(),
-        id: t?.String(),
-
     })
 }
-
-
-// Found: {
-//     "animal1": "Dog",
-//     "animal2": "Cat",
-//     "animal3": "Bird",
-//     "genre1": "Hiphop",
-//     "genre2": "R&B",
-//     "genre3": "Rock",
-//     "horoscope": "Aries"
-//   }

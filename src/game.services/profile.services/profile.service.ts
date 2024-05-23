@@ -374,7 +374,7 @@ class ProfileService {
           const result: QueryResult | undefined = await session?.executeRead(tx =>
               tx.run(`
                   MATCH (u:User { username: $userName })-[:SOUL]->(s:Soul)
-                  RETURN soul
+                  RETURN s as soul
               `, { userName })
           );
 

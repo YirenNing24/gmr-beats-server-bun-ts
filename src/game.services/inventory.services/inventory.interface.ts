@@ -65,6 +65,7 @@ export interface CardMetaData {
     position2: string;
     rarity: string;
     level: string;
+    zodiac: string;
     experience: string;
     currentExperience: string;
     image: string;

@@ -92,7 +92,7 @@ export interface SoulMetaData {
 	genre3: string;
 	animal1: string;
 	horoscope: string;
-    id: string
+    id?: string
     ownership?: string[];
     horoscopeMatch?: string [];
 }

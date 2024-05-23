@@ -207,6 +207,8 @@ class RewardService {
 
             const metadata = { ...soulMetadata, ownership };
             const edition: NFTCollection = await sdk.getContract(SOUL_ADDRESS, "nft-collection");
+
+            //@ts-ignore
             await edition.erc721.updateMetadata(soulMetadata.id, metadata);
 
             const ownershipBadge = await sdk.getContract(SOCIAL_BADGES_ADDRESS, "edition");
@@ -220,9 +222,46 @@ class RewardService {
         }
     }
 
-    private async sendOwnershipBadge() {
-        
+    public async provideHoroscopeReward(token: string, cardName: CardOwned) {
+        const tokenService: TokenService = new TokenService();
+        const userName: string = await tokenService.verifyAccessToken(token);
+
+        let session: Session | undefined;
+
+        try {
+            const { name } = cardName;
+            session = this.driver?.session();
+
+            const getCardRewardNodeCypher = `
+            MATCH (u:User {username: $userName})-[:EQUIPPED|INVENTORY]->(c:Card {name: $name})
+            OPTIONAL MATCH (u)-[:SOUL]->(s:Soul)
+            RETURN s as Soul, c as Card
+        `;
+
+        const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
+            (tx: ManagedTransaction) =>
+                tx.run(getCardRewardNodeCypher, { userName, name })
+        );
+
+        if (!result) {
+            return [];
+        }
+
+        // Extract soul
+        const soulNode = result.records.length > 0 ? result.records[0].get('Soul') : null;
+        const soul: SoulMetaData = soulNode ? soulNode.properties : null;
+
+        const cards: CardMetaData[] = result.records.map(record => {
+            const { zodiac, name } = record.get('Card').properties as CardMetaData;
+            return { zodiac, name } as CardMetaData
+        }).filter(card => !soul?.horoscopeMatch?.includes(card.name));
+
+        } catch(error: any) {
+
+        }
     }
+
+
 }
 
 export default RewardService;
