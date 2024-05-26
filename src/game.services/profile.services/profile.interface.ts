@@ -95,6 +95,7 @@ export interface SoulMetaData {
     id?: string
     ownership?: string[];
     horoscopeMatch?: string [];
+    animalMatch?: string [];
 }
 
 /**

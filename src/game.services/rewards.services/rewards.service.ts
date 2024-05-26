@@ -4,13 +4,6 @@ import { Driver, ManagedTransaction, QueryResult, RecordShape, Session } from "n
 //** ERROR CODES
 import ValidationError from '../../outputs/validation.error'
 
-//** IMPORTED SERVICES
-import WalletService from "../../user.services/wallet.services/wallet.service";
-
-//** TYPE INTERFACES
-import { ClassicScoreStats } from "../leaderboard.services/leaderboard.interface";
-import { UserData } from "../../user.services/user.service.interface";
-
 //** THIRDWEB IMPORTS
 import { Edition, NFTCollection, ThirdwebSDK, Token } from "@thirdweb-dev/sdk";
 
@@ -27,7 +20,12 @@ interface CardOwned {
     name: string;
 }
 
+interface AnimalMatch {
+    animal: string;
+}
+
 class RewardService {
+
     driver?: Driver;
     constructor(driver?: Driver) {
         this.driver = driver;
@@ -245,7 +243,7 @@ class RewardService {
     
             if (!result || result.records.length === 0) {
                 throw new ValidationError("No match found", "No match found");
-            }
+            };
     
             // Extract soul
             const soulNode = result.records.length > 0 ? result.records[0].get('Soul') : null;
@@ -352,6 +350,50 @@ class RewardService {
     
         } catch (error: any) {
             throw error;
+        }
+    }
+
+    public async provideAnimalReward(token: string, animalMatch: AnimalMatch) {
+        const tokenService: TokenService = new TokenService();
+        const userName: string = await tokenService.verifyAccessToken(token);
+
+        
+
+        let session: Session | undefined;
+        try {
+
+            const { animal } = animalMatch;
+            session = this.driver?.session();
+
+            const getCardRewardNodeCypher = `
+            MATCH (u:User {username: $userName})-[:EQUIPPED|INVENTORY]->(c:Card {animal: $animal})
+            OPTIONAL MATCH (u)-[:SOUL]->(s:Soul)
+            RETURN s as Soul, c as Card
+        `;
+
+        const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
+            (tx: ManagedTransaction) =>
+                tx.run(getCardRewardNodeCypher, { userName, animal })
+        );
+
+        if (!result || result.records.length === 0) {
+            throw new ValidationError("No match found", "No match found");
+        };
+
+        // Extract soul
+        const soulNode = result.records.length > 0 ? result.records[0].get('Soul') : null;
+        const soul: SoulMetaData = soulNode ? soulNode.properties : null;
+
+        const cards: CardMetaData[] = result.records.map(record => {
+            const { animal, name } = record.get('Card').properties as CardMetaData;
+            return { animal, name } as CardMetaData;
+        });
+
+
+
+
+        } catch(error: any) {
+            throw error
         }
     }
 }

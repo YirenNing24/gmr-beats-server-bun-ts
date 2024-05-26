@@ -284,11 +284,12 @@ class ProfileService {
 
         const lastUpdated: string = new Date().toISOString();
 
-        const ownership: String[] = []
-        const horoscopeMatch: String[] = []
-        const likedGroups: String[] = []
+        const ownership: String[] = [];
+        const horoscopeMatch: String[] = [];
+        const animalMatch: String[] = []
+        const likedGroups: String[] = [];
 
-        const metadata = {...soulMetadata, lastUpdated, ownership, horoscopeMatch, likedGroups}
+        const metadata = {...soulMetadata, lastUpdated, ownership, horoscopeMatch, likedGroups, animalMatch}
         //@ts-ignore
         await soul.erc721.mintTo(walletAddress, metadata);
 
@@ -339,8 +340,7 @@ class ProfileService {
           secretKey: SECRET_KEY,
         });
         const lastUpdated: string = new Date().toISOString();
-        const ownership: String[] = []
-        const metadata = { ...soulMetadata, lastUpdated, ownership };
+        const metadata = { ...soulMetadata, lastUpdated, };
 
         
         // Update metadata using ERC1155 contract

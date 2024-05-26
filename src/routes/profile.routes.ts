@@ -96,7 +96,7 @@ const router = (app: Elysia) => {
       const profileService: ProfileService = new ProfileService(driver);
       const output: SuccessMessage = await profileService.createSoulPreferences(jwtToken, body);
   
-      return output;
+      return output as SuccessMessage;
     } catch (error: any) {
       throw error
       }
