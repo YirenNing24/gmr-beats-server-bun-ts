@@ -27,6 +27,7 @@ import { CardMetaData } from "../inventory.services/inventory.interface";
 //** CYPHER IMPORTS
 import { uploadProfilePicCypher } from "./profile.cypher";
 
+
 class ProfileService {
   driver?: Driver;
   constructor(driver?: Driver) {
@@ -284,7 +285,10 @@ class ProfileService {
         const lastUpdated: string = new Date().toISOString();
 
         const ownership: String[] = []
-        const metadata = {...soulMetadata, lastUpdated, ownership}
+        const horoscopeMatch: String[] = []
+        const likedGroups: String[] = []
+
+        const metadata = {...soulMetadata, lastUpdated, ownership, horoscopeMatch, likedGroups}
         //@ts-ignore
         await soul.erc721.mintTo(walletAddress, metadata);
 
@@ -459,8 +463,6 @@ class ProfileService {
           };
         });
     
-
-        
         return cardCollection as CardCollection[]
     
       } catch (error: any) {
