@@ -21,7 +21,7 @@ interface CardOwned {
 }
 
 interface AnimalMatch {
-    animal: string;
+    name: string;
 }
 
 class RewardService {
@@ -357,23 +357,21 @@ class RewardService {
         const tokenService: TokenService = new TokenService();
         const userName: string = await tokenService.verifyAccessToken(token);
 
-        
-
         let session: Session | undefined;
         try {
 
-            const { animal } = animalMatch;
+            const { name } = animalMatch;
             session = this.driver?.session();
 
             const getCardRewardNodeCypher = `
-            MATCH (u:User {username: $userName})-[:EQUIPPED|INVENTORY]->(c:Card {animal: $animal})
+            MATCH (u:User {username: $userName})-[:EQUIPPED|INVENTORY]->(c:Card {animal: $name})
             OPTIONAL MATCH (u)-[:SOUL]->(s:Soul)
             RETURN s as Soul, c as Card
         `;
 
         const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
             (tx: ManagedTransaction) =>
-                tx.run(getCardRewardNodeCypher, { userName, animal })
+                tx.run(getCardRewardNodeCypher, { userName, name })
         );
 
         if (!result || result.records.length === 0) {
@@ -389,7 +387,97 @@ class RewardService {
             return { animal, name } as CardMetaData;
         });
 
+        // Check for horoscope match and provide reward if necessary
+        for (const card of cards) {
+            if (soul?.animal1 || soul?.animal2 || soul?.animal3 === card.animal && (!soul.animalMatch || !soul.animalMatch.includes(card.name))) {
+                await this.provideAnimalRewardToUser(userName, card.name);
+                break;  // Exit loop after providing the reward for one matching card
+            }
+        }
 
+        return new SuccessMessage("Animal reward received");
+        } catch(error: any) {
+            throw error
+        }
+    }
+
+    private async provideAnimalRewardToUser(userName: String, cardName: string) {
+        const session: Session | undefined = this.driver?.session();
+        try {
+
+            try {
+                const getAnimalRewardNodeCypher = `
+                    MATCH (u:User {username: $userName})-[:EQUIPPED|INVENTORY]->(c:Card {name: $cardName})
+                    OPTIONAL MATCH (u)-[:SOUL]->(s:Soul)
+                    OPTIONAL MATCH (c)-[:REWARD]->(cr:CardReward)
+                    RETURN cr as CardReward, s as Soul, c as Card, u.smartWalletAddress as smartWalletAddress
+                `;
+        
+                const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
+                    (tx: ManagedTransaction) =>
+                        tx.run(getAnimalRewardNodeCypher, { userName, cardName })
+                );
+        
+                if (!result || result.records.length === 0) {
+                    throw new ValidationError("No matches found", "No matches found");
+                };
+        
+                // Extract soul and smartWalletAddress
+                const soulNode = result.records[0].get('Soul');
+                if (!soulNode) {
+                    throw new ValidationError("No Soul node found", "No Soul node found");
+                };
+        
+                const soul: SoulMetaData = soulNode.properties;
+                const smartWalletAddress: string = result.records[0].get('smartWalletAddress');
+        
+                if (Array.isArray(soul.animalMatch)) {
+                    // Add the cardName to the horoscopeMatch array
+                    const updatedAnimalMatch: string[] = [...soul.animalMatch, cardName];
+        
+                    const updateAnimalCypher = `
+                        MATCH (u:User {username: $userName})-[:SOUL]->(s:Soul)
+                        SET a.animalMatch = $updatedanimalMatch
+                    `;
+        
+                    await session?.executeWrite(
+                        (tx: ManagedTransaction) =>
+                            tx.run(updateAnimalCypher, { userName, updatedAnimalMatch })
+                    );
+        
+                    await this.sendRewardAnimal(smartWalletAddress, soul, updatedAnimalMatch);
+                } else {
+                    throw new ValidationError("Invalid animal data", "Invalid animal data");
+                };
+
+
+            } catch (error: any) {
+                throw error;
+            } finally {
+                if (session) {
+                    await session.close();
+                }
+            }
+
+        } catch(error: any) {
+            throw error
+        }
+    }
+
+    private async sendRewardAnimal(smartWalletAddress: string, soulMetadata: SoulMetaData, updatedAnimalMatch: string []) {
+        try {
+            const sdk: ThirdwebSDK = ThirdwebSDK.fromPrivateKey(PRIVATE_KEY, CHAIN, {
+                secretKey: SECRET_KEY,
+            });
+    
+            const beats: Token = await sdk.getContract(BEATS_TOKEN, "token");
+            await beats.erc20.transfer(smartWalletAddress, 350);
+    
+            const metadata = { ...soulMetadata, horoscopeMatch: updatedAnimalMatch };
+            const edition: NFTCollection = await sdk.getContract(SOUL_ADDRESS, "nft-collection");
+
+            //@ts-ignore
+            await edition.erc721.updateMetadata(soulMetadata.id, metadata);
 
 
         } catch(error: any) {
