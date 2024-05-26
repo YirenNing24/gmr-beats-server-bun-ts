@@ -15,7 +15,7 @@ import { UserData } from "../../user.services/user.service.interface";
 import { Edition, NFTCollection, ThirdwebSDK, Token } from "@thirdweb-dev/sdk";
 
 //** CONFIGS
-import { BEATS_TOKEN, CARD_UPGRADE, CHAIN, PRIVATE_KEY, SECRET_KEY, SOCIAL_BADGES_ADDRESS, SOUL_ADDRESS } from "../../config/constants";
+import { BEATS_TOKEN, CHAIN, PRIVATE_KEY, SECRET_KEY, SOCIAL_BADGES_ADDRESS, SOUL_ADDRESS } from "../../config/constants";
 
 //** SERVICE IMPORTS
 import TokenService from "../../user.services/token.services/token.service";
@@ -337,7 +337,7 @@ class RewardService {
             });
     
             const beats: Token = await sdk.getContract(BEATS_TOKEN, "token");
-            await beats.erc20.transfer(smartWalletAddress, 100);
+            await beats.erc20.transfer(smartWalletAddress, 250);
     
             const metadata = { ...soulMetadata, horoscopeMatch: updatedhoroscopeMatch };
             const edition: NFTCollection = await sdk.getContract(SOUL_ADDRESS, "nft-collection");
