@@ -364,7 +364,7 @@ class RewardService {
             session = this.driver?.session();
 
             const getCardRewardNodeCypher = `
-            MATCH (u:User {username: $userName})-[:EQUIPPED|INVENTORY]->(c:Card {animal: $name})
+            MATCH (u:User {username: $userName})-[:EQUIPPED|INVENTORY]->(c:Card {name: $name})
             OPTIONAL MATCH (u)-[:SOUL]->(s:Soul)
             RETURN s as Soul, c as Card
         `;
@@ -389,7 +389,7 @@ class RewardService {
 
         // Check for horoscope match and provide reward if necessary
         for (const card of cards) {
-            if (soul?.animal1 || soul?.animal2 || soul?.animal3 === card.animal && (!soul.animalMatch || !soul.animalMatch.includes(card.name))) {
+            if (soul?.animal1 || soul?.animal2 || soul?.animal3 === animalMatch.name && (!soul.animalMatch || !soul.animalMatch.includes(card.name))) {
                 await this.provideAnimalRewardToUser(userName, card.name);
                 break;  // Exit loop after providing the reward for one matching card
             }
@@ -434,10 +434,12 @@ class RewardService {
                 if (Array.isArray(soul.animalMatch)) {
                     // Add the cardName to the horoscopeMatch array
                     const updatedAnimalMatch: string[] = [...soul.animalMatch, cardName];
+
+                    console.log(updatedAnimalMatch)
         
                     const updateAnimalCypher = `
                         MATCH (u:User {username: $userName})-[:SOUL]->(s:Soul)
-                        SET a.animalMatch = $updatedanimalMatch
+                        SET s.animalMatch = $updatedAnimalMatch
                     `;
         
                     await session?.executeWrite(

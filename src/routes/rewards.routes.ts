@@ -96,7 +96,7 @@ const rewards = (app: Elysia) => {
         const driver: Driver = getDriver();
         const rewardService: RewardService = new RewardService(driver)
         
-        const output = await rewardService.provideAnimalReward(jwtToken, body);
+        const output: SuccessMessage = await rewardService.provideAnimalReward(jwtToken, body);
 
         return output as SuccessMessage;
       } catch (error: any) {
