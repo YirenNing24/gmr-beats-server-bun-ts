@@ -480,7 +480,11 @@ class RewardService {
 
             //@ts-ignore
             await edition.erc721.updateMetadata(soulMetadata.id, metadata);
+            const critterBuddiesBadge: Edition = await sdk.getContract(SOCIAL_BADGES_ADDRESS, "edition");
 
+            const tokenId: string = "2"
+            const tokenAmount: string = "1"
+            critterBuddiesBadge.transfer(smartWalletAddress, tokenId, tokenAmount);
 
         } catch(error: any) {
             throw error
