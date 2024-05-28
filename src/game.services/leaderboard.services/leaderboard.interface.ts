@@ -28,9 +28,7 @@ export interface ClassicScoreStats {
     good: number;
     bad: number;
     miss: number;
-
 }
-
 
 /**
 * Represents the request parameters for retrieving classic mode leaderboard.

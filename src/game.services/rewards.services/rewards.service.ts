@@ -491,10 +491,11 @@ class RewardService {
         }
     }
 
-    public async firstScorer(token: string) {
-        const tokenService: TokenService = new TokenService();
-        const userName: string = await tokenService.verifyAccessToken(token);
+    public async firstScorer(username: string) {
         try {
+            
+
+
             
 
 
