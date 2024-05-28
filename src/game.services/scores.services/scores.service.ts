@@ -31,63 +31,63 @@ class ScoreService {
     }
 
     //* CLASSIC GAME MODE SAVE FUNCTION
-    public async saveScoreClassic(scoreStats: ClassicScoreStats, token: string): Promise<void> {
+    public async saveScoreClassic(score: ClassicScoreStats, token: string): Promise<void> {
         try {
             const tokenService: TokenService = new TokenService();
             const username: string = await tokenService.verifyAccessToken(token);
 
-            const session: Session | undefined = this.driver?.session();
-            const res: QueryResult | undefined = await session?.executeRead((tx: ManagedTransaction) =>
-                tx.run("MATCH (u:User {username: $username}) RETURN u", { username })
-            );
-            await session?.close();
+            // const session: Session | undefined = this.driver?.session();
+            // const res: QueryResult | undefined = await session?.executeRead((tx: ManagedTransaction) =>
+            //     tx.run("MATCH (u:User {username: $username}) RETURN u", { username })
+            // );
+            // await session?.close();
     
-            if (res?.records.length === 0) {
-                throw new ValidationError(`User with username '${username}' not found.`, "");
-            }
+            // if (res?.records.length === 0) {
+            //     throw new ValidationError(`User with username '${username}' not found.`, "");
+            // }
     
-            const statsScore: string = JSON.stringify(scoreStats);
+            // const statsScore: string = JSON.stringify(scoreStats);
 
-            const session2: Session | undefined = this.driver?.session();
-            const currentDate = new Date();
-            const date: string = currentDate.toISOString().split('T')[0];
+            // const session2: Session | undefined = this.driver?.session();
+            // const currentDate = new Date();
+            // const date: string = currentDate.toISOString().split('T')[0];
 
-            const { highscore, score, difficulty } = scoreStats as ClassicScoreStats;
-            const { songName } = scoreStats.finalStats;
+            // const { highscore, score, difficulty } = scoreStats as ClassicScoreStats;
+            // const { songName } = scoreStats.finalStats;
 
-            const songNameCaps: string = songName.toUpperCase()
-            const difficultyCAps: string = difficulty.toUpperCase()
+            // const songNameCaps: string = songName.toUpperCase()
+            // const difficultyCAps: string = difficulty.toUpperCase()
 
-            await session2?.executeWrite(
-                async (tx: ManagedTransaction) => {
-                    // Find and remove the previous high score relationship
-                    if (highscore) {
-                        const prevHighScoreQuery = `
-                            MATCH (u:User {username: $username})-[:CLASSIC]->(prevHighScore:Score)-[prevRel:HIGHSCORE]->()
-                            DELETE prevRel
-                        `;
-                        await tx.run(prevHighScoreQuery, { username });
-                    }
+            // await session2?.executeWrite(
+            //     async (tx: ManagedTransaction) => {
+            //         // Find and remove the previous high score relationship
+            //         if (highscore) {
+            //             const prevHighScoreQuery = `
+            //                 MATCH (u:User {username: $username})-[:CLASSIC]->(prevHighScore:Score)-[prevRel:HIGHSCORE]->()
+            //                 DELETE prevRel
+            //             `;
+            //             await tx.run(prevHighScoreQuery, { username });
+            //         }
     
-                    // Create the new Score node
-                    const createScoreQuery: string = `
-                        CREATE (s:Score {
-                            username: $username,
-                            scoreStats: $statsScore,
-                            score: $score,
-                            date: $date,
-                            difficulty: $difficulty
-                        })
-                        WITH s
-                        MATCH (u:User {username: $username})
-                        CREATE (u)-[:${songNameCaps}]->(s)
-                        ${highscore ? 'CREATE (u)-[:HIGHSCORE]->(s)' : ''}
-                        CREATE (u)-[:CLASSIC]->(s)
-                        CREATE (u)-[:${difficultyCAps}]->(s)
-                    `;
-                await tx.run(createScoreQuery, { username, statsScore, date, highscore, score, difficulty });
-                }
-            );
+            //         // Create the new Score node
+            //         const createScoreQuery: string = `
+            //             CREATE (s:Score {
+            //                 username: $username,
+            //                 scoreStats: $statsScore,
+            //                 score: $score,
+            //                 date: $date,
+            //                 difficulty: $difficulty
+            //             })
+            //             WITH s
+            //             MATCH (u:User {username: $username})
+            //             CREATE (u)-[:${songNameCaps}]->(s)
+            //             ${highscore ? 'CREATE (u)-[:HIGHSCORE]->(s)' : ''}
+            //             CREATE (u)-[:CLASSIC]->(s)
+            //             CREATE (u)-[:${difficultyCAps}]->(s)
+            //         `;
+            //     await tx.run(createScoreQuery, { username, statsScore, date, highscore, score, difficulty });
+            //     }
+            // );
         } catch (error: any) {
             throw error;
         }
@@ -119,3 +119,5 @@ class ScoreService {
 }
 
 export default ScoreService;
+
+

@@ -490,6 +490,19 @@ class RewardService {
             throw error
         }
     }
+
+    public async firstScorer(token: string) {
+        const tokenService: TokenService = new TokenService();
+        const userName: string = await tokenService.verifyAccessToken(token);
+        try {
+            
+
+
+
+        } catch(error: any) {
+            throw error
+        }
+    }
 }
 
 export default RewardService;

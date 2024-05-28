@@ -8,10 +8,12 @@ import { getDriver } from '../db/memgraph';
 
 //** SERVICE IMPORTS
 import ScoreService from '../game.services/scores.services/scores.service';
-import { ClassicScoreStats } from '../game.services/game.services.interfaces';
+import { ClassicScoreStats } from '../game.services/leaderboard.services/leaderboard.interface';
 
 //** VALIDATION SCHEMA IMPORT
 import { authorizationBearerSchema } from './route.schema/schema.auth';
+import { ClassicLeaderboardRequestSchema } from './route.schema/schema.leaderboard';
+import { classicScoreStatsSchema } from '../game.services/leaderboard.services/leaderboard.schema';
 
 
 const scores = (app: Elysia): void => {
@@ -23,16 +25,15 @@ const scores = (app: Elysia): void => {
             }
             const jwtToken: string = authorizationHeader.substring(7);
 
-            const classicScoreStats: ClassicScoreStats = body as ClassicScoreStats
 
             const driver: Driver = getDriver();
             const scoreService:  ScoreService = new ScoreService(driver)
-            await scoreService.saveScoreClassic(classicScoreStats, jwtToken)
+            await scoreService.saveScoreClassic(body, jwtToken)
 
         } catch (error: any) {
           throw error
         }
-      }, authorizationBearerSchema
+      }, classicScoreStatsSchema
     )
 
     .get('/api/open/highscore/classic', async ({ headers }): Promise<ClassicScoreStats[]> => {

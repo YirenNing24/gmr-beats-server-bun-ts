@@ -11,7 +11,7 @@ import { getDriver } from '../db/memgraph'
 import LeaderboardService from '../game.services/leaderboard.services/leaderboard.services'
 
 //** TYPES IMPORTS
-import { ClassicLeaderboardRequest, ClassicScoreStats } from '../game.services/game.services.interfaces'
+import { ClassicLeaderboardRequest } from '../game.services/leaderboard.services/leaderboard.interface'
 import { authorizationBearerSchema } from './route.schema/schema.auth'
 
 
