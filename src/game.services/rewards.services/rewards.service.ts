@@ -491,19 +491,41 @@ class RewardService {
         }
     }
 
-    public async firstScorer(username: string) {
+    public async firstScorer(username: string, songName: string, smartWalletAddress: string, artist: string) {
         try {
+            const sdk: ThirdwebSDK = ThirdwebSDK.fromPrivateKey(PRIVATE_KEY, CHAIN, {
+                secretKey: SECRET_KEY,
+            });
             
+            const critterBuddiesBadge: Edition = await sdk.getContract(SOCIAL_BADGES_ADDRESS, "edition");
+    
+            // Set tokenId based on the artist
+            let tokenId: string;
+            switch (artist) {
+                case 'ICU':
+                    tokenId = "3";
+                    break;
+                case 'X:IN':
+                    tokenId = "4";
+                    break;
+                case 'Great Guys':
+                    tokenId = "5";
+                    break;
+                default:
+                    tokenId = "";
+                    break;
+            }
 
-
-            
-
-
-
+            console.log(tokenId)
+    
+            const tokenAmount: string = "1";
+            // await critterBuddiesBadge.transfer(smartWalletAddress, tokenId, tokenAmount);
+    
         } catch(error: any) {
-            throw error
+            throw error;
         }
     }
+    
 }
 
 export default RewardService;

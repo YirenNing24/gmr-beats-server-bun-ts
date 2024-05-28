@@ -23,6 +23,7 @@ export interface ClassicScoreStats {
     accuracy: number;
     finished: boolean;
     songName: string;
+    artist: string;
     perfect: number;
     veryGood: number;
     good: number;

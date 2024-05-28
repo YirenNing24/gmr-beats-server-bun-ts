@@ -35,11 +35,12 @@ class ScoreService {
                 tx.run(`MATCH (u:User {username: $userName})
                         CREATE (s:$songName)
                         CREATE (u)-[:SCORE]->(s)
-                        SET s += $score`, { songName, score, userName}))
+                        SET s += $score
+                        RETURN u.smartWalletAddress as smartWalletAddress`, { songName, score, userName}))
             await session?.close();
-    
+            const smartWalletAddress: string = result?.records[0].get("smartWalletAddress");
             if (result?.records.length === 0) {
-                rewardService.firstScorer(userName);
+                rewardService.firstScorer(userName, score.songName, smartWalletAddress, score.artist);
             };
 
             return new SuccessMessage("Score saved")
@@ -76,7 +77,7 @@ class ScoreService {
 export default ScoreService;
 
 
-function toPascalCase(str: string): string {
+const toPascalCase = (str: string): string => {
     return str
         .toLowerCase()
         .split(' ')

@@ -288,8 +288,9 @@ class ProfileService {
         const horoscopeMatch: String[] = [];
         const animalMatch: String[] = []
         const likedGroups: String[] = [];
+        const weeklyFirst: String [] = [];
 
-        const metadata = {...soulMetadata, lastUpdated, ownership, horoscopeMatch, likedGroups, animalMatch}
+        const metadata = {...soulMetadata, lastUpdated, ownership, horoscopeMatch, likedGroups, animalMatch, weeklyFirst}
         //@ts-ignore
         await soul.erc721.mintTo(walletAddress, metadata);
 

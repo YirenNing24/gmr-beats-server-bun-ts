@@ -11,6 +11,7 @@ export const classicScoreStatsSchema = {
         accuracy: t.Number(),
         finished: t.Boolean(),
         songName: t.String(),
+        artist: t.String(),
         perfect: t.Number(),
         veryGood: t.Number(),
         good: t.Number(),
