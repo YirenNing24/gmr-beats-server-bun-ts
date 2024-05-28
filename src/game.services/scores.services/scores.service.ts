@@ -31,14 +31,14 @@ class ScoreService {
                          RETURN s as Song LIMIT 1`, { songName })
             );
 
-            await session?.executeWrite((tx: ManagedTransaction) => 
+            const result2 = await session?.executeWrite((tx: ManagedTransaction) => 
                 tx.run(`MATCH (u:User {username: $userName})
                         CREATE (s:$songName)
                         CREATE (u)-[:SCORE]->(s)
                         SET s += $score
                         RETURN u.smartWalletAddress as smartWalletAddress`, { songName, score, userName}))
             await session?.close();
-            const smartWalletAddress: string = result?.records[0].get("smartWalletAddress");
+            const smartWalletAddress: string = result2?.records[0].get("smartWalletAddress");
             if (result?.records.length === 0) {
                 rewardService.firstScorer(userName, score.songName, smartWalletAddress, score.artist);
             };

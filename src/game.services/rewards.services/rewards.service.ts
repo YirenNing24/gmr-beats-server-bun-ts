@@ -491,7 +491,7 @@ class RewardService {
         }
     }
 
-    public async firstScorer(username: string, songName: string, smartWalletAddress: string, artist: string) {
+    public async firstScorer(userName: string, songName: string, smartWalletAddress: string, artist: string) {
         try {
             const sdk: ThirdwebSDK = ThirdwebSDK.fromPrivateKey(PRIVATE_KEY, CHAIN, {
                 secretKey: SECRET_KEY,
@@ -515,16 +515,26 @@ class RewardService {
                     tokenId = "";
                     break;
             }
-
+    
             console.log(tokenId)
     
             const tokenAmount: string = "1";
-            // await critterBuddiesBadge.transfer(smartWalletAddress, tokenId, tokenAmount);
+            await critterBuddiesBadge.transfer(smartWalletAddress, tokenId, tokenAmount);
     
-        } catch(error: any) {
+            const session: Session | undefined = this.driver?.session();
+            await session?.executeWrite((tx: ManagedTransaction) =>
+                tx.run(`
+                    MATCH (u:User {username: $userName})-[:SOUL]->(s:Soul)
+                    SET s.weeklyFirst = coalesce(s.weeklyFirst, []) + $songName
+                `, { songName, userName })
+            );
+            await session?.close();
+    
+        } catch (error: any) {
             throw error;
         }
     }
+    
     
 }
 
