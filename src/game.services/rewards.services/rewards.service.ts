@@ -516,15 +516,10 @@ class RewardService {
                     break;
             }
     
-            console.log(tokenId)
-            console.log(songName)
-            console.log(userName)
-    
             const tokenAmount: string = "1";
            
-    
             const session: Session | undefined = this.driver?.session();
-            const result = await session?.executeWrite((tx: ManagedTransaction) =>
+            await session?.executeWrite((tx: ManagedTransaction) =>
                 tx.run(`
                     MATCH (u:User {username: $userName})-[:SOUL]->(s:Soul)
                     SET s.weeklyFirst = s.weeklyFirst + [$songName]
@@ -532,10 +527,9 @@ class RewardService {
             );
             await session?.close();
 
-             await critterBuddiesBadge.transfer(smartWalletAddress, tokenId, tokenAmount);
+            await critterBuddiesBadge.transfer(smartWalletAddress, tokenId, tokenAmount);
     
         } catch (error: any) {
-            console.log(error)
             throw error;
         }
     }
