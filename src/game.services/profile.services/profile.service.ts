@@ -386,7 +386,8 @@ class ProfileService {
           await session?.close();
   
           if (!result || result.records.length === 0) {
-              throw new ValidationError("No records found", "No records found");
+            //@ts-ignore
+              return {}
           }
   
           const soul: SoulMetaData = result.records[0].get('soul').properties;

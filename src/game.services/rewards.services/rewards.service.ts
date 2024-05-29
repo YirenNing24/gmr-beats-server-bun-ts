@@ -517,6 +517,7 @@ class RewardService {
             }
     
             console.log(tokenId)
+            console.log(songName)
     
             const tokenAmount: string = "1";
             await critterBuddiesBadge.transfer(smartWalletAddress, tokenId, tokenAmount);
@@ -525,7 +526,7 @@ class RewardService {
             await session?.executeWrite((tx: ManagedTransaction) =>
                 tx.run(`
                     MATCH (u:User {username: $userName})-[:SOUL]->(s:Soul)
-                    SET s.weeklyFirst = coalesce(s.weeklyFirst, []) + $songName
+                    SET s.weeklyFirst = s.weeklyFirst + $songName
                 `, { songName, userName })
             );
             await session?.close();
