@@ -38,9 +38,10 @@ class ScoreService {
                         SET s += $score
                         RETURN u.smartWalletAddress as smartWalletAddress`, { songName, score, userName}))
             await session?.close();
+
             const smartWalletAddress: string = result2?.records[0].get("smartWalletAddress");
             if (result?.records.length === 0) {
-                rewardService.firstScorer(userName, score.songName, smartWalletAddress, score.artist);
+                await rewardService.firstScorer(userName, score.songName, smartWalletAddress, score.artist);
             };
 
             return new SuccessMessage("Score saved")
