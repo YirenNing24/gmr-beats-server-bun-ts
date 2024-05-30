@@ -24,23 +24,32 @@ class ChatService {
   public async chatRoom(room: string, token: string): Promise<void> {
     try {
       const tokenService: TokenService = new TokenService();
-      const username: string = await tokenService.verifyAccessToken(token)
-
-      const ws = this.websocket
+      const username: string = await tokenService.verifyAccessToken(token);
+      
+      const ws = this.websocket;
       const connection: rt.Connection = await getRethinkDB();
       let query: rt.Sequence = rt.db('beats').table("chats").filter({ roomId: room });
+      
       if (!watchedRooms[room]) {
         query.changes().run(connection, (error, cursor) => {
-          if (error) throw error;
-          cursor.each((error, row)  => {
-            if (error) throw error;
-            if (row.roomNewVal) {
-              const roomNewVal: Result = row.roomNewVal;
-                const roomData: string = JSON.stringify(roomNewVal);
-                app.server?.publish('all', roomData)
+          if (error) {
+            console.error("Error running change feed query:", error);
+            return;
+          }
+      
+          cursor.each((error, row) => {
+            if (error) {
+              console.error("Error processing change feed row:", error);
+              return;
             }
-          })
+            if (row.new_val) {
+              const roomNewVal: Result = row.new_val;
+              const roomData: string = JSON.stringify(roomNewVal);
+              app.server?.publish('all', roomData);
+            }
+          });
         });
+      
         watchedRooms[room] = true;
       }
       let orderedQuery: rt.Sequence = query.orderBy(rt.desc("ts")).limit(4);
@@ -57,6 +66,7 @@ class ChatService {
             handle: room,
           };
           const roomData: string = JSON.stringify(room_data);
+
 
           ws?.send(roomData);
         } catch (error: any) {
@@ -139,6 +149,7 @@ class ChatService {
 export default ChatService
 
 const sanitise = async (message: NewMessage): Promise<boolean> => {
+
   return !!message && message.message !== null && message.message !== "";
 };
 
@@ -150,6 +161,7 @@ export const insertChats = async (newMessage: NewMessage): Promise<void> => {
 
       // Check if message.receiver has a value, if it has then the message is a private message
       const table: string = newMessage.receiver ? "private" : "chats";
+
       insertMessage(connection, newMessage, table);
     }
   } catch (error: any) {
