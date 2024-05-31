@@ -39,3 +39,18 @@ export interface SetPlayerStatus {
     osName: string
     ipAddress: string
   }
+
+export interface CardGiftData {
+  cardName: string
+  id: string
+  receiver: string
+  
+}
+
+
+export interface CardGiftSending {
+  localWallet: string
+  localWalletKey: string
+  senderWalletAddress: string
+  receiverWalletAddress: string
+}

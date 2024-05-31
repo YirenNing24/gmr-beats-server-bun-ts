@@ -54,6 +54,8 @@ export default class WalletService {
         secretKey: SECRET_KEY,
       });
 
+      
+
       // Fetch token balances using the SDK
       const [beatsBalance, gmrBalance, nativeBalance, smartWalletAddress] = await Promise.all([
         sdk.wallet.balance(BEATS_TOKEN),

@@ -186,6 +186,7 @@ export interface UserData {
       country: string;
       deviceId: string;
       inventorySize: any;
+      smartWalletAddress: string
     };
   }
   

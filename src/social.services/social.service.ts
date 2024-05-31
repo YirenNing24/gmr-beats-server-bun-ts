@@ -5,38 +5,32 @@ import { Driver, ManagedTransaction, QueryResult, Session } from "neo4j-driver";
 import rt from "rethinkdb";
 import { getRethinkDB } from "../db/rethink";
 
+//**THIRDWEB IMPORT
+import { Edition, ThirdwebSDK } from "@thirdweb-dev/sdk";
+
 //** ERROR CODES
 import ValidationError from "../outputs/validation.error";
 
 //** TYPE INTERFACE IMPORTS
-import { FollowResponse, ViewProfileData, ViewedUserData, MutualData, PlayerStatus, SetPlayerStatus } from "./social.services.interface";
+import { FollowResponse, ViewProfileData, ViewedUserData, MutualData, PlayerStatus, SetPlayerStatus, CardGiftData, CardGiftSending } from "./social.services.interface";
 
 //** IMPORTED SERVICES 
 import TokenService from "../user.services/token.services/token.service";
+import { CardMetaData } from "../game.services/inventory.services/inventory.interface";
+import { SuccessMessage } from "../outputs/success.message";
+import { UserData } from "../user.services/user.service.interface";
+import { LocalWalletNode } from "@thirdweb-dev/wallets/evm/wallets/local-wallet-node";
+import { CHAIN, EDITION_ADDRESS, SECRET_KEY, SMART_WALLET_CONFIG } from "../config/constants";
+import { SmartWallet } from "@thirdweb-dev/wallets";
 
 class SocialService {
-    /**
-   * Creates an instance of the SocialService class.
-   *
-   * @constructor
-   * @param {Driver} driver - The Neo4j driver for database interactions.
-   */
+
   private driver:Driver
   constructor(driver: Driver) {
-    /**
-     * The Neo4j driver for database interactions.
-     * @type {Driver}
-     */
-    this.driver = driver;
+
+  this.driver = driver;
   }
-  /**
- * Follows a user.
- *
- * @param {string} follower - The username of the follower.
- * @param {string} toFollow - The username of the user to follow.
- * @returns {Promise<FollowResponse>} A promise that resolves to a FollowResponse indicating the follow status.
- * @throws {Error} If the user to follow is not found.
- */
+
   public async follow(follower: string, toFollow: string, token: string): Promise<FollowResponse> {
     try {
 
@@ -64,7 +58,7 @@ class SocialService {
         ));
       await session.close();
 
-      if ( result.records.length === 0 ) {
+      if (result.records.length === 0) {
         throw new Error(
           `User to follow not found`
         )
@@ -222,15 +216,7 @@ class SocialService {
    * @throws {Error} If an error occurs during the retrieval process.
    */
   public async mutualStatus(token: string): Promise<PlayerStatus[]> {
-    /**
-     * @typedef {Object} PlayerStatus
-     * @property {string} username - The username of a mutual follower.
-     * @property {number} lastOnline - The timestamp representing the last online time of the mutual follower.
-     * @property {string} status - The online status of the mutual follower.
-     */
-
     try {
-      
       const tokenService: TokenService = new TokenService();
       const username: string = await tokenService.verifyAccessToken(token);
 
@@ -268,21 +254,11 @@ class SocialService {
     }
   }
 
-/**
-   * Sets the online status for a user in the system.
-   *
-   * @param {string} username - The username of the user for whom the online status is to be set.
-   * @param {string} activity - The activity description of the user.
-   * @param {string} userAgent - The user agent string representing the user's browser.
-   * @param {string} osName - The name of the operating system used by the user.
-   * @param {string} ipAddress - The IP address from which the user is accessing the system.
-   * @returns {Promise<void>} A promise that resolves once the online status is successfully set.
-   * @throws {Error} If an error occurs during the status setting process.
-   */
+
+   //* Sets the online status for a user in the system.
   public async setStatusOnline(activity: string, userAgent: string, osName: string, ipAddress: string, token: string): Promise<void> {
 
     try {
-
       const tokenService: TokenService = new TokenService();
       const username: string = await tokenService.verifyAccessToken(token);
 
@@ -306,6 +282,102 @@ class SocialService {
       throw error;
     }
   }
+
+  public async sendCardGift(token: string, cardGiftData: CardGiftData): Promise<SuccessMessage> {
+    const session: Session | undefined = this.driver?.session();
+    const tokenService: TokenService = new TokenService();
+  
+    try {
+      const { receiver, cardName, id } = cardGiftData as CardGiftData
+      const userName: string = await tokenService.verifyAccessToken(token);
+      const result: QueryResult | undefined = await session?.executeRead((tx: ManagedTransaction) =>
+        tx.run(`
+        MATCH (u:User {username: $userName})-[:INVENTORY]->(c:Card {name: $name, id: $id})
+        MATCH (r:User {username: $receiver})
+        MATCH (u)-[:FOLLOW]->(r)
+        MATCH (r)-[:FOLLOW]->(u)
+        RETURN u.smartWalletAddress as smartWalletAddress, c as Card, r.smartWalletAddress as receiverWalletAddress, u.localWallet as localWallet, u.localWalletKey as localWalletKey`,
+        { userName, name: cardName, id, receiver })
+      );
+  
+      if (result && result.records.length > 0) {
+        const record = result.records[0];
+        const smartWalletAddress: string = record.get('smartWalletAddress');
+        const receiverWalletAddress: string = record.get('receiverWalletAddress');
+        const localWallet: string = record.get('localWallet');
+        const localWalletKey: string = record.get('localWalletKey');
+  
+        // Call the cardGiftSending function with the obtained addresses and cardData
+
+        const cardGiftSend: CardGiftSending = { localWallet, localWalletKey, senderWalletAddress: smartWalletAddress, receiverWalletAddress};
+        await this.cardGiftSending(cardGiftData, cardGiftSend, userName);
+      } else {
+        throw new Error("No matching records found or users do not follow each other");
+      }
+  
+      return new SuccessMessage("Card gift sent");
+    } catch (error: any) {
+      throw error;
+    } finally {
+      if (session) {
+        await session.close();
+      }
+    }
+  }
+  
+  private async cardGiftSending(cardGiftData: CardGiftData, cardGiftSending: CardGiftSending, userName: string) {
+    try {
+
+      await this.sendGifromWallet(cardGiftSending, cardGiftData); 
+      const { receiver, id, cardName } = cardGiftData
+      const session: Session | undefined = this.driver?.session();
+      await session?.executeWrite((tx: ManagedTransaction) =>
+        tx.run(`
+        MATCH (u:User {username: $userName})-[e:INVENTORY]->(c:Card {name: $name, id: $id})
+        MATCH (r:User {username: $receiver})
+        CREATE (r)-[:INVENTORY]->(C)
+        DELETE e`,
+        { userName, name: cardName, id, receiver })
+      );
+
+    } catch (error: any) {
+      console.error('Error sending card gift:', error);
+      throw error;
+    }
+  }
+  
+
+  private async sendGifromWallet(cardGfitSending: CardGiftSending, cardData: CardGiftData) {
+    try {
+
+      const { localWalletKey, localWallet, receiverWalletAddress } = cardGfitSending;
+
+      const wallet: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
+      await wallet.import({
+        encryptedJson: localWallet,
+        password: localWalletKey,
+      });
+
+      // Connect the smart wallet
+      const smartWallet: SmartWallet = new SmartWallet(SMART_WALLET_CONFIG);
+      await smartWallet.connect({
+        personalWallet: wallet,
+      });
+
+      // Use the SDK normally
+      const sdk: ThirdwebSDK = await ThirdwebSDK.fromWallet(smartWallet, CHAIN, {
+        secretKey: SECRET_KEY,
+      });
+
+      const cardContract: Edition = await sdk.getContract(EDITION_ADDRESS, 'edition');
+      await cardContract.transfer(receiverWalletAddress, cardData.id, 1)
+
+    } catch(error: any) {
+      throw error
+    }
+  }
+  
+  
   
 };
 
