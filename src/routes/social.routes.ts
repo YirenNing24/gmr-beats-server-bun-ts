@@ -17,6 +17,8 @@ import { PrivateMessage } from '../chat.services/chat.interface';
 //** VALIDATION SCHEMA IMPORT
 import { followResponseSchema, getMutualConversationSchema, setOnlineStatusSchema, unFollowResponseSchema, viewProfileSchema } from './route.schema/schema.social';
 import { authorizationBearerSchema } from './route.schema/schema.auth';
+import { cardGiftSchema } from '../social.services/social.schema';
+import { SuccessMessage } from '../outputs/success.message';
   
 
 const social = (app: Elysia) => {
@@ -166,6 +168,25 @@ const social = (app: Elysia) => {
         throw new Error("Unauthorized")
         }
       }, authorizationBearerSchema
+    )
+
+    .post('/api/social/gift/card', async ({ headers, body }): Promise<SuccessMessage> => {
+      try {
+        const authorizationHeader: string = headers.authorization;
+        if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+          throw new Error('Bearer token not found in Authorization header');
+        }
+        const jwtToken: string = authorizationHeader.substring(7);
+
+        const driver: Driver = getDriver();
+        const socialService: SocialService = new SocialService(driver);
+        const output: SuccessMessage = await socialService.sendCardGift(jwtToken, body)
+
+        return output as SuccessMessage
+      } catch(error: any) {
+        throw error
+      }
+      }, cardGiftSchema
     )
 
   };

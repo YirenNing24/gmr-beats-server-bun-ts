@@ -44,7 +44,6 @@ export interface CardGiftData {
   cardName: string
   id: string
   receiver: string
-  
 }
 
 
