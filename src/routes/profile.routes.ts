@@ -20,7 +20,7 @@ import { newStatPointsSchema, uploadDpBufferSchema } from './route.schema/schema
 import { soulMetaDataSchema } from '../game.services/profile.services/profile.schema'
 
 
-const router = (app: Elysia) => {
+const profile = (app: Elysia) => {
   app.post('/api/update/statpoints', async ({ headers, body }): Promise<any | UpdateStatsFailed | Error > => {
     try {
 
@@ -163,4 +163,4 @@ const router = (app: Elysia) => {
   
 };
 
-export default router;
+export default profile;

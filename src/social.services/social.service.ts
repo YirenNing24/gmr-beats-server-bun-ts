@@ -124,48 +124,56 @@ class SocialService {
   //** Retrieves profile information for a user's view of another user's profile.
 
   public async viewProfile(viewUsername: string, token: string): Promise<ViewProfileData> {
-    /**
-     * @typedef {Object} ViewProfileData
-     * @property {string} username - The username of the viewed user.
-     * @property {PlayerStats} playerStats - The player statistics of the viewed user.
-     * @property {boolean} followsUser - Indicates if the user making the request follows the viewed user.
-     * @property {boolean} followedByUser - Indicates if the viewed user follows the user making the request.
-     */
-
-    const tokenService:  TokenService = new TokenService();
+    const tokenService: TokenService = new TokenService();
     const userName: string = await tokenService.verifyAccessToken(token);
-
+  
     const session: Session = this.driver.session();
     try {
       const result = await session.executeRead(async (tx: ManagedTransaction) => {
-        const [userQuery, followQuery, followedByQuery] = await Promise.all([
-          tx.run('MATCH (u:User {username: $viewUsername}) RETURN u', 
-            { viewUsername }),
+        const [userQuery, followQuery, followedByQuery, soul] = await Promise.all([
+          tx.run('MATCH (u:User {username: $viewUsername}) RETURN u', { viewUsername }),
           tx.run(`
             MATCH (u:User {username: $userName})-[:FOLLOW]->(v:User {username: $viewUsername})
-            RETURN COUNT(v) > 0 AS followsUser`,
-            { userName, viewUsername }),
+            OPTIONAL MATCH (u)-[:SOUL]->(s:Soul)
+            RETURN COUNT(v) > 0 AS followsUser, s as Soul`,
+            { userName, viewUsername }
+          ),
           tx.run(`
             MATCH (v:User {username: $viewUsername})-[:FOLLOW]->(u:User {username: $userName})
             RETURN COUNT(u) > 0 AS followedByUser`,
-            { userName, viewUsername }),
+            { userName, viewUsername }
+          ),
+          tx.run(`
+          MATCH (u:User {username: $viewUsername})-[:SOUL]->(s:Soul)
+          RETURN s as Soul`,
+          { viewUsername }
+        )
         ]);
-
+  
         if (userQuery.records.length === 0) {
           throw new ValidationError(`User with username '${viewUsername}' not found.`, "");
+        };
+  
+        const user = userQuery.records[0].get('u');
+        let userSoul = {}
+        if (soul.records.length === 0) {
+          userSoul = {}
+        }
+        else{
+          userSoul = soul.records[0].get('Soul').properties;
         }
 
-        const user = userQuery.records[0].get('u');
         const { username, playerStats } = user.properties as ViewedUserData;
 
-        const followsUser: boolean = followQuery.records[0].get('followsUser');
-        const followedByUser: boolean = followedByQuery.records[0].get('followedByUser');
-
-        return { username, playerStats, followsUser, followedByUser } as ViewProfileData
+        const followsUser: boolean = followQuery.records.length > 0 ? followQuery.records[0].get('followsUser') : false;
+        const followedByUser: boolean = followedByQuery.records.length > 0 ? followedByQuery.records[0].get('followedByUser') : false;
+  
+        return { username, playerStats, userSoul, followsUser, followedByUser } as ViewProfileData;
       });
-
+  
       return result as ViewProfileData;
     } catch (error: any) {
+      console.log(error);
       throw error;
     } finally {
       if (session) {
@@ -173,6 +181,7 @@ class SocialService {
       }
     }
   };
+  
 
 
   //** Retrieves a list of users who are mutual followers with the specified user.
