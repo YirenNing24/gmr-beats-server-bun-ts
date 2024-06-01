@@ -9,10 +9,3 @@ export const cardGiftSchema = {
         id: t.String(), 
         receiver: t.String() })
 }
-
-
-export interface CardGiftData {
-    cardName: string
-    id: string
-    receiver: string
-  }
