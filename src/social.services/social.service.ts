@@ -330,12 +330,14 @@ class SocialService {
 
       await this.sendGifromWallet(cardGiftSending, cardGiftData); 
       const { receiver, id, cardName } = cardGiftData
+
+      console.log(receiver)
       const session: Session | undefined = this.driver?.session();
       await session?.executeWrite((tx: ManagedTransaction) =>
         tx.run(`
         MATCH (u:User {username: $userName})-[e:INVENTORY]->(c:Card {name: $name, id: $id})
         MATCH (r:User {username: $receiver})
-        CREATE (r)-[:INVENTORY]->(C)
+        CREATE (r)-[:INVENTORY]->(c)
         DELETE e`,
         { userName, name: cardName, id, receiver })
       );
