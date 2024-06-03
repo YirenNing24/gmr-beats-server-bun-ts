@@ -7,4 +7,5 @@ const hostname: string = 'localhost'
 
 app.listen({ port }, () => {
     console.log(`Beats admin server is running on port http://${hostname}:${port}/`);
-});
+    }
+);
