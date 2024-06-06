@@ -116,13 +116,15 @@ class ProfileService {
       }
     }
 
-    public async uploadProfilePic(imageBuffer: BufferData, token: string): Promise<SuccessMessage> {
+  public async uploadProfilePic(imageBuffer: BufferData, token: string): Promise<SuccessMessage> {
       try {
         const tokenService: TokenService = new TokenService();
         const userName: string = await tokenService.verifyAccessToken(token);
     
         // Check the number of existing profile pictures for the user
         const existingProfilePicsCount: number = await this.getProfilePicsCount(userName);
+
+        console.log(existingProfilePicsCount)
         if (existingProfilePicsCount >= 5) {
           throw new ValidationError(`You already have 5 profile pictures.`, "");
         }
@@ -146,8 +148,7 @@ class ProfileService {
         // Save the profile picture to the database
         await rt.db('beats').table('profilePic').insert(profilePicture).run(connection);
     
-        await connection.close();
-    
+
         return new SuccessMessage("Profile picture upload successful");
       } catch (error: any) {
         console.error("Error updating profile picture:", error);
@@ -155,35 +156,29 @@ class ProfileService {
       }
     }
     
-    
-
-  public async getProfilePic(token: string): Promise<ProfilePicture[]> {
+    public async getProfilePic(token: string): Promise<ProfilePicture[]> {
       try {
         const tokenService: TokenService = new TokenService();
         const userName: string = await tokenService.verifyAccessToken(token);
-
-        const session: Session | undefined = this.driver?.session();
-
-        // Find the user node within a Read Transaction
-        const result: QueryResult | undefined = await session?.executeRead(tx =>
-            tx.run('MATCH (u:User {username: $userName}) RETURN u.profilePictures', { userName })
-        );
-
-        await session?.close();
-
-        // Verify the user exists and has profile pictures
-        if (!result || result.records.length === 0) {
-            throw new ValidationError(`User with username '${userName}' not found or has no profile pictures.`, "");
-        }
-
-        // Extract profile pictures from the query result
-        const profilePictures: ProfilePicture[] = result.records[0].get('u.profilePictures');
     
+        const connection: rt.Connection = await getRethinkDB();
+        const cursor: rt.Cursor = await rt
+          .db('beats')
+          .table('profilePic')
+          .filter({ userName })  // Filter by userName
+          .orderBy(rt.desc('uploadedAt'))
+          .limit(10)
+          .run(connection);
+    
+        const profilePictures: ProfilePicture[] = await cursor.toArray();
+
         return profilePictures as ProfilePicture[];
       } catch (error: any) {
-        throw new ValidationError(`Error processing the image ${error.message}.`, "");
+        console.error(`Error processing the image: ${error.message}`);
+        throw error
       }
     }
+    
   
   public async getDisplayPic(userNames: string[]): Promise<{ profilePicture: ProfilePicture }[]> {
     try {
@@ -232,11 +227,12 @@ class ProfileService {
           .getAll(userName)
           .count()
           .run(connection);
-    
-        return countResult;
+        
+        return countResult as number;
       } catch (error: any) {
         console.log(error)
-        throw new ValidationError(`Get profile pic error.`, "");
+        throw error
+
       }
     }
 
