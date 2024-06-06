@@ -71,9 +71,10 @@ export interface UpdateStatsFailed {
 export interface ProfilePicture {
     userName: string;
     fileFormat: string;
-    profilePicture: number[];
+    profilePicture: string;
     uploadedAt: number;
     fileSize: number;
+    likes: string[]
 }
 
 /**

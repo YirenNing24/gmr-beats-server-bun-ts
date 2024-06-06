@@ -24,9 +24,10 @@ import { NFTCollection, ThirdwebSDK } from '@thirdweb-dev/sdk';
 import { CHAIN, PRIVATE_KEY, SECRET_KEY, SOUL_ADDRESS } from "../../config/constants";
 import { CardMetaData } from "../inventory.services/inventory.interface";
 
-//** CYPHER IMPORTS
-import { uploadProfilePicCypher } from "./profile.cypher";
 
+interface BufferData {
+  bufferData: string
+}
 
 class ProfileService {
   driver?: Driver;
@@ -115,41 +116,46 @@ class ProfileService {
       }
     }
 
-  public async uploadProfilePic(bufferData: number[], token: string): Promise<SuccessMessage> {
+    public async uploadProfilePic(imageBuffer: BufferData, token: string): Promise<SuccessMessage> {
       try {
         const tokenService: TokenService = new TokenService();
         const userName: string = await tokenService.verifyAccessToken(token);
-
+    
         // Check the number of existing profile pictures for the user
         const existingProfilePicsCount: number = await this.getProfilePicsCount(userName);
         if (existingProfilePicsCount >= 5) {
           throw new ValidationError(`You already have 5 profile pictures.`, "");
         }
-
+    
         const uploadedAt: number = Date.now();
         const fileFormat: string = 'png';
         const fileSize: number = 100;
-        const profilePicture: ProfilePicture = { profilePicture: bufferData, userName, uploadedAt, fileFormat, fileSize };
-
-        const session: Session | undefined = this.driver?.session();
-        // Find the user node within a Read Transaction
-        const result: QueryResult | undefined = await session?.executeWrite((tx: ManagedTransaction) =>
-          tx.run(uploadProfilePicCypher, { userName, profilePicture })
-        );
+        
+        // Assuming imageBuffer is already an array of numbers
+        const profilePicture: ProfilePicture = {
+          profilePicture: imageBuffer.bufferData,
+          userName,
+          uploadedAt,
+          fileFormat,
+          fileSize,
+          likes: []
+        };
     
-        await session?.close();
+        const connection: rt.Connection = await getRethinkDB();
     
-        // Verify the user exists
-        if (result?.records.length === 0) {
-          throw new ValidationError(`User with username '${userName}' not found.`, "");
-        }
+        // Save the profile picture to the database
+        await rt.db('beats').table('profilePic').insert(profilePicture).run(connection);
+    
+        await connection.close();
     
         return new SuccessMessage("Profile picture upload successful");
       } catch (error: any) {
-          console.error("Error updating profile picture:", error);
-          throw error
+        console.error("Error updating profile picture:", error);
+        throw error;
       }
     }
+    
+    
 
   public async getProfilePic(token: string): Promise<ProfilePicture[]> {
       try {
@@ -222,13 +228,14 @@ class ProfileService {
         // Count the number of profile pictures for the user
         const countResult: number = await rt
           .db('beats')
-          .table('profilepic')
+          .table('profilePic')
           .getAll(userName)
           .count()
           .run(connection);
     
         return countResult;
       } catch (error: any) {
+        console.log(error)
         throw new ValidationError(`Get profile pic error.`, "");
       }
     }

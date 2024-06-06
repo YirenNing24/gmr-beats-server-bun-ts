@@ -3,7 +3,7 @@ import { t } from "elysia";
 
 export const uploadDpBufferSchema = { 
     headers: t.Object({ authorization: t.String() }), body: t.Object({
-        bufferData: t.Array(t.Number())
+        bufferData: t.String()
     })
 }
 
