@@ -17,7 +17,7 @@ class TokenService {
 			const tokens: TokenScheme = await this.verifyRefreshToken(token);
 			return tokens as TokenScheme;
 		} catch (error: any) {
-			throw error;
+			return error;
 		}
 	}
 
@@ -31,7 +31,7 @@ class TokenService {
 			return { refreshToken, accessToken, userName: username } as TokenScheme;
 		} catch (error: any) {
 			console.log(error);
-			throw new Error('Failed to generate refresh token');
+			return error;
 		}
 	}
 
@@ -42,7 +42,7 @@ class TokenService {
 
 			return accessToken as string;
 		} catch (error: any) {
-			throw new Error('Failed to generate access token');
+			return error
 		}
 	}
 
@@ -56,7 +56,7 @@ class TokenService {
 			return userName as string;
 		} catch (error: any) {
 		  console.log(error)
-		  throw error;
+		  return error;
 		}
 	}
 
@@ -70,7 +70,7 @@ class TokenService {
 
 			return tokens as TokenScheme;
 		} catch (error: any) {
-			throw error;
+			return error;
 		}
 	}
 

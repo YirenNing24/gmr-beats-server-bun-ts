@@ -144,8 +144,7 @@ class AuthService {
 
         const walletPromise: Promise<WalletData> = walletService.importWallet(localWallet, localWalletKey);
         const energyPromise: Promise<number> = replenishService.getEnergy(userName, playerStats);
-        const statsPromise: Promise<PlayerStats> = profileService.getStats(userName)
-        const [ wallet, energy, stats ] = await Promise.all([walletPromise, energyPromise, statsPromise]);
+        const [ wallet, energy] = await Promise.all([ walletPromise, energyPromise ]);
 
         const tokens: TokenScheme = await tokenService.generateTokens(userName);
         const { refreshToken, accessToken } = tokens as TokenScheme
@@ -153,7 +152,7 @@ class AuthService {
             username,
             wallet,
             safeProperties,
-            playerStats: stats,
+            playerStats,
             energy,
             uuid: userId,
             refreshToken,
@@ -164,6 +163,7 @@ class AuthService {
 
         } as AuthenticateReturn
     } catch (error: any) {
+        console.log(error)
         throw error;
     }
     };
@@ -176,7 +176,8 @@ class AuthService {
         const replenishService: Replenishments = new Replenishments();
         const tokenService: TokenService = new TokenService();
   
-        const accessRefresh:  TokenScheme = await tokenService.verifyRefreshToken(token)
+        const accessRefresh:  TokenScheme = await tokenService.verifyRefreshToken(token);
+
         const { userName, accessToken, refreshToken  } = accessRefresh as  TokenScheme
   
         // Open a new session
@@ -216,6 +217,7 @@ class AuthService {
           success: "OK", 
           loginType: 'beats',} as ValidateSessionReturn
         } catch (error: any) {
+          console.log(error)
           throw error;
         }
     };
@@ -332,8 +334,7 @@ class AuthService {
 
       const walletPromise: Promise<WalletData> = walletService.importWallet(localWallet, localWalletKey);
       const energyPromise: Promise<number> = replenishService.getEnergy(userName, playerStats);
-      const statsPromise: Promise<PlayerStats> = profileService.getStats(userName)
-      const [ wallet, energy, stats ] = await Promise.all([walletPromise, energyPromise, statsPromise]);
+      const [ wallet, energy] = await Promise.all([walletPromise, energyPromise]);
 
       const tokens: TokenScheme = await tokenService.generateTokens(playerId);
       const { refreshToken, accessToken } = tokens as TokenScheme
@@ -341,7 +342,7 @@ class AuthService {
           username,
           wallet,
           safeProperties,
-          playerStats: stats,
+          playerStats,
           energy,
           uuid: userId,
           refreshToken,

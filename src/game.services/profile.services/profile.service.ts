@@ -12,10 +12,9 @@ import { SuccessMessage } from "../../outputs/success.message";
 
 //** SERVICE IMPORT
 import TokenService from "../../user.services/token.services/token.service";
-import RewardService from "../rewards.services/rewards.service";
 
 //** TYPE INTERFACES
-import { UpdateStatsFailed, ProfilePicture, StatPoints, SoulMetaData, GroupCardCount, GroupCollection, CardCollection } from "./profile.interface";
+import { UpdateStatsFailed, ProfilePicture, StatPoints, SoulMetaData, GroupCardCount, GroupCollection, CardCollection, PictureLikes } from "./profile.interface";
 import { PlayerStats } from "../../user.services/user.service.interface";
 
 
@@ -23,6 +22,9 @@ import { PlayerStats } from "../../user.services/user.service.interface";
 import { NFTCollection, ThirdwebSDK } from '@thirdweb-dev/sdk';
 import { CHAIN, PRIVATE_KEY, SECRET_KEY, SOUL_ADDRESS } from "../../config/constants";
 import { CardMetaData } from "../inventory.services/inventory.interface";
+
+//** NANOID IMPORT
+import { nanoid } from "nanoid/async";
 
 
 interface BufferData {
@@ -86,36 +88,6 @@ class ProfileService {
     }
     }
 
-  public async getStats(username: string): Promise<PlayerStats> {
-    try {
-
-        // Get the Neo4j driver instance
-        const driver: Driver = getDriver();
-        const session: Session = driver.session();
-
-        // Execute a read transaction to retrieve playerStats
-        const result: QueryResult<RecordShape> | undefined = await session.executeRead(
-            tx => tx.run(
-                `MATCH (u:User {username: $username})
-                RETURN u.playerStats`,
-                { username }
-            )
-        );
-          // Close the database session
-          await session.close();
-          // Check if user exists in the database
-          if (result.records.length === 0) {
-              throw new ValidationError(`User with username '${username}' not found.`, "");
-          }
-          // Get playerStats from the query result and return it
-          const playerStats: PlayerStats = result.records[0].get('u.playerStats');
-          return playerStats;
-      } catch (error: any) {
-        console.error("Error getting stats:", error);
-        throw error;
-      }
-    }
-
   public async uploadProfilePic(imageBuffer: BufferData, token: string): Promise<SuccessMessage> {
       try {
         const tokenService: TokenService = new TokenService();
@@ -124,7 +96,6 @@ class ProfileService {
         // Check the number of existing profile pictures for the user
         const existingProfilePicsCount: number = await this.getProfilePicsCount(userName);
 
-        console.log(existingProfilePicsCount)
         if (existingProfilePicsCount >= 5) {
           throw new ValidationError(`You already have 5 profile pictures.`, "");
         }
@@ -155,8 +126,127 @@ class ProfileService {
         throw error;
       }
     }
+
+  public async likeProfilePicture(token: string, likedProfilePicture: { id: string}) {
+      try {
+        const tokenService: TokenService = new TokenService();
+        const userName: string = await tokenService.verifyAccessToken(token);
+
+        const session: Session | undefined = this.driver?.session();
     
-    public async getProfilePic(token: string): Promise<ProfilePicture[]> {
+        const result: QueryResult<RecordShape> | undefined = await session?.executeRead(tx =>
+          tx.run(`MATCH (u:User {username: $userName}) RETURN u`, { userName })
+        );
+    
+        if (!result?.records.length) throw new ValidationError(`User with username '${userName}' not found.`, "");
+    
+        const timestamp: number = Date.now();
+        const likeId: string = await nanoid();
+    
+        const likeData: PictureLikes = { userName, timestamp, likeId };
+    
+        const pictureId: string = likedProfilePicture.id || "";
+    
+        const connection: rt.Connection = await getRethinkDB();
+        
+        // Get the profile picture from the database
+        const query: ProfilePicture = await rt.db('beats').table('profilePic').get(pictureId).run(connection) as ProfilePicture;
+    
+        if (!query) {
+          return new ValidationError(`Profile picture with ID '${pictureId}' not found.`, "");
+        }
+    
+        // Check if the user already liked the picture
+        const alreadyLiked = query.likes.some(like => like.userName === userName);
+    
+        if (!alreadyLiked) {
+          // Add the new like
+          query.likes.push(likeData);
+    
+          // Update the profile picture in the database
+          await rt.db('beats').table('profilePic').get(pictureId).update({ likes: query.likes }).run(connection);
+        } else {
+          return new ValidationError(`User '${userName}' has already liked this picture.`, "");
+        }
+    
+        return new SuccessMessage("Profile picture liked successfully");
+      } catch (error: any) {
+        console.error("Error liking profile picture:", error);
+        throw error;
+      }
+    }
+
+  public async unlikeProfilePicture(token: string, likedProfilePicture: { id: string}) {
+      try {
+        const tokenService: TokenService = new TokenService();
+        const userName: string = await tokenService.verifyAccessToken(token);
+    
+        const session: Session | undefined = this.driver?.session();
+    
+        const result: QueryResult<RecordShape> | undefined = await session?.executeRead(tx =>
+          tx.run(`MATCH (u:User {username: $userName}) RETURN u`, { userName })
+        );
+    
+        if (!result?.records.length) throw new ValidationError(`User with username '${userName}' not found.`, "");
+    
+        const pictureId: string = likedProfilePicture.id || "";
+    
+        const connection: rt.Connection = await getRethinkDB();
+        
+        // Get the profile picture from the database
+        const query: ProfilePicture = await rt.db('beats').table('profilePic').get(pictureId).run(connection) as ProfilePicture;
+    
+        if (!query) {
+          return new ValidationError(`Profile picture with ID '${pictureId}' not found.`, "");
+        }
+    
+        // Check if the user has already liked the picture
+        const likeIndex = query.likes.findIndex(like => like.userName === userName);
+    
+        if (likeIndex !== -1) {
+          // Remove the like
+          query.likes.splice(likeIndex, 1);
+    
+          // Update the profile picture in the database
+          await rt.db('beats').table('profilePic').get(pictureId).update({ likes: query.likes }).run(connection);
+        } else {
+          return new ValidationError(`User '${userName}' has not liked this picture.`, "");
+        }
+    
+        return new SuccessMessage("Profile picture unliked successfully");
+      } catch (error: any) {
+        console.error("Error unliking profile picture:", error);
+        throw error;
+      }
+    }
+    
+  public async getPlayerProfilePic(token: string, playerUsername: string): Promise<ProfilePicture[]> {
+      try {
+        const tokenService: TokenService = new TokenService();
+        await tokenService.verifyAccessToken(token);
+
+        const userName: string = playerUsername
+    
+        const connection: rt.Connection = await getRethinkDB();
+        const cursor: rt.Cursor = await rt
+          .db('beats')
+          .table('profilePic')
+          .filter({ userName })
+          .orderBy(rt.desc('uploadedAt'))
+          .limit(10)
+          .run(connection);
+    
+        const profilePictures: ProfilePicture[] = await cursor.toArray();
+
+
+
+        return profilePictures as ProfilePicture[];
+      } catch (error: any) {
+        console.error(`Error processing the image: ${error.message}`);
+        throw error;
+      }
+    }
+  public async getProfilePic(token: string): Promise<ProfilePicture[]> {
       try {
         const tokenService: TokenService = new TokenService();
         const userName: string = await tokenService.verifyAccessToken(token);
@@ -165,21 +255,20 @@ class ProfileService {
         const cursor: rt.Cursor = await rt
           .db('beats')
           .table('profilePic')
-          .filter({ userName })  // Filter by userName
+          .filter({ userName })
           .orderBy(rt.desc('uploadedAt'))
           .limit(10)
           .run(connection);
     
         const profilePictures: ProfilePicture[] = await cursor.toArray();
-
+        
         return profilePictures as ProfilePicture[];
       } catch (error: any) {
         console.error(`Error processing the image: ${error.message}`);
-        throw error
+        throw error;
       }
     }
     
-  
   public async getDisplayPic(userNames: string[]): Promise<{ profilePicture: ProfilePicture }[]> {
     try {
         const session: Session | undefined = this.driver?.session();
@@ -220,22 +309,21 @@ class ProfileService {
   private async getProfilePicsCount(userName: string): Promise<number> {
       const connection: rt.Connection = await getRethinkDB();
       try {
-        // Count the number of profile pictures for the user
+        // Count the number of profile pictures for the user using filter
         const countResult: number = await rt
           .db('beats')
           .table('profilePic')
-          .getAll(userName)
+          .filter({ userName })
           .count()
           .run(connection);
         
-        return countResult as number;
+        return countResult;
       } catch (error: any) {
-        console.log(error)
-        throw error
-
-      }
+        console.error(error);
+        throw error;
     }
-
+    }
+    
   public async createSoulPreferences(token: string, soulMetadata: SoulMetaData): Promise<SuccessMessage> {
       const session: Session | undefined = this.driver?.session();
       const tokenService: TokenService = new TokenService();
@@ -271,7 +359,6 @@ class ProfileService {
       } catch(error: any) {
         throw error
       }
-
     }
 
   private async createSoul(userName: string, walletAddress: string | undefined, soulMetadata: SoulMetaData) {
@@ -474,11 +561,6 @@ class ProfileService {
         throw error;
       }
     }
-    
-  
-  
-    
-    
-  
+
 }
 export default ProfileService

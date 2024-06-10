@@ -74,7 +74,15 @@ export interface ProfilePicture {
     profilePicture: string;
     uploadedAt: number;
     fileSize: number;
-    likes: string[]
+    likes: PictureLikes[];
+    id?: string
+}
+
+
+export interface PictureLikes {
+    userName?: string;
+    timestamp?: number;
+    likeId: string; 
 }
 
 /**

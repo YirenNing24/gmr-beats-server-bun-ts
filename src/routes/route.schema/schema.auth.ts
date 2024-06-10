@@ -11,7 +11,8 @@ import { t } from "elysia";
  * @property {string} body.password - The password for login.
  */
 export const beatsLoginSchema = {
-    body: t.Object({ username: t.String(), password: t.String() })
+    body: t.Object({ username: t.String(), password: t.String() }),
+
 }
 
 /**

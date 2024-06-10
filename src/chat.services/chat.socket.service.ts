@@ -70,7 +70,7 @@ class ChatService {
 
           ws?.send(roomData);
         } catch (error: any) {
-          console.error("Error processing query result:", error);
+          throw error
         }
       });
       let query2: rt.Sequence = rt.db('beats').table("private").filter({ roomId: username });
@@ -165,20 +165,21 @@ export const insertChats = async (newMessage: NewMessage): Promise<void> => {
       insertMessage(connection, newMessage, table);
     }
   } catch (error: any) {
-    logError(error);
+    throw error
   }
 };
 
 const insertMessage = async (connection: any, newMessage: NewMessage, table: string = "chats"): Promise<void> => {
-  await rt.db('beats')
+  try {
+    await rt.db('beats')
     .table(table)
     .insert({
       ...newMessage,
       ts: Date.now(),
     })
     .run(connection);
-};
+  } catch(error: any){
+    throw error
+  }
 
-const logError = (error: any): void => {
-  console.error("Error processing message:", error);
 };

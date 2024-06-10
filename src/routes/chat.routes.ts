@@ -46,7 +46,7 @@ const chat = (app: Elysia): void => {
         newMessage?.timestamp && (await timeService.getServerDateTime(newMessage));
       } catch (error: any) {
         console.error('Error in WebSocket message event:', error);
-        return error;
+        throw error;
       }
     }
   });
