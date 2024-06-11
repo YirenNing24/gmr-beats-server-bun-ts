@@ -14,7 +14,7 @@ import { SuccessMessage } from "../../outputs/success.message";
 import TokenService from "../../user.services/token.services/token.service";
 
 //** TYPE INTERFACES
-import { UpdateStatsFailed, ProfilePicture, StatPoints, SoulMetaData, GroupCardCount, GroupCollection, CardCollection, PictureLikes } from "./profile.interface";
+import { UpdateStatsFailed, ProfilePicture, StatPoints, SoulMetaData, CardCollection, PictureLikes, BufferData, MyNote } from "./profile.interface";
 import { PlayerStats } from "../../user.services/user.service.interface";
 
 
@@ -26,10 +26,6 @@ import { CardMetaData } from "../inventory.services/inventory.interface";
 //** NANOID IMPORT
 import { nanoid } from "nanoid/async";
 
-
-interface BufferData {
-  bufferData: string
-}
 
 class ProfileService {
   driver?: Driver;
@@ -542,8 +538,6 @@ class ProfileService {
 
         await session?.close();
 
-
-    
         const cardCollection = result?.records.map(record => {
           const card: CardMetaData = record.get('card').properties;
           delete card.imageByte;
@@ -561,6 +555,64 @@ class ProfileService {
         throw error;
       }
     }
+
+  public async updateMyNotes(token: string, myNotes: MyNote): Promise<SuccessMessage | Error> {
+      try {
+        const { note } = myNotes
+        if (note.length > 60) {
+          return new Error("Note exceeds the 60 character limit.");
+        }
+    
+        const tokenService: TokenService = new TokenService();
+        const userName: string = await tokenService.verifyAccessToken(token);
+    
+        const connection: rt.Connection = await getRethinkDB();
+        
+        const timestamp: number = Date.now();
+        const noteData = { userName, note, createdAt: timestamp, updatedAt: timestamp };
+    
+        // Insert the new note or update the existing one
+        await rt.db('beats').table('myNotes').insert(noteData, { conflict: "replace" }).run(connection);
+
+        return new SuccessMessage("My notes updated");
+      } catch (error: any) {
+        console.error("Error updating note:", error);
+        throw error;
+      }
+    }
+
+  public async getMyNotes(token: string,): Promise<MyNote | {}> {
+      try {
+        const tokenService: TokenService = new TokenService();
+        const userName: string = await tokenService.verifyAccessToken(token);
+    
+        const connection: rt.Connection = await getRethinkDB();
+        
+        // Retrieve the latest note for the user
+        const cursor: rt.Cursor = await rt
+          .db('beats')
+          .table('myNotes')
+          .filter({ userName })
+          .orderBy(rt.desc('createdAt')) // Order by createdAt timestamp in descending order
+          .limit(1) // Limit to one result
+          .run(connection);
+        
+        const notesArray: MyNote[] = await cursor.toArray();
+        
+        if (notesArray.length === 0) {
+          return {}
+        }
+    
+        const myNote: MyNote = notesArray[0];
+    
+        return myNote;
+      } catch (error: any) {
+        console.error("Error retrieving note:", error);
+        throw error;
+      }
+    }
+    
+    
 
 }
 export default ProfileService

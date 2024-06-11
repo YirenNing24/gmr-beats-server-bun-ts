@@ -76,3 +76,11 @@ export const getProfilePictureSchema = {
         player_username: t?.String()
     })
 };
+
+
+export const updateMyNotesSchema = { 
+    headers: t.Object({ authorization: t.String() }), 
+    body: t.Object({ 
+        note: t.String()
+    })
+};

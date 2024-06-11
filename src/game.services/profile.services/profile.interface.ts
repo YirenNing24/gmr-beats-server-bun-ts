@@ -143,3 +143,16 @@ export interface CardCollection {
 	name: string;
 	count: number;
 }
+
+
+export interface BufferData {
+    bufferData: string
+  }
+  
+  
+export interface MyNote {
+    userName?: string;
+    note: string;
+    createdAt?: number;
+    updatedAt?: number;
+  }

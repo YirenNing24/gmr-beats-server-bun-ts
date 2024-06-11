@@ -9,14 +9,14 @@ import { Driver } from 'neo4j-driver'
 import ProfileService from '../game.services/profile.services/profile.service'
 
 //** TYPE INTERFACES
-import { CardCollection, GroupCardCount, ProfilePicture ,SoulMetaData,StatPoints, UpdateStatsFailed } from '../game.services/profile.services/profile.interface'
+import { CardCollection, GroupCardCount, MyNote, ProfilePicture ,SoulMetaData,StatPoints, UpdateStatsFailed } from '../game.services/profile.services/profile.interface'
 
 //** CONFIG IMPORT
 import { SuccessMessage } from '../outputs/success.message'
 
 //** VALIDATION SCHEMA IMPORT
 import { authorizationBearerSchema } from './route.schema/schema.auth'
-import { getProfilePictureSchema, likeProfilePicturePicSchema, newStatPointsSchema, uploadDpBufferSchema } from './route.schema/schema.profile'
+import { getProfilePictureSchema, likeProfilePicturePicSchema, newStatPointsSchema, updateMyNotesSchema, uploadDpBufferSchema } from './route.schema/schema.profile'
 import { soulMetaDataSchema } from '../game.services/profile.services/profile.schema'
 import ValidationError from '../outputs/validation.error'
 
@@ -245,6 +245,46 @@ const profile = (app: Elysia) => {
       return output as  CardCollection[] 
     } catch(error: any) {
       throw error
+      }
+    }, authorizationBearerSchema
+  )
+
+  .post('/api/mynote/update', async ({ headers, body }): Promise<SuccessMessage | ValidationError > => {
+    try {
+      const authorizationHeader: string | null = headers.authorization;
+      if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+        throw new Error('Bearer token not found in Authorization header');
+      }
+      const jwtToken: string = authorizationHeader.substring(7);
+
+      const driver: Driver = getDriver();
+      const profileService: ProfileService = new ProfileService(driver);
+
+      const output: SuccessMessage | Error = await profileService.updateMyNotes(jwtToken, body);
+
+      return output as SuccessMessage
+    } catch (error: any) {
+      return error;
+      }
+    }, updateMyNotesSchema
+  )
+
+  .get('/api/mynote/latest', async ({ headers }): Promise<MyNote | [] > => {
+    try {
+      const authorizationHeader: string | null = headers.authorization;
+      if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+        throw new Error('Bearer token not found in Authorization header');
+      }
+      const jwtToken: string = authorizationHeader.substring(7);
+
+      const driver: Driver = getDriver();
+      const profileService: ProfileService = new ProfileService(driver);
+
+      const output: MyNote | {} = await profileService.getMyNotes(jwtToken)
+
+      return output as MyNote
+    } catch (error: any) {
+      throw error;
       }
     }, authorizationBearerSchema
   )
