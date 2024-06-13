@@ -1,6 +1,5 @@
 //** MEMGRAPH IMPORT
 import { Driver, ManagedTransaction, QueryResult, RecordShape, Session } from "neo4j-driver";
-import { getDriver } from '../../db/memgraph';
 
 //** RETHINK DB IMPORT
 import rt from "rethinkdb";
@@ -608,6 +607,31 @@ class ProfileService {
         return myNote;
       } catch (error: any) {
         console.error("Error retrieving note:", error);
+        throw error;
+      }
+    }
+
+  public async moments(token: string, myNotes: MyNote): Promise<SuccessMessage | Error> {
+      try {
+        const { note } = myNotes
+        if (note.length > 60) {
+          return new Error("Note exceeds the 60 character limit.");
+        }
+    
+        const tokenService: TokenService = new TokenService();
+        const userName: string = await tokenService.verifyAccessToken(token);
+    
+        const connection: rt.Connection = await getRethinkDB();
+        
+        const timestamp: number = Date.now();
+        const noteData = { userName, note, createdAt: timestamp, updatedAt: timestamp };
+    
+        // Insert the new note or update the existing one
+        await rt.db('beats').table('myNotes').insert(noteData, { conflict: "replace" }).run(connection);
+
+        return new SuccessMessage("My notes updated");
+      } catch (error: any) {
+        console.error("Error updating note:", error);
         throw error;
       }
     }
