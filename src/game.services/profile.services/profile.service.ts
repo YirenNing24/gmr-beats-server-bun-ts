@@ -233,8 +233,6 @@ class ProfileService {
     
         const profilePictures: ProfilePicture[] = await cursor.toArray();
 
-
-
         return profilePictures as ProfilePicture[];
       } catch (error: any) {
         console.error(`Error processing the image: ${error.message}`);
@@ -252,7 +250,7 @@ class ProfileService {
           .table('profilePic')
           .filter({ userName })
           .orderBy(rt.desc('uploadedAt'))
-          .limit(10)
+          .limit(1)
           .run(connection);
     
         const profilePictures: ProfilePicture[] = await cursor.toArray();
@@ -264,37 +262,24 @@ class ProfileService {
       }
     }
     
-  public async getDisplayPic(userNames: string[]): Promise<{ profilePicture: ProfilePicture }[]> {
+  public async getDisplayPic(token: string, userNames: (string | undefined)[]): Promise<ProfilePicture[]> {
     try {
-        const session: Session | undefined = this.driver?.session();
-        const queryResult: QueryResult | undefined = await session?.executeRead(tx =>
-            tx.run(`
-                MATCH (u:User)
-                WHERE u.username IN $userNames
-                UNWIND u.profilePictures AS profilePicture
-                RETURN u.username AS username, profilePicture
-                ORDER BY profilePicture.uploadedAt DESC
-                LIMIT 10
-            `, { userNames })
-        );
 
-        await session?.close();
+      const tokenService: TokenService = new TokenService();
+      await tokenService.verifyAccessToken(token);
 
-        if (!queryResult) {
-            throw new ValidationError("Error getting profile pictures: query result is undefined.", "");
-        }
+      const connection: rt.Connection = await getRethinkDB();
+      const cursor: rt.Cursor = await rt
+        .db('beats')
+        .table('profilePic')
+        .filter(userNames)
+        .orderBy(rt.desc('uploadedAt'))
+        .limit(1)
+        .run(connection);
 
-        const profilePictures: { profilePicture: ProfilePicture }[] = queryResult.records.map(record => ({
-            profilePicture: {
-                userName: record.get("username"),
-                profilePicture: record.get("profilePicture").profilePicture,
-                fileFormat: record.get("profilePicture").fileFormat,
-                uploadedAt: record.get("profilePicture").uploadedAt,
-                fileSize: record.get("profilePicture").fileSize
-            }
-        }));
+      const profilePictures: ProfilePicture[] = await cursor.toArray();
 
-        return profilePictures;
+      return profilePictures as ProfilePicture[]
     } catch (error: any) {
         console.error("Error getting profile pictures:", error);
         throw new ValidationError(`Error retrieving the profile pictures: ${error.message}.`, "");

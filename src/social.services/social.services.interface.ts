@@ -46,10 +46,51 @@ export interface CardGiftData {
   receiver: string
 }
 
-
 export interface CardGiftSending {
   localWallet: string
   localWalletKey: string
   senderWalletAddress: string
   receiverWalletAddress: string
+}
+
+export interface PostFanMoment {
+  userName?: string
+  postId?: string
+  caption?: string
+  image?: string
+  posterImage?: string
+  createdAt?: number
+  likes?: PostLike[]
+  shares?: PostShare[]
+  comments?: PostComment[]
+}
+
+export interface PostLike {
+  userName?: string;
+  timestamp?: number;
+  likeId?: string; 
+}
+
+export interface PostShare {
+  userName?: string;
+  timestamp?: number;
+  shareId?: string; 
+}
+
+export interface PostComment {
+
+  userName?: string;
+  timestamp?: number;
+  commentId?: string;
+  comment?: string
+}
+
+
+export interface FanMomentId {
+  id: string
+}
+
+export interface FanMomentComment {
+  id: string;
+  comment: string
 }

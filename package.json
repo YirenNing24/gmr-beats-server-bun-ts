@@ -17,12 +17,12 @@
     "@elysiajs/eden": "^0.8.1",
     "@elysiajs/jwt": "^0.6.4",
     "@influxdata/influxdb-client": "^1.33.2",
-    "@thirdweb-dev/chains": "^0.1.116",
-    "@thirdweb-dev/sdk": "^4.0.92",
+    "@thirdweb-dev/chains": "^0.1.120",
+    "@thirdweb-dev/sdk": "^4.0.99",
     "@thirdweb-dev/storage": "^2.0.15",
-    "@thirdweb-dev/wallets": "^2.5.32",
+    "@thirdweb-dev/wallets": "^2.5.39",
     "@types/jsonwebtoken": "^9.0.6",
-    "@types/node": "^20.14.2",
+    "@types/node": "^20.14.6",
     "@types/rethinkdb": "^2.3.21",
     "bcrypt-ts": "^4.0.1",
     "crypto-random-string": "^5.0.0",
@@ -31,7 +31,7 @@
     "ethers": "^5.7.2",
     "fast-jwt": "^4.0.1",
     "geoip-lite2": "^2.1.36",
-    "google-auth-library": "^9.10.0",
+    "google-auth-library": "^9.11.0",
     "hyperimport": "^0.2.0",
     "nanoid": "^4.0.2",
     "neo4j-driver": "^5.21.0",
@@ -39,6 +39,6 @@
     "ollama": "^0.4.9",
     "redis": "^4.6.14",
     "rethinkdb": "^2.4.2",
-    "thirdweb": "^5.28.0"
+    "thirdweb": "^5.29.6"
   }
 }

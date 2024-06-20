@@ -11,20 +11,21 @@ import SocialService from '../social.services/social.service';
 import ChatService from '../chat.services/chat.socket.service';
 
 //* TYPES IMPORTS
-import { FollowResponse, MutualData, PlayerStatus, ViewProfileData } from '../social.services/social.services.interface';
+import { FollowResponse, MutualData, PlayerStatus, PostFanMoment, ViewProfileData } from '../social.services/social.services.interface';
 import { PrivateMessage } from '../chat.services/chat.interface';
+import { SuccessMessage } from '../outputs/success.message';
 
 //** VALIDATION SCHEMA IMPORT
 import { followResponseSchema, getMutualConversationSchema, setOnlineStatusSchema, unFollowResponseSchema, viewProfileSchema } from './route.schema/schema.social';
 import { authorizationBearerSchema } from './route.schema/schema.auth';
-import { cardGiftSchema } from '../social.services/social.schema';
-import { SuccessMessage } from '../outputs/success.message';
+import { cardGiftSchema, commentFanMomentSchema, getFanMomentSchema, likeFanMomentSchema, postFanMomentSchema } from '../social.services/social.schema';
+
+
+
   
 
 const social = (app: Elysia) => {
     
-  //@ts-ignore
-
     app.get('/api/social/viewprofile/:username', async ({ headers, params }): Promise<ViewProfileData> => {
       try {
         const authorizationHeader: string = headers.authorization;
@@ -55,15 +56,13 @@ const social = (app: Elysia) => {
           }
           const jwtToken: string = authorizationHeader.substring(7);
 
-          const { follower, toFollow } = body
-
           const driver: Driver = getDriver();
           const followService: SocialService = new SocialService(driver);
-          const output: FollowResponse = await followService.follow(follower, toFollow, jwtToken);
+          const output: FollowResponse = await followService.follow(body, jwtToken);
 
           return output as FollowResponse
         } catch (error: any) {
-          throw new Error("Unauthorized")
+          throw error
         }
       }, followResponseSchema
     )
@@ -76,12 +75,10 @@ const social = (app: Elysia) => {
           }
           const jwtToken: string = authorizationHeader.substring(7);
 
-          const { follower, toUnfollow } = body
-
           const driver: Driver = getDriver();
           const followService: SocialService = new SocialService(driver);
   
-        const output: FollowResponse = await followService.unfollow(follower, toUnfollow, jwtToken);
+        const output: FollowResponse = await followService.unfollow(body, jwtToken);
 
         return output as FollowResponse
       } catch (error: any) {
@@ -188,6 +185,154 @@ const social = (app: Elysia) => {
       }
       }, cardGiftSchema
     )
+
+    .post('/api/social/my/fanmoments/post', async ({ headers, body }): Promise<SuccessMessage | Error> => {
+      try {
+        const authorizationHeader: string = headers.authorization;
+        if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+          throw new Error('Bearer token not found in Authorization header');
+        }
+        const jwtToken: string = authorizationHeader.substring(7);
+
+        const driver: Driver = getDriver();
+        const socialService: SocialService = new SocialService(driver);
+        const output: SuccessMessage | Error = await socialService.postFanMoments(jwtToken, body);
+
+        return output as SuccessMessage
+      } catch(error: any) {
+        throw error
+      }
+      }, postFanMomentSchema
+    )
+
+    .get('/api/social/hot/fanmoments', async ({ headers, query }): Promise<PostFanMoment[]> => {
+      try {
+        const authorizationHeader: string = headers.authorization;
+        if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+          throw new Error('Bearer token not found in Authorization header');
+        }
+        const jwtToken: string = authorizationHeader.substring(7);
+
+        // Extract limit and offset from query parameters with default values
+        const limit: number = parseInt(query.limit as string) || 5;
+        const offset: number = parseInt(query.offset as string) || 0;
+
+
+        const driver: Driver = getDriver();
+        const socialService: SocialService = new SocialService(driver);
+        const output: PostFanMoment[] = await socialService.getHotFanMomentPosts(jwtToken, limit, offset);
+
+        return output
+      } catch(error: any) {
+        throw error
+        }
+      }, getFanMomentSchema
+    )
+
+    .get('/api/social/my/fanmoments', async ({ headers, query }): Promise<PostFanMoment[]> => {
+      try {
+        const authorizationHeader: string = headers.authorization;
+        if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+          throw new Error('Bearer token not found in Authorization header');
+        }
+        const jwtToken: string = authorizationHeader.substring(7);
+
+        // Extract limit and offset from query parameters with default values
+        const limit: number = parseInt(query.limit as string) || 5;
+        const offset: number = parseInt(query.offset as string) || 0;
+
+        const driver: Driver = getDriver();
+        const socialService: SocialService = new SocialService(driver);
+        const output: PostFanMoment[] = await socialService.getMyFanMomentPosts(jwtToken, limit, offset);
+
+        return output as PostFanMoment[]
+      } catch(error: any) {
+        throw error
+        }
+      }, getFanMomentSchema
+    )
+
+    .get('/api/social/latest/fanmoments', async ({ headers, query }): Promise<PostFanMoment[]> => {
+      try {
+        const authorizationHeader: string = headers.authorization;
+        if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+          throw new Error('Bearer token not found in Authorization header');
+        }
+        const jwtToken: string = authorizationHeader.substring(7);
+
+        // Extract limit and offset from query parameters with default values
+        const limit: number = parseInt(query.limit as string) || 5;
+        const offset: number = parseInt(query.offset as string) || 0;
+
+        const driver: Driver = getDriver();
+        const socialService: SocialService = new SocialService(driver);
+        const output: PostFanMoment[] = await socialService.getLatestFanMomentPosts(jwtToken, limit, offset);
+
+        return output as PostFanMoment[]
+      } catch(error: any) {
+        throw error
+        }
+      }, getFanMomentSchema
+    )
+
+    .post('/api/social/fanmoments/like', async ({ headers, body }): Promise<SuccessMessage | Error> => {
+      try {
+        const authorizationHeader: string = headers.authorization;
+        if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+          throw new Error('Bearer token not found in Authorization header');
+        }
+        const jwtToken: string = authorizationHeader.substring(7);
+
+        const driver: Driver = getDriver();
+        const socialService: SocialService = new SocialService(driver);
+        const output: SuccessMessage | Error = await socialService.likeFanMoment(jwtToken, body)
+
+        return output as SuccessMessage
+      } catch(error: any) {
+        throw error
+      }
+      }, likeFanMomentSchema
+    )
+
+    .post('/api/social/fanmoments/unlike', async ({ headers, body }): Promise<SuccessMessage | Error> => {
+      try {
+        const authorizationHeader: string = headers.authorization;
+        if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+          throw new Error('Bearer token not found in Authorization header');
+        }
+        const jwtToken: string = authorizationHeader.substring(7);
+
+        const driver: Driver = getDriver();
+        const socialService: SocialService = new SocialService(driver);
+        const output: SuccessMessage | Error = await socialService.unlikeFanMoment(jwtToken, body)
+
+        return output as SuccessMessage
+      } catch(error: any) {
+        throw error
+      }
+      }, likeFanMomentSchema
+    )
+
+    .post('/api/social/fanmoments/comment', async ({ headers, body}): Promise<SuccessMessage>=> {
+      try {
+        const authorizationHeader: string = headers.authorization;
+        if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+          throw new Error('Bearer token not found in Authorization header');
+        }
+        const jwtToken: string = authorizationHeader.substring(7);
+
+        const driver: Driver = getDriver();
+        const socialService: SocialService = new SocialService(driver);
+
+        const output: SuccessMessage = await socialService.commentFanMoment(jwtToken, body);
+
+        return output as SuccessMessage
+      } catch(error: any) {
+        throw error
+      }
+    }, commentFanMomentSchema
+  )
+
 
   };
 

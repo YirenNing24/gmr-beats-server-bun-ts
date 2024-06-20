@@ -84,3 +84,10 @@ export const updateMyNotesSchema = {
         note: t.String()
     })
 };
+
+
+export const getProfilePicsSchema = {
+    headers: t.Object({ authorization: t.String() }), 
+    body: t.Array(t.String())
+
+}

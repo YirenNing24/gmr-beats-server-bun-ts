@@ -10,7 +10,6 @@ export const viewProfileSchema = {
 export const followResponseSchema = {
     headers: t.Object({ authorization: t.String() }), 
     body: t.Object({ 
-        follower: t.String(),
         toFollow: t.String()
     })
 }
@@ -18,7 +17,6 @@ export const followResponseSchema = {
 export const unFollowResponseSchema = {
     headers: t.Object({ authorization: t.String() }), 
     body: t.Object({ 
-        follower: t.String(),
         toUnfollow: t.String()
     })
 }

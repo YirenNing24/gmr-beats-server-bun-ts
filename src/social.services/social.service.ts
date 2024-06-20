@@ -7,21 +7,28 @@ import { getRethinkDB } from "../db/rethink";
 
 //**THIRDWEB IMPORT
 import { Edition, ThirdwebSDK } from "@thirdweb-dev/sdk";
+import { SmartWallet } from "@thirdweb-dev/wallets";
+import { LocalWalletNode } from "@thirdweb-dev/wallets/evm/wallets/local-wallet-node";
 
 //** ERROR CODES
 import ValidationError from "../outputs/validation.error";
 
 //** TYPE INTERFACE IMPORTS
-import { FollowResponse, ViewProfileData, ViewedUserData, MutualData, PlayerStatus, SetPlayerStatus, CardGiftData, CardGiftSending } from "./social.services.interface";
+import { FollowResponse, ViewProfileData, ViewedUserData, MutualData, PlayerStatus, SetPlayerStatus, CardGiftData, CardGiftSending, PostFanMoment, FanMomentId, FanMomentComment, PostComment } from "./social.services.interface";
+import { SuccessMessage } from "../outputs/success.message";
+import { ProfilePicture } from "../game.services/profile.services/profile.interface";
 
 //** IMPORTED SERVICES 
 import TokenService from "../user.services/token.services/token.service";
-import { CardMetaData } from "../game.services/inventory.services/inventory.interface";
-import { SuccessMessage } from "../outputs/success.message";
-import { UserData } from "../user.services/user.service.interface";
-import { LocalWalletNode } from "@thirdweb-dev/wallets/evm/wallets/local-wallet-node";
+import ProfileService from "../game.services/profile.services/profile.service";
+
+//** CONFIG IMPORT
 import { CHAIN, EDITION_ADDRESS, SECRET_KEY, SMART_WALLET_CONFIG } from "../config/constants";
-import { SmartWallet } from "@thirdweb-dev/wallets";
+
+//**NANOID IMPORT
+import { nanoid } from "nanoid/async";
+import { timeStamp } from "console";
+
 
 class SocialService {
 
@@ -31,22 +38,19 @@ class SocialService {
   this.driver = driver;
   }
 
-  public async follow(follower: string, toFollow: string, token: string): Promise<FollowResponse> {
+  public async follow(toFollow: { toFollow: string }, token: string): Promise<FollowResponse> {
     try {
 
       const tokenService: TokenService = new TokenService();
       const userName: string = await tokenService.verifyAccessToken(token);
 
-
-      if (userName !== follower) {
-        throw new Error("Unauthorized")
-      }
+      const userToFollow: string = toFollow.toFollow
       const session: Session = this.driver.session();
       const result: QueryResult = await session.executeWrite((tx: ManagedTransaction) =>
         tx.run( 
           `
-          MATCH (u:User {username: $follower}) 
-          MATCH (p:User {username: $toFollow})
+          MATCH (u:User {username: $userName}) 
+          MATCH (p:User {username: $userToFollow})
           MERGE (u)-[r:FOLLOW]->(p)
           ON CREATE SET u.createdAt = timestamp()
           RETURN p 
@@ -54,7 +58,7 @@ class SocialService {
             followed: true} 
             AS follow
           `,
-          { follower, toFollow }
+          { userName, userToFollow }
         ));
       await session.close();
 
@@ -70,37 +74,27 @@ class SocialService {
       console.error("Something went wrong: ", error);
       throw error;
     }
-  };
+  }
 
-  /**
-   * Unfollows a user.
-   *
-   * @param {string} follower - The username of the follower.
-   * @param {string} toUnfollow - The username of the user to unfollow.
-   * @returns {Promise<FollowResponse>} A promise that resolves to a FollowResponse indicating the unfollow status.
-   * @throws {Error} If the user to unfollow is not found.
-   */
-  public async unfollow(follower: string, toUnfollow: string, token: string): Promise<FollowResponse> {
+   //** Unfollows a user.
+  public async unfollow(toUnfollow: { toUnfollow: string }, token: string): Promise<FollowResponse> {
     try {
 
       const tokenService: TokenService = new TokenService();
       const userName: string = await tokenService.verifyAccessToken(token);
 
-      if (userName !== follower) {
-        throw new Error("Unauthorized")
-      }
-
+      const userToUnfollow: string = toUnfollow.toUnfollow
       const session = this.driver.session();
       const result: QueryResult = await session.executeWrite((tx: ManagedTransaction) =>
         tx.run( 
           `
-          MATCH (u:User {username: $follower})-[r:FOLLOW]->(p:User {username: $toUnfollow})
+          MATCH (u:User {username: $userName})-[r:FOLLOW]->(p:User {username: $userToUnfollow})
           DELETE r
           RETURN p {.*, 
             followed: false
           } AS unfollow
           `,
-          { follower, toUnfollow }
+          { userName, userToUnfollow }
         ));
       await session.close();
 
@@ -113,10 +107,9 @@ class SocialService {
       console.error("Something went wrong: ", error);
       throw error;
     }
-  };
+  }
 
   //** Retrieves profile information for a user's view of another user's profile.
-
   public async viewProfile(viewUsername: string, token: string): Promise<ViewProfileData> {
     const tokenService: TokenService = new TokenService();
     const userName: string = await tokenService.verifyAccessToken(token);
@@ -174,10 +167,8 @@ class SocialService {
         await session.close();
       }
     }
-  };
+  }
   
-
-
   //** Retrieves a list of users who are mutual followers with the specified user.
    public async mutual(token: string): Promise<MutualData[]> {
     try {
@@ -205,16 +196,9 @@ class SocialService {
       console.error("Something went wrong: ", error);
       throw error;
     }
-  };
+  }
 
-
-  /**
-   * Retrieves the online status of mutual followers for the specified user.
-   *
-   * @param {string} username - The username of the user for whom mutual followers' status is to be retrieved.
-   * @returns {Promise<PlayerStatus[]>} A promise that resolves to an array of PlayerStatus representing online status of mutual followers.
-   * @throws {Error} If an error occurs during the retrieval process.
-   */
+  //** Retrieves the online status of mutual followers for the specified user.
   public async mutualStatus(token: string): Promise<PlayerStatus[]> {
     try {
       const tokenService: TokenService = new TokenService();
@@ -254,10 +238,8 @@ class SocialService {
     }
   }
 
-
-   //* Sets the online status for a user in the system.
+  //** Sets the online status for a user in the system.
   public async setStatusOnline(activity: string, userAgent: string, osName: string, ipAddress: string, token: string): Promise<void> {
-
     try {
       const tokenService: TokenService = new TokenService();
       const username: string = await tokenService.verifyAccessToken(token);
@@ -328,10 +310,9 @@ class SocialService {
   private async cardGiftSending(cardGiftData: CardGiftData, cardGiftSending: CardGiftSending, userName: string) {
     try {
 
-      await this.sendGifromWallet(cardGiftSending, cardGiftData); 
+      await this.sendGiftromWallet(cardGiftSending, cardGiftData); 
       const { receiver, id, cardName } = cardGiftData
 
-      console.log(receiver)
       const session: Session | undefined = this.driver?.session();
       await session?.executeWrite((tx: ManagedTransaction) =>
         tx.run(`
@@ -348,8 +329,7 @@ class SocialService {
     }
   }
   
-
-  private async sendGifromWallet(cardGfitSending: CardGiftSending, cardData: CardGiftData) {
+  private async sendGiftromWallet(cardGfitSending: CardGiftSending, cardData: CardGiftData) {
     try {
 
       const { localWalletKey, localWallet, receiverWalletAddress } = cardGfitSending;
@@ -378,10 +358,381 @@ class SocialService {
       throw error
     }
   }
+
+  public async postFanMoments(token: string, postFanMoment: PostFanMoment): Promise<SuccessMessage | Error> {
+    try {
+      const tokenService: TokenService = new TokenService();
+      const userName: string = await tokenService.verifyAccessToken(token);
+  
+      const createdAt: number = Date.now();
+      const postId: string = await nanoid();
+  
+      // Check if both caption and image are empty
+      if (!(postFanMoment.image || (postFanMoment.caption && postFanMoment.caption.trim() !== ""))) {
+        return new ValidationError("Post is empty", "Either caption or image is required.");
+      }
+  
+      const post: PostFanMoment = { ...postFanMoment, userName, postId, createdAt, likes: [], comments: [], shares: [] };
+  
+      const connection: rt.Connection = await getRethinkDB();
+      await rt
+        .db('beats')
+        .table('fanZone')
+        .insert(post)
+        .run(connection);
+  
+      return new SuccessMessage("Fanzone post success");
+    } catch (error: any) {
+      console.error("Error posting fan moment:", error);
+      throw new Error(`Failed to post fan moment: ${error.message}`);
+    }
+  }
+
+  public async getHotFanMomentPosts(token: string, limit: number, offset: number): Promise<PostFanMoment[]> {
+    try {
+      const tokenService: TokenService = new TokenService();
+      const profileService: ProfileService = new ProfileService();
+  
+      await tokenService.verifyAccessToken(token);
+  
+      const connection: rt.Connection = await getRethinkDB();
+      const cursor = await rt
+        .db('beats')
+        .table('fanZone')
+        .orderBy(rt.desc('createdAt')) // Ensure that the data is ordered before pagination
+        .slice(offset, offset + limit) // Use slice for pagination
+        .run(connection);
+  
+      const posts: PostFanMoment[] = await cursor.toArray();
+  
+      const postsWithTrendScore = posts.map(post => ({
+        ...post,
+        trendScore: this.calculateTrendScore(post),
+        formattedTime: this.formatTimeDifference(post.createdAt || 0)
+      }));
+  
+      // Extract unique usernames from the posts
+      const userNames: (string | undefined)[] = [...new Set(postsWithTrendScore.map(post => post.userName))];
+      const profilePics: ProfilePicture[] = await profileService.getDisplayPic(token, userNames);
+  
+      // Map profile pictures to the corresponding posts
+      const postsWithProfilePics = postsWithTrendScore.map(post => {
+        const profilePic = profilePics.find(pic => pic.userName === post.userName);
+        return {
+          ...post,
+          profilePic: profilePic ? profilePic.profilePicture : null
+        };
+      });
+  
+      // Sort posts by trend score in descending order
+      postsWithProfilePics.sort((a, b) => b.trendScore - a.trendScore);
+  
+      return postsWithProfilePics;
+    } catch (error: any) {
+      console.error('Error retrieving hot fan moment posts:', error);
+      throw new Error('Failed to retrieve hot fan moment posts');
+    }
+  }
+  
+  public async getMyFanMomentPosts(token: string, limit: number, offset: number): Promise<PostFanMoment[]> {
+    try {
+      const tokenService: TokenService = new TokenService();
+      const profileService: ProfileService = new ProfileService();
+  
+      const userName: string = await tokenService.verifyAccessToken(token);
+  
+      const connection: rt.Connection = await getRethinkDB();
+      const cursor = await rt
+        .db('beats')
+        .table('fanZone')
+        .filter({ userName })
+        .orderBy(rt.desc('createdAt')) // Ensure that the data is ordered before pagination
+        .slice(offset, offset + limit) // Use slice for pagination
+        .run(connection);
+  
+      const posts: PostFanMoment[] = await cursor.toArray();
+  
+      const userNames: (string | undefined)[] = [...new Set(posts.map(post => post.userName))];
+      const profilePics: ProfilePicture[] = await profileService.getDisplayPic(token, userNames);
+  
+      const profilePicMap: { [key: string]: ProfilePicture } = {};
+      profilePics.forEach(pic => {
+        if (pic.userName) {
+          profilePicMap[pic.userName] = pic;
+        }
+      });
+  
+      const postsWithProfilePics = posts.map(post => ({
+        ...post,
+        profilePicture: post.userName ? profilePicMap[post.userName] : undefined,
+        formattedTime: this.formatTimeDifference(post.createdAt || 0)
+      }));
+  
+      return postsWithProfilePics;
+    } catch (error: any) {
+      console.error('Error retrieving my fan moment posts:', error);
+      throw new Error('Failed to retrieve my fan moment posts');
+    }
+  }
+
+  public async getLatestFanMomentPosts(token: string, limit: number, offset: number): Promise<PostFanMoment[]> {
+    try {
+      const tokenService: TokenService = new TokenService();
+      const profileService: ProfileService = new ProfileService();
+  
+      await tokenService.verifyAccessToken(token);
+  
+      const connection: rt.Connection = await getRethinkDB();
+      const cursor = await rt
+        .db('beats')
+        .table('fanZone')
+        .orderBy(rt.asc('createdAt')) // Ensure that the data is ordered before pagination
+        .slice(offset, offset + limit) // Use slice for pagination
+        .run(connection);
+  
+      const posts: PostFanMoment[] = await cursor.toArray();
+  
+      const userNames: (string | undefined)[] = [...new Set(posts.map(post => post.userName))];
+      const profilePics: ProfilePicture[] = await profileService.getDisplayPic(token, userNames);
+  
+      const profilePicMap: { [key: string]: ProfilePicture } = {};
+      profilePics.forEach(pic => {
+        if (pic.userName) {
+          profilePicMap[pic.userName] = pic;
+        }
+      });
+  
+      const postsWithProfilePics = posts.map(post => ({
+        ...post,
+        profilePicture: post.userName ? profilePicMap[post.userName] : undefined,
+        formattedTime: this.formatTimeDifference(post.createdAt || 0)
+      }));
+  
+      return postsWithProfilePics;
+    } catch (error: any) {
+      console.error('Error retrieving my fan moment posts:', error);
+      throw new Error('Failed to retrieve my fan moment posts');
+    }
+  }
+  
+  public async getFollowingMomentPosts(token: string, limit: number, offset: number): Promise<PostFanMoment[]> {
+    try {
+      const tokenService: TokenService = new TokenService();
+      const profileService: ProfileService = new ProfileService();
+      const userName: string = await tokenService.verifyAccessToken(token);
+  
+      const session: Session = this.driver.session();
+      const result: QueryResult = await session.executeRead((tx: ManagedTransaction) =>
+        tx.run(
+          `
+          MATCH (u1:User {username: $userName})-[:FOLLOW]->(u2)
+          RETURN COLLECT(u2.username) AS followingUsernames
+          `,
+          { userName }
+        )
+      );
+  
+      const followingUsernames = result.records[0].get('followingUsernames') as string[];
+  
+      if (followingUsernames.length === 0) {
+        return [];
+      }
+  
+      const connection: rt.Connection = await getRethinkDB();
+      const cursor = await rt
+        .db('beats')
+        .table('(fanZone')
+        .filter(followingUsernames)
+        .orderBy(rt.desc('uploadedAt')) // Ensure that the data is ordered before pagination
+        .slice(offset, offset + limit) // Use slice for pagination
+        .run(connection);
+  
+      const posts: PostFanMoment[] = await cursor.toArray();
+  
+      const userNames: (string | undefined)[] = [...new Set(posts.map(post => post.userName))];
+      const profilePics: ProfilePicture[] = await profileService.getDisplayPic(token, userNames);
+  
+      const profilePicMap: { [key: string]: ProfilePicture } = {};
+      profilePics.forEach(pic => {
+        if (pic.userName) {
+          profilePicMap[pic.userName] = pic;
+        }
+      });
+  
+      const postsWithProfilePics = posts.map(post => ({
+        ...post,
+        profilePicture: post.userName ? profilePicMap[post.userName] : undefined,
+        formattedTime: this.formatTimeDifference(post.createdAt || 0)
+      }));
+  
+      return postsWithProfilePics;
+    } catch (error: any) {
+      console.error('Error retrieving following moment posts:', error);
+      throw new Error('Failed to retrieve following moment posts');
+    }
+  }
   
   
   
-};
+
+	private calculateTrendScore(post: PostFanMoment): number {
+		const W_likes: number = 1;
+		const W_comments: number = 2;
+		const W_shares: number = 3;
+
+		const likesCount: number = post.likes ? post.likes.length : 0;
+		const commentsCount: number = post.comments ? post.comments.length : 0;
+		const sharesCount: number = post.shares ? post.shares.length : 0;
+		const trendScore: number = (likesCount * W_likes) + (commentsCount * W_comments) + (sharesCount * W_shares);
+		return trendScore;
+	}
+
+  private formatTimeDifference(createdAt: number): string {
+    const now = Date.now();
+    const diff = now - createdAt;
+
+    const minutes = Math.floor(diff / (1000 * 60));
+    if (minutes < 60) return `${minutes}min`;
+
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    if (hours < 24) return `${hours}h`;
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    if (days < 365) return `${days}D`;
+
+    const years = Math.floor(days / 365);
+    return `${years}y`;
+  }
+
+  public async likeFanMoment(token: string, fanMomentId: FanMomentId) {
+    try {
+      const tokenService: TokenService = new TokenService();
+      const userName: string = await tokenService.verifyAccessToken(token);
+
+      const connection: rt.Connection = await getRethinkDB();
+
+      const query: PostFanMoment = await rt
+        .db('beats')
+        .table('fanZone')
+        .get(fanMomentId.id)
+        .run(connection) as PostFanMoment;
+
+      if (!query) {
+        throw new ValidationError(`Fan moment with ID '${fanMomentId.id}' not found.`, "");
+      }
+
+      const likeIndex: number = query.likes ? query.likes.findIndex(like => like === userName) : -1;
+
+      if (likeIndex === -1) {
+        // User has not liked this post yet, add the like
+        await rt
+          .db('beats')
+          .table('fanZone')
+          .get(fanMomentId.id)
+          .update({
+            likes: rt.row('likes').default([]).append(userName)
+          })
+          .run(connection);
+
+        return new SuccessMessage("Fan moment liked successfully")
+      } else {
+        return new Error('User has already liked this fan moment')
+      }
+    } catch (error: any) {
+      console.error('Error liking fan moment:', error);
+      throw new Error(`Failed to like fan moment: ${error.message}`);
+    }
+  }
+
+  public async unlikeFanMoment(token: string, fanMomentId: FanMomentId) {
+    try {
+      const tokenService: TokenService = new TokenService();
+      const userName: string = await tokenService.verifyAccessToken(token);
+
+      const connection: rt.Connection = await getRethinkDB();
+
+      const query: PostFanMoment = await rt
+        .db('beats')
+        .table('fanZone')
+        .get(fanMomentId.id)
+        .run(connection) as PostFanMoment;
+
+      if (!query) {
+        throw new ValidationError(`Fan moment with ID '${fanMomentId.id}' not found.`, "");
+      }
+
+      const likes = query.likes || [];
+      const likeIndex = likes.findIndex(like => like === userName);
+
+      if (likeIndex !== -1) {
+        // User has liked this post, remove the like
+        likes.splice(likeIndex, 1);
+
+        await rt
+          .db('beats')
+          .table('fanZone')
+          .get(fanMomentId.id)
+          .update({ likes: likes })
+          .run(connection);
+
+        return new SuccessMessage('Fan moment unliked successfully')
+      } else {
+        return new Error('User has not liked this fan moment');
+      }
+    } catch (error: any) {
+      console.error('Error unliking fan moment:', error);
+      throw new Error(`Failed to unlike fan moment: ${error.message}`);
+    }
+  }
+
+  public async commentFanMoment(token: string, fanMomentComment: FanMomentComment): Promise<SuccessMessage> {
+    try {
+      const tokenService: TokenService = new TokenService();
+      const userName: string = await tokenService.verifyAccessToken(token);
+  
+      const connection: rt.Connection = await getRethinkDB();
+  
+      const { id, comment } = fanMomentComment;
+      const query: PostFanMoment = await rt
+        .db('beats')
+        .table('fanZone')
+        .get(id)
+        .run(connection) as PostFanMoment;
+  
+      if (!query) {
+        throw new ValidationError(`Fan moment with ID '${fanMomentComment.id}' not found.`, "");
+      }
+  
+      const timestamp: number = Date.now();
+      const commentId: string = await nanoid();
+      const newComment: PostComment = { userName, timestamp, commentId, comment };
+  
+      // If the comments array does not exist, initialize it
+      if (!query.comments) {
+        query.comments = [];
+      }
+  
+      // Add the new comment to the comments array
+      query.comments.push(newComment);
+  
+      // Update the fan moment with the new comments array
+      await rt
+        .db('beats')
+        .table('fanZone')
+        .get(id)
+        .update({ comments: query.comments })
+        .run(connection);
+      
+      return new SuccessMessage("Comment has been added")
+    } catch (error: any) {
+      console.error("Error commenting on fan moment:", error);
+      throw error;
+    }
+  }
+  
+
+
+}
 
 
 export default SocialService

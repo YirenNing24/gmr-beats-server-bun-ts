@@ -16,7 +16,7 @@ import { SuccessMessage } from '../outputs/success.message'
 
 //** VALIDATION SCHEMA IMPORT
 import { authorizationBearerSchema } from './route.schema/schema.auth'
-import { getProfilePictureSchema, likeProfilePicturePicSchema, newStatPointsSchema, updateMyNotesSchema, uploadDpBufferSchema } from './route.schema/schema.profile'
+import { getProfilePicsSchema, getProfilePictureSchema, likeProfilePicturePicSchema, newStatPointsSchema, updateMyNotesSchema, uploadDpBufferSchema } from './route.schema/schema.profile'
 import { soulMetaDataSchema } from '../game.services/profile.services/profile.schema'
 import ValidationError from '../outputs/validation.error'
 
@@ -125,6 +125,26 @@ const profile = (app: Elysia) => {
       return error;
       }
     }, uploadDpBufferSchema
+  )
+
+  .post('/api/open/profilepics', async ({ headers, body }): Promise<ProfilePicture[]> => {
+    try {
+      const authorizationHeader: string | null = headers.authorization;
+      if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+        throw new Error('Bearer token not found in Authorization header');
+      }
+      const jwtToken: string = authorizationHeader.substring(7);
+
+      const driver: Driver = getDriver();
+      const profileService: ProfileService = new ProfileService(driver);
+
+      const output: ProfilePicture[] = await profileService.getDisplayPic(jwtToken, body)
+
+      return output as ProfilePicture[]
+    } catch(error: any) {
+      throw error
+    }
+    }, getProfilePicsSchema
   )
 
   .post('/api/like/profilepic', async ({ headers, body }): Promise<SuccessMessage | ValidationError> => {
@@ -288,6 +308,8 @@ const profile = (app: Elysia) => {
       }
     }, authorizationBearerSchema
   )
+
+  
   
 };
 
