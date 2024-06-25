@@ -91,3 +91,9 @@ export const getProfilePicsSchema = {
     body: t.Array(t.String())
 
 }
+
+export const changeProfilePicsSchema = {
+    headers: t.Object({ authorization: t.String() }), 
+    body: t.Object({ id: t.String() })
+
+}

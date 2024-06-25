@@ -10,7 +10,7 @@
     "start": "bun run --loader src/hello.zig"
   },
   "peerDependencies": {
-    "typescript": "^5.3.3"
+    "typescript": "^5.5.2"
   },
   "dependencies": {
     "@elysiajs/cors": "^0.6.0",
@@ -22,7 +22,7 @@
     "@thirdweb-dev/storage": "^2.0.15",
     "@thirdweb-dev/wallets": "^2.5.39",
     "@types/jsonwebtoken": "^9.0.6",
-    "@types/node": "^20.14.6",
+    "@types/node": "^20.14.8",
     "@types/rethinkdb": "^2.3.21",
     "bcrypt-ts": "^4.0.1",
     "crypto-random-string": "^5.0.0",
@@ -30,7 +30,7 @@
     "elysia-ip": "^0.0.7",
     "ethers": "^5.7.2",
     "fast-jwt": "^4.0.1",
-    "geoip-lite2": "^2.1.36",
+    "geoip-lite2": "^2.1.37",
     "google-auth-library": "^9.11.0",
     "hyperimport": "^0.2.0",
     "nanoid": "^4.0.2",

@@ -186,7 +186,7 @@ const social = (app: Elysia) => {
       }, cardGiftSchema
     )
 
-    .post('/api/social/my/fanmoments/post', async ({ headers, body }): Promise<SuccessMessage | Error> => {
+    .post('/api/social/fanmoments/post', async ({ headers, body }): Promise<SuccessMessage | Error> => {
       try {
         const authorizationHeader: string = headers.authorization;
         if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
@@ -267,6 +267,29 @@ const social = (app: Elysia) => {
         const driver: Driver = getDriver();
         const socialService: SocialService = new SocialService(driver);
         const output: PostFanMoment[] = await socialService.getLatestFanMomentPosts(jwtToken, limit, offset);
+
+        return output as PostFanMoment[]
+      } catch(error: any) {
+        throw error
+        }
+      }, getFanMomentSchema
+    )
+
+    .get('/api/social/following/fanmoments', async ({ headers, query }): Promise<PostFanMoment[]> => {
+      try {
+        const authorizationHeader: string = headers.authorization;
+        if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+          throw new Error('Bearer token not found in Authorization header');
+        }
+        const jwtToken: string = authorizationHeader.substring(7);
+
+        // Extract limit and offset from query parameters with default values
+        const limit: number = parseInt(query.limit as string) || 5;
+        const offset: number = parseInt(query.offset as string) || 0;
+
+        const driver: Driver = getDriver();
+        const socialService: SocialService = new SocialService(driver);
+        const output: PostFanMoment[] = await socialService.getFollowingMomentPosts(jwtToken, limit, offset);
 
         return output as PostFanMoment[]
       } catch(error: any) {

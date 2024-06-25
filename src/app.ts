@@ -8,30 +8,27 @@ import { initDriver } from './db/memgraph';
 //* INITIALIZERS
 import { NEO4J_PASSWORD, NEO4J_URI, NEO4J_USERNAME } from './config/constants.js';
 import routes from "./routes/index";
-import { ip } from "elysia-ip";
 
 
-const app: Elysia = new Elysia()
+// Initialize Elysia app
+const app = new Elysia()
+  
+  .use(cors({
+    origin: ['http://localhost:8085'],
+    methods: ["GET", "POST", "HEAD", "PUT", "OPTIONS"],
+    allowedHeaders: [
+      "content-Type",
+      "authorization",
+      "origin",
+      "x-Requested-with",
+      "accept",
+    ],
+    credentials: true,
+    maxAge: 600,
+  }))
 
-//@ts-ignore
-app.use(cors({
-  origin: ['http://localhost:8085'],
-  methods: ["GET", "POST", "HEAD", "PUT", "OPTIONS"],
-  allowedHeaders: [
-    "content-Type",
-    "authorization",
-    "origin",
-    "x-Requested-with",
-    "accept",
-  ],
-  credentials: true,
-  maxAge: 600,
-}))
-//@ts-ignore
-.use(routes)
+routes(app)
 
-
-//@ts-ignore
 initDriver(NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD);
 
 export default app

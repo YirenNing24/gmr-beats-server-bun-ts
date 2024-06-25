@@ -82,7 +82,6 @@ class AuthService {
                country: "SOKOR",
                deviceId: $deviceId,
                inventorySize: 200,
-               profilePictures: []
              })
            `,
            { signupDate, userId, userName, encrypted, localWallet, smartWalletAddress, locKey, playerStats, suspended, country, deviceId }
@@ -266,7 +265,6 @@ class AuthService {
               country: "SOKOR",
               deviceId: $deviceId,
               inventorySize: 200,
-              profilePictures: []
             })
           `,
           { signupDate, playerId, userName, encrypted, localWallet, smartWalletAddress, locKey, playerStats, suspended, country, deviceId }

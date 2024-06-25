@@ -2,7 +2,7 @@
 import { Driver, ManagedTransaction, QueryResult, RecordShape, Session } from "neo4j-driver";
 
 //** RETHINK DB IMPORT
-import rt from "rethinkdb";
+import rt, { WriteResult } from "rethinkdb";
 import { getRethinkDB } from "../../db/rethink";
 
 //** OUTPUT IMPORTS
@@ -239,6 +239,7 @@ class ProfileService {
         throw error;
       }
     }
+
   public async getProfilePic(token: string): Promise<ProfilePicture[]> {
       try {
         const tokenService: TokenService = new TokenService();
@@ -284,6 +285,42 @@ class ProfileService {
         console.error("Error getting profile pictures:", error);
         throw new ValidationError(`Error retrieving the profile pictures: ${error.message}.`, "");
     }
+    }
+
+  public async changeProfilePic(token: string, newProfilePicture: { id: string }): Promise<SuccessMessage> {
+      try {
+          const tokenService: TokenService = new TokenService();
+          await tokenService.verifyAccessToken(token);
+  
+          const { id } = newProfilePicture;
+          const connection: rt.Connection = await getRethinkDB();
+          const latestProfilePic = await rt
+              .db('beats')
+              .table('profilePic')
+              .get(id)
+              .run(connection);
+  
+          if (!latestProfilePic) {
+              throw new Error('No profile picture found for the user');
+          }
+  
+          // Update the user's profile picture to the latest one
+          const updateResult: rt.WriteResult = await rt
+              .db('beats')
+              .table('profilePic')
+              .get(id)
+              .update({ uploadedAt: Date.now() })
+              .run(connection);
+  
+          if (updateResult && updateResult.replaced === 1) {
+              return new SuccessMessage('Profile picture updated successfully');
+          } else {
+              throw new Error('Failed to update profile picture');
+          }
+      } catch (error: any) {
+          console.error('Error updating profile picture:', error);
+          throw error;
+      }
     }
 
   private async getProfilePicsCount(userName: string): Promise<number> {
@@ -469,7 +506,7 @@ class ProfileService {
           throw error;
       } 
     }
-  
+
   public async getOwnedCardCount(token: string): Promise<{ [groupName: string]: number }> {
       const tokenService: TokenService = new TokenService();
       try {

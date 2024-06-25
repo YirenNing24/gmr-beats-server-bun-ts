@@ -483,8 +483,8 @@ class SocialService {
       await tokenService.verifyAccessToken(token);
   
       const connection: rt.Connection = await getRethinkDB();
-      const cursor = await rt
-        .db('beats')
+      const cursor = await
+        rt.db('beats')
         .table('fanZone')
         .orderBy(rt.asc('createdAt')) // Ensure that the data is ordered before pagination
         .slice(offset, offset + limit) // Use slice for pagination
@@ -541,7 +541,7 @@ class SocialService {
       const connection: rt.Connection = await getRethinkDB();
       const cursor = await rt
         .db('beats')
-        .table('(fanZone')
+        .table('fanZone')
         .filter(followingUsernames)
         .orderBy(rt.desc('uploadedAt')) // Ensure that the data is ordered before pagination
         .slice(offset, offset + limit) // Use slice for pagination
@@ -572,9 +572,6 @@ class SocialService {
     }
   }
   
-  
-  
-
 	private calculateTrendScore(post: PostFanMoment): number {
 		const W_likes: number = 1;
 		const W_comments: number = 2;
