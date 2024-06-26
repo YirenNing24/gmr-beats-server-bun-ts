@@ -98,7 +98,7 @@ const social = (app: Elysia) => {
         const driver: Driver = getDriver();
         const socialService: SocialService = new SocialService(driver);
 
-        const output: MutualData[] = await socialService.mutual(jwtToken);
+        const output: MutualData[] = await socialService.getMutual(jwtToken);
         return output;
       } catch (error: any) {
         throw error

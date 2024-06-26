@@ -41,13 +41,14 @@ export interface SenderData {
 * @property {number} timestamp - Additional timestamp associated with the message.
 */
 export interface NewMessage {
-  id: string;
+  id?: string;
   message: string;
   roomId: string;
   sender: SenderData;
   receiver: string;
   ts: number;
   timestamp: number;
+  voiceMessage?: string;
 }
 
 /**

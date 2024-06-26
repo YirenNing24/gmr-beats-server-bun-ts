@@ -13,6 +13,7 @@ import TimeService from "../game.services/time.services/time.service";
 
 //** CONFIG IMPORT
 import ValidationError from "../outputs/validation.error";
+import { changeProfilePicsSchema } from "./route.schema/schema.profile";
 
 const chat = (app: Elysia): void => {
   app.ws('/api/ws', {
@@ -49,7 +50,8 @@ const chat = (app: Elysia): void => {
         throw error;
       }
     }
-  });
+  }
+), changeProfilePicsSchema
 };
 
 export default chat;

@@ -16,7 +16,7 @@ import ValidationError from "../outputs/validation.error";
 //** TYPE INTERFACE IMPORTS
 import { FollowResponse, ViewProfileData, ViewedUserData, MutualData, PlayerStatus, SetPlayerStatus, CardGiftData, CardGiftSending, PostFanMoment, FanMomentId, FanMomentComment, PostComment } from "./social.services.interface";
 import { SuccessMessage } from "../outputs/success.message";
-import { ProfilePicture } from "../game.services/profile.services/profile.interface";
+import { MyNote, ProfilePicture } from "../game.services/profile.services/profile.interface";
 
 //** IMPORTED SERVICES 
 import TokenService from "../user.services/token.services/token.service";
@@ -170,33 +170,79 @@ class SocialService {
   }
   
   //** Retrieves a list of users who are mutual followers with the specified user.
-   public async mutual(token: string): Promise<MutualData[]> {
+  public async getMutual(token: string): Promise<MutualData[]> {
     try {
-      const tokenService:  TokenService = new TokenService();
+      const tokenService: TokenService = new TokenService();
       const username: string = await tokenService.verifyAccessToken(token);
-      
+  
       const session: Session = this.driver.session();
       const result: QueryResult = await session.executeRead((tx: ManagedTransaction) =>
         tx.run(
           `
           MATCH (u1:User {username: $username})-[:FOLLOW]->(u2),
-                (u2)-[:FOLLOW]->(u1)
+              (u2)-[:FOLLOW]->(u1)
           RETURN u2.username as username, u2.playerStats as playerStats
           `,
           { username }
-        ));
+        )
+      );
       await session.close();
-
+  
       const users: MutualData[] = result.records.map(record => ({
         username: record.get("username") || "",
-        playerStats: record.get("playerStats") || "" })) as MutualData[];
-
-      return users as MutualData[];
+        playerStats: record.get("playerStats") || ""
+      })) as MutualData[];
+  
+      const usernames = users.map(user => user.username);
+  
+      const profileService: ProfileService = new ProfileService();
+      const profilePics: ProfilePicture[] = await profileService.getDisplayPic(token, usernames);
+      const myNotes: MyNote[] = await this.getMutualMyNotes(usernames);
+  
+      const usersWithProfilePics = users.map(user => {
+        const profilePic: ProfilePicture | undefined = profilePics.find(pic => pic.userName === user.username);
+        const note: MyNote | undefined = myNotes.find(note => note.userName === user.username);
+        return {
+          ...user,
+          profilePicture: profilePic || null, // Add profilePicture data or null if not found
+          myNote: note || null // Add myNote data or null if not found
+        };
+      });
+  
+      return usersWithProfilePics as MutualData[];
     } catch (error: any) {
       console.error("Something went wrong: ", error);
       throw error;
     }
   }
+  
+
+  public async getMutualMyNotes(usernames: string[]): Promise<MyNote[]> {
+    try {
+
+  
+      const connection: rt.Connection = await getRethinkDB();
+      
+      // Retrieve the latest note for the user
+      const cursor: rt.Cursor = await rt
+        .db('beats')
+        .table('myNotes')
+        .filter(usernames)
+        .orderBy(rt.desc('createdAt'))
+        .limit(1)
+        .run(connection);
+      
+      const notesArray: MyNote[] = await cursor.toArray();
+      
+      const myNote: MyNote[] = notesArray;
+  
+      return myNote;
+    } catch (error: any) {
+      console.error("Error retrieving note:", error);
+      throw error;
+    }
+  }
+  
 
   //** Retrieves the online status of mutual followers for the specified user.
   public async mutualStatus(token: string): Promise<PlayerStatus[]> {

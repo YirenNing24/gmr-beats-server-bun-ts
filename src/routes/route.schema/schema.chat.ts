@@ -22,3 +22,4 @@ export const newMessageSchema = {
         receiver: t.String(),
         ts: t.Number()  })
 }
+

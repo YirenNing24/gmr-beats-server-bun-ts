@@ -602,7 +602,38 @@ class ProfileService {
       }
     }
 
-  public async getMyNotes(token: string,): Promise<MyNote | {}> {
+  public async getMutualMyNotes(token: string,): Promise<MyNote | {}> {
+      try {
+        const tokenService: TokenService = new TokenService();
+        const userName: string = await tokenService.verifyAccessToken(token);
+    
+        const connection: rt.Connection = await getRethinkDB();
+        
+        // Retrieve the latest note for the user
+        const cursor: rt.Cursor = await rt
+          .db('beats')
+          .table('myNotes')
+          .filter({ userName })
+          .orderBy(rt.desc('createdAt')) // Order by createdAt timestamp in descending order
+          .limit(1) // Limit to one result
+          .run(connection);
+        
+        const notesArray: MyNote[] = await cursor.toArray();
+        
+        if (notesArray.length === 0) {
+          return {}
+        }
+    
+        const myNote: MyNote = notesArray[0];
+    
+        return myNote;
+      } catch (error: any) {
+        console.error("Error retrieving note:", error);
+        throw error;
+      }
+    }
+
+    public async getMyNotes(token: string,): Promise<MyNote | {}> {
       try {
         const tokenService: TokenService = new TokenService();
         const userName: string = await tokenService.verifyAccessToken(token);
