@@ -49,6 +49,7 @@ export const CARD_UPGRADE: string = '0xac8aADf1dB87A6193E306884aB57940f72986a53'
 export const SOUL_ADDRESS: string = '0xc465946c70C08e438294824050B51cfb77aEe2A5';
 export const SOCIAL_BADGES_ADDRESS: string = '0xa98d398DA254Cda866acae71592ac8E12581AF19';
 export const PRIVATE_KEY: string  = process.env.THIRDWEB_AUTH_PRIVATE_KEY || ""
+export const ENGINE_ACCESS_TOKEN: string = process.env.ENGINE_ACCESS_TOKEN || ""
 
 export const GOOGLE_CLIENT_ID: string  = process.env.GOOGLE_CLIENT_ID || ""
 export const GOOGLE_CLIENT_SECRET: string = process.env.GOOGLE_CLIENT_SECRET || ""
