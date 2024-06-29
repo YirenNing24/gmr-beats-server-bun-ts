@@ -33,7 +33,6 @@ class WalletService {
 
   public async getWalletBalance(walletAddress: string) {
     try {
-
       const chain = "421614" //ARBITRUM SEPOLIA
       const [arbitrumToken, gmrToken, beatsToken] = await Promise.all([
         engine.backendWallet.getBalance(chain, walletAddress),
