@@ -40,6 +40,6 @@
     "ollama": "^0.4.9",
     "redis": "^4.6.14",
     "rethinkdb": "^2.4.2",
-    "thirdweb": "^5.30.0"
+    "thirdweb": "^5.31.0"
   }
 }
