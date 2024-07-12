@@ -1,111 +1,56 @@
 //** THIRDWEB IMPORT * TYPES
-import { ThirdwebSDK } from "@thirdweb-dev/sdk";
-import { LocalWalletNode } from "@thirdweb-dev/wallets/evm/wallets/local-wallet-node";
-import { SmartWallet } from "@thirdweb-dev/wallets";
+import { Engine } from "@thirdweb-dev/engine";
 
-
-// * CONFIGS
-import { CHAIN, BEATS_TOKEN, GMR_TOKEN, SECRET_KEY, SMART_WALLET_CONFIG } from "../../config/constants";
+//** CONFIG IMPORT
+import { BEATS_TOKEN, GMR_TOKEN, ENGINE_ACCESS_TOKEN } from "../../config/constants";
 
 //**  TYPE INTERFACE
 import { WalletData } from "../user.service.interface";
 
-/**
- * Public class representing a WalletService.
- */
-export default class WalletService {
+const engine = new Engine({
+  url: "http://localhost:3005",
+  accessToken: ENGINE_ACCESS_TOKEN,
+  
+});
 
-  //** Creates a wallet and returns the wallet data.
-  public async createWallet(password: string): Promise<{ localWallet: string, smartWalletAddress: string }> {
+class WalletService {
+
+  //** Creates a wallet and returns the wallet address.
+  public async createWallet(username: string): Promise<string> {
     try {
-      // Local signer
-      const newWallet: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
-      await newWallet.generate();
-      const localWallet: string = await newWallet.export({
-        strategy: "encryptedJson",
-        password: password,
-      });
-      const smartWalletAddress: string = await this.getWalletAddress(localWallet, password);
+        // Create a new backend wallet with the player's username as the label
+        const wallet = await engine.backendWallet.create({ label: username });
 
-      return { localWallet, smartWalletAddress }
-    } catch (error) {
-      console.error("Something went wrong: ", error);
-      throw error;
+        // Extract the wallet address from the response
+        const { walletAddress } = wallet.result;
+
+        return walletAddress as string;
+    } catch (error: any) {
+        console.error("Error creating player wallet:", error);
+        throw error;
     }
   }
 
-  //** Imports a wallet using the provided wallet data and password.
-  public async importWallet(walletData: string, password: string): Promise<WalletData> {
+  public async getWalletBalance(walletAddress: string) {
     try {
-      const localWallet: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
-      await localWallet.import({
-        encryptedJson: walletData,
-        password: password,
-      });
+      const chain = "421614" //ARBITRUM SEPOLIA
+      const [arbitrumToken, gmrToken, beatsToken] = await Promise.all([
+        engine.backendWallet.getBalance(chain, walletAddress),
+        engine.erc20.balanceOf(walletAddress, chain, GMR_TOKEN),
+        engine.erc20.balanceOf(walletAddress, chain, BEATS_TOKEN)
+      ]);
 
-      // Connect the smart wallet
-      const smartWallet: SmartWallet = new SmartWallet(SMART_WALLET_CONFIG);
-      await smartWallet.connect({
-        personalWallet: localWallet,
-      });
-
-      // Use the SDK normally
-      const sdk: ThirdwebSDK = await ThirdwebSDK.fromWallet(smartWallet, CHAIN, {
-        secretKey: SECRET_KEY,
-      });
-
-      
-
-      // Fetch token balances using the SDK
-      const [beatsBalance, gmrBalance, nativeBalance, smartWalletAddress] = await Promise.all([
-        sdk.wallet.balance(BEATS_TOKEN),
-        sdk.wallet.balance(GMR_TOKEN),
-        sdk.wallet.balance(),
-        sdk.wallet.getAddress()
-      ])
-
-      // Return an object containing the wallet's 0x address and balance information
       return {
-        smartWalletAddress,
-        beatsBalance: beatsBalance.displayValue,
-        gmrBalance: gmrBalance.displayValue,
-        nativeBalance: nativeBalance.displayValue,
-      } as WalletData
-    } catch (error: any) {
-
-      console.error("Something went wrong: ", error);
-      throw error;
-    }
-  }
-
-  public async getWalletAddress(walletData: string, password: string): Promise<string> {
-    try {
-      const localWallet: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
-      await localWallet.import({
-        encryptedJson: walletData,
-        password: password,
-      });
-
-      // Connect the smart wallet
-      const smartWallet: SmartWallet = new SmartWallet(SMART_WALLET_CONFIG);
-      await smartWallet.connect({
-        personalWallet: localWallet,
-      });
-
-      // Use the SDK normally
-      const sdk: ThirdwebSDK = await ThirdwebSDK.fromWallet(smartWallet, CHAIN, {
-        secretKey: SECRET_KEY,
-      });
-
-      // Fetch token balances using the SDK
-      const [smartWalletAddress] = await Promise.all([
-        sdk.wallet.getAddress()
-      ])
-
-      // Return an object containing the wallet's 0x
-      return smartWalletAddress as string
+        smartWalletAddress: walletAddress,
+        beatsBalance: beatsToken.result.displayValue,
+        gmrBalance: gmrToken.result.displayValue,
+        nativeBalance: arbitrumToken.result.displayValue,
+      } as WalletData;
     } catch (error: any) {
       throw error;
     }
   }
+
 }
+
+export default WalletService

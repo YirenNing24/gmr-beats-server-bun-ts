@@ -48,68 +48,61 @@ class AuthService {
   public async register(userData: User, ipAddress: string): Promise<void> {
     const walletService: WalletService = new WalletService();
     const replenishService: Replenishments = new Replenishments();
-
+  
     const userId: string = await nanoid();
-    const { userName, password, deviceId } = userData as User
+    const { userName, password, deviceId } = userData as User;
     const encrypted: string = await hash(password, parseInt(SALT_ROUNDS));
-    const locKey: string = await hash(userName, parseInt(SALT_ROUNDS));
 
-    const wallets = await walletService.createWallet(locKey)
-    const { localWallet, smartWalletAddress } = wallets
-    const signupDate: number = Date.now()
+    const smartWalletAddress: string = await walletService.createWallet(userName);
+    const signupDate: number = Date.now();
     const suspended: Suspended = { until: null, reason: "" };
-
+  
     const geo = geoip.lookup(ipAddress);
-    const country: string | undefined = geo?.country
-
-
+    const country: string | undefined = geo?.country || "SOKOR";
+  
     const session: Session = this.driver.session();
     try {
-       await session.executeWrite(
+      await session.executeWrite(
         (tx: ManagedTransaction) => tx.run(
-           `
-             CREATE (u:User {
-               signupDate: $signupDate,
-               accountType: "beats",
-               userId: $userId,
-               username: $userName,
-               password: $encrypted,
-               localWallet: $localWallet, 
-               localWalletKey: $locKey,
-               smartWalletAddress: $smartWalletAddress,
-               playerStats: $playerStats,
-               suspended: $suspended,
-               country: "SOKOR",
-               deviceId: $deviceId,
-               inventorySize: 200,
-             })
-           `,
-           { signupDate, userId, userName, encrypted, localWallet, smartWalletAddress, locKey, playerStats, suspended, country, deviceId }
-         ) 
-       )
-
-      // Close the session
-      await session.close()
-
+          `
+          CREATE (u:User {
+            signupDate: $signupDate,
+            accountType: "beats",
+            userId: $userId,
+            username: $userName,
+            password: $encrypted,
+            smartWalletAddress: $smartWalletAddress,
+            playerStats: $playerStats,
+            suspended: $suspended,
+            country: $country,
+            deviceId: $deviceId,
+            inventorySize: 200
+          })
+          `,
+          { signupDate, userId, userName, encrypted, smartWalletAddress, suspended, country, deviceId, playerStats }
+        )
+      );
+  
       // Set energy for new users to 200
       const currentTime: number = Math.floor(Date.now() / 1000);
-      await replenishService.setEnergy(userName, currentTime, 200, 1)
-
+      await replenishService.setEnergy(userName, currentTime, 200, 1);
+  
     } catch (error: any) {
       // Handle unique constraints in the database
       if (error.code === 'Neo.ClientError.Schema.ConstraintValidationFailed') {
         if (error.message.includes('username')) {
           throw new ValidationError(
             `An account already exists with the username ${userName}`,
-              'Username already taken',
-            )
-          }
+            'Username already taken',
+          );
         }
-        throw error
-      } finally {
-        await session.close()
       }
-    };
+      throw error;
+    } finally {
+      await session.close();
+    }
+  }
+  
 
   // Authenticates a user with the provided username and unencrypted password.
   public async authenticate(userName: string, unencryptedPassword: string): Promise<AuthenticateReturn> {
@@ -139,11 +132,11 @@ class AuthService {
             throw new ValidationError('Incorrect password.', "Incorrect password");
         }
         // Return User Details
-        const { password, localWallet, localWalletKey, playerStats, userId, username, ...safeProperties } = user.properties
+        const { password, smartWalletAddress, playerStats, userId, username, ...safeProperties } = user.properties
 
-        const walletPromise: Promise<WalletData> = walletService.importWallet(localWallet, localWalletKey);
+        const walletPromise: Promise<WalletData> = walletService.getWalletBalance(smartWalletAddress);
         const energyPromise: Promise<number> = replenishService.getEnergy(userName, playerStats);
-        const [ wallet, energy] = await Promise.all([ walletPromise, energyPromise ]);
+        const [ wallet, energy ] = await Promise.all([ walletPromise, energyPromise ]);
 
         const tokens: TokenScheme = await tokenService.generateTokens(userName);
         const { refreshToken, accessToken } = tokens as TokenScheme
@@ -175,7 +168,9 @@ class AuthService {
         const replenishService: Replenishments = new Replenishments();
         const tokenService: TokenService = new TokenService();
   
-        const accessRefresh:  TokenScheme = await tokenService.verifyRefreshToken(token);
+        const accessRefresh: TokenScheme = await tokenService.verifyRefreshToken(token);
+
+        console.log("yes: ", accessRefresh)
 
         const { userName, accessToken, refreshToken  } = accessRefresh as  TokenScheme
   
@@ -193,14 +188,14 @@ class AuthService {
         }
         
         const userData: UserData = result.records[0].get('u');
-        const { localWallet, localWalletKey, playerStats, password, userId, username, ...safeProperties } = userData.properties;
+        const { smartWalletAddress, playerStats, password, userId, username, ...safeProperties } = userData.properties;
         
         // Import the user's smart wallet using the WalletService class
-        const walletPromise: Promise<WalletData> = walletService.importWallet(localWallet, localWalletKey);
+        const walletPromise: Promise<WalletData> = walletService.getWalletBalance(smartWalletAddress);
         const energyPromise: Promise<number> = replenishService.getEnergy(username, playerStats) ;
   
         // const statsPromise = profileService.getStats(username);
-        const [walletSmart, energy ] = await Promise.all([walletPromise, energyPromise ]);
+        const [ walletSmart, energy ] = await Promise.all([walletPromise, energyPromise ]);
   
         // Return an object containing the user's smart wallet, safe properties, success message, and JWT token
         return {
@@ -222,10 +217,8 @@ class AuthService {
     };
 
   public async googleRegister(body: GoogleRegister , ipAddress: string): Promise<void | ValidationError> {
-
     const walletService: WalletService = new WalletService();
     const replenishService: Replenishments = new Replenishments();
-
     const googleService: GoogleService = new GoogleService();
 
     const { serverToken, deviceId } = body
@@ -243,10 +236,7 @@ class AuthService {
     try {
       const password: string = await nanoid()
       const encrypted: string = await hash(password, parseInt(SALT_ROUNDS));
-      const locKey: string = await hash(displayName, parseInt(SALT_ROUNDS));
-
-      const wallets = await walletService.createWallet(locKey);
-      const { localWallet, smartWalletAddress } = wallets
+      const smartWalletAddress: string = await walletService.createWallet(userName);
 
       await session.executeWrite(
         (tx: ManagedTransaction) => tx.run(
@@ -257,8 +247,6 @@ class AuthService {
               userId: $playerId,
               username: $userName,
               password: $encrypted,
-              localWallet: $localWallet, 
-              localWalletKey: $locKey,
               smartWalletAddress: $smartWalletAddress, 
               playerStats: $playerStats,
               suspended: $suspended,
@@ -267,7 +255,7 @@ class AuthService {
               inventorySize: 200,
             })
           `,
-          { signupDate, playerId, userName, encrypted, localWallet, smartWalletAddress, locKey, playerStats, suspended, country, deviceId }
+          { signupDate, playerId, userName, encrypted, smartWalletAddress, playerStats, suspended, country, deviceId }
           ) 
         )
   
@@ -328,9 +316,9 @@ class AuthService {
       const user: UserData = result.records[0].get('u');
 
       // Return User Details
-      const { password, localWallet, localWalletKey, playerStats, userId, username, ...safeProperties } = user.properties
+      const { password, smartWalletAddress, playerStats, userId, username, ...safeProperties } = user.properties
 
-      const walletPromise: Promise<WalletData> = walletService.importWallet(localWallet, localWalletKey);
+      const walletPromise: Promise<WalletData> = walletService.getWalletBalance(smartWalletAddress);
       const energyPromise: Promise<number> = replenishService.getEnergy(userName, playerStats);
       const [ wallet, energy] = await Promise.all([walletPromise, energyPromise]);
 
