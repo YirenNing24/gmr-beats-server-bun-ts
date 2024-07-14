@@ -216,11 +216,10 @@ class SocialService {
     }
   }
   
-
   public async getMutualMyNotes(usernames: string[]): Promise<MyNote[]> {
     try {
 
-  
+      setInterval
       const connection: rt.Connection = await getRethinkDB();
       
       // Retrieve the latest note for the user

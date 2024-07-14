@@ -170,8 +170,6 @@ class AuthService {
   
         const accessRefresh: TokenScheme = await tokenService.verifyRefreshToken(token);
 
-        console.log("yes: ", accessRefresh)
-
         const { userName, accessToken, refreshToken  } = accessRefresh as  TokenScheme
   
         // Open a new session
