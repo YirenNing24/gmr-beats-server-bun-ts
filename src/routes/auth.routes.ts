@@ -64,7 +64,7 @@ const auth = (app: Elysia): void => {
 
       const output: ValidateSessionReturn = await authService.validateSession(jwtToken);
       return output as ValidateSessionReturn;
-    } catch (error: any) {
+    } catch (error: any) {  
       throw error
     }
         }, authorizationBearerSchema

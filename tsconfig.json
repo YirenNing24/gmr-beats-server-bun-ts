@@ -6,14 +6,19 @@
     "moduleResolution": "bundler",
     "moduleDetection": "force",
     "allowImportingTsExtensions": true,
+    "typeRoots": ["node_modules/@types"],
     "noEmit": true,
     "composite": true,
     "strict": true,
     "downlevelIteration": true,
+    "paths": {
+      "*": ["/node_modules/*"]
+    },
     "skipLibCheck": true,
     "jsx": "preserve",
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
+    
     "allowJs": true,
     "rootDir": "./src",
     "types": [

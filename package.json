@@ -26,6 +26,7 @@
     "@types/node": "^20.14.10",
     "@types/rethinkdb": "^2.3.21",
     "bcrypt-ts": "^4.0.1",
+    "colyseus": "^0.15.17",
     "crypto-random-string": "^5.0.0",
     "elysia": "^0.7.31",
     "elysia-ip": "^0.0.7",

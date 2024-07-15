@@ -1,6 +1,11 @@
 
+import { Room } from "colyseus"
 
-class GameService {
+class GameService extends Room {
+
+    onCreate(options: any): void | Promise<any> {
+            
+    }
 
 
     public async setVariables() {
