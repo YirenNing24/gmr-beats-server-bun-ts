@@ -35,13 +35,14 @@ import { LocalWallet, WalletData, UserData, ValidateSessionReturn, AuthenticateR
 //** GEO IP IMPORT
 import geoip from 'geoip-lite2'
 import { GoogleRegister } from './auth.interface.js'
+import { SuccessMessage } from '../../outputs/success.message.js'
 
 class AuthService {
 
   driver: Driver
   constructor(driver: Driver) {
     this.driver = driver
-    }
+    };
 
 
   // Registers a user.
@@ -101,7 +102,7 @@ class AuthService {
     } finally {
       await session.close();
     }
-  }
+    }
   
 
   // Authenticates a user with the provided username and unencrypted password.
@@ -158,7 +159,7 @@ class AuthService {
         console.log(error)
         throw error;
     }
-    };
+    }
 
   // Authenticates a user using JWT for auto-login.
   public async validateSession(token: string): Promise<ValidateSessionReturn>  {
@@ -170,7 +171,7 @@ class AuthService {
   
         const accessRefresh: TokenScheme = await tokenService.verifyRefreshToken(token);
 
-        const { userName, accessToken, refreshToken  } = accessRefresh as  TokenScheme
+        const { userName, accessToken, refreshToken  } = accessRefresh as  TokenScheme;
   
         // Open a new session
         const session:Session = this.driver.session();
@@ -212,7 +213,20 @@ class AuthService {
           console.log(error)
           throw error;
         }
-    };
+    }
+
+  public async authenticateBeatsClient(token: string): Promise<SuccessMessage> {
+    try {
+      const tokenService: TokenService = new TokenService();
+      await tokenService.verifyRefreshToken(token);
+
+      return new SuccessMessage("Token is valid");
+    } catch(error: any) {
+      throw error
+    }
+    
+  }
+
 
   public async googleRegister(body: GoogleRegister , ipAddress: string): Promise<void | ValidationError> {
     const walletService: WalletService = new WalletService();
@@ -280,7 +294,7 @@ class AuthService {
         } finally {
           await session.close()
         }
-    };
+    }
 
   // Logins a user using Google Auth
   public async googleLogin(token: string): Promise<AuthenticateReturn | ValidationError> {
@@ -342,13 +356,9 @@ class AuthService {
 
     }
 
-    };
+    }
 
 
-
-
-
- 
 };
 
 export default AuthService
