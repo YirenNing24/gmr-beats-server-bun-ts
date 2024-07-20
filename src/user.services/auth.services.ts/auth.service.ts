@@ -215,17 +215,23 @@ class AuthService {
         }
     }
 
-  public async authenticateBeatsClient(token: string): Promise<SuccessMessage> {
-    try {
-      const tokenService: TokenService = new TokenService();
-      await tokenService.verifyRefreshToken(token);
-
-      return new SuccessMessage("Token is valid");
-    } catch(error: any) {
-      throw error
+    public async authenticateBeatsClient(token: string): Promise<SuccessMessage | Error> {
+      try {
+        const tokenService: TokenService = new TokenService();
+        const userName: string | Error = await tokenService.verifyAccessToken(token);
+    
+        if (userName instanceof Error) {
+          console.log("Token verification failed");
+          return new Error("error encountered");
+        }
+    
+        return new SuccessMessage("Token is valid");
+      } catch (error: any) {
+        console.error("An error occurred during authentication:", error);
+        return new Error("authentication failed");
+      }
     }
     
-  }
 
 
   public async googleRegister(body: GoogleRegister , ipAddress: string): Promise<void | ValidationError> {

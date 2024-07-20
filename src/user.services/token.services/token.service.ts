@@ -42,11 +42,12 @@ class TokenService {
 
 			return accessToken as string;
 		} catch (error: any) {
+			console.log(error);
 			return error
 		}
 	}
 
-	public async verifyAccessToken(token: string): Promise<string> {
+	public async verifyAccessToken(token: string): Promise<string | Error > {
 		try {
 			const verifyAccessTokenSync = createVerifier({ key: JWT_SECRET });
 			const decodedToken = verifyAccessTokenSync(token);
@@ -55,7 +56,7 @@ class TokenService {
 
 			return userName as string;
 		} catch (error: any) {
-		  console.log(error)
+		  console.log(error);
 		  return error;
 		}
 	}
