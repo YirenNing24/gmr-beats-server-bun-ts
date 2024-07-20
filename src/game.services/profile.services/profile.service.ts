@@ -2,7 +2,7 @@
 import { Driver, ManagedTransaction, QueryResult, RecordShape, Session } from "neo4j-driver";
 
 //** RETHINK DB IMPORT
-import rt, { WriteResult } from "rethinkdb";
+import rt from "rethinkdb";
 import { getRethinkDB } from "../../db/rethink";
 
 //** OUTPUT IMPORTS
@@ -35,7 +35,7 @@ class ProfileService {
   public async updateStats(statPoints: StatPoints, token: string): Promise<any | UpdateStatsFailed> {
     try {
         const tokenService: TokenService = new TokenService();
-        const username: string = await tokenService.verifyAccessToken(token);
+        const username: string | Error = await tokenService.verifyAccessToken(token);
 
         const session: Session | undefined = this.driver?.session();
         if (!session) throw new Error('Session is undefined');
@@ -49,7 +49,7 @@ class ProfileService {
         const userData = result?.records[0].get('u.playerStats');
         const playerStats: PlayerStats = JSON.parse(userData);
 
-        const { level, playerExp, availStatPoints, rank, statPointsSaved } = playerStats;
+        const { level, playerExp, availStatPoints, rank } = playerStats;
         const { mainVocalist, rapper, leadDancer, leadVocalist, mainDancer, visual, leadRapper } = statPoints;
         const totalStatPointsAdded =
             mainVocalist + rapper + leadDancer + leadVocalist + mainDancer + visual + leadRapper;
@@ -86,9 +86,10 @@ class ProfileService {
   public async uploadProfilePic(imageBuffer: BufferData, token: string): Promise<SuccessMessage> {
       try {
         const tokenService: TokenService = new TokenService();
-        const userName: string = await tokenService.verifyAccessToken(token);
+        const userName: string | Error = await tokenService.verifyAccessToken(token);
     
         // Check the number of existing profile pictures for the user
+        //@ts-ignore
         const existingProfilePicsCount: number = await this.getProfilePicsCount(userName);
 
         if (existingProfilePicsCount >= 5) {
@@ -102,6 +103,7 @@ class ProfileService {
         // Assuming imageBuffer is already an array of numbers
         const profilePicture: ProfilePicture = {
           profilePicture: imageBuffer.bufferData,
+          //@ts-ignore
           userName,
           uploadedAt,
           fileFormat,
@@ -125,7 +127,7 @@ class ProfileService {
   public async likeProfilePicture(token: string, likedProfilePicture: { id: string}) {
       try {
         const tokenService: TokenService = new TokenService();
-        const userName: string = await tokenService.verifyAccessToken(token);
+        const userName: string | Error = await tokenService.verifyAccessToken(token);
 
         const session: Session | undefined = this.driver?.session();
     
@@ -137,7 +139,8 @@ class ProfileService {
     
         const timestamp: number = Date.now();
         const likeId: string = await nanoid();
-    
+        
+        //@ts-ignore
         const likeData: PictureLikes = { userName, timestamp, likeId };
     
         const pictureId: string = likedProfilePicture.id || "";
@@ -174,7 +177,7 @@ class ProfileService {
   public async unlikeProfilePicture(token: string, likedProfilePicture: { id: string}) {
       try {
         const tokenService: TokenService = new TokenService();
-        const userName: string = await tokenService.verifyAccessToken(token);
+        const userName: string | Error = await tokenService.verifyAccessToken(token);
     
         const session: Session | undefined = this.driver?.session();
     
@@ -243,7 +246,7 @@ class ProfileService {
   public async getProfilePic(token: string): Promise<ProfilePicture[]> {
       try {
         const tokenService: TokenService = new TokenService();
-        const userName: string = await tokenService.verifyAccessToken(token);
+        const userName: string | Error = await tokenService.verifyAccessToken(token);
     
         const connection: rt.Connection = await getRethinkDB();
         const cursor: rt.Cursor = await rt
@@ -344,7 +347,7 @@ class ProfileService {
   public async createSoulPreferences(token: string, soulMetadata: SoulMetaData): Promise<SuccessMessage> {
       const session: Session | undefined = this.driver?.session();
       const tokenService: TokenService = new TokenService();
-      const userName: string = await tokenService.verifyAccessToken(token);
+      const userName: string | Error = await tokenService.verifyAccessToken(token);
       try{
 
           const result: QueryResult | undefined = await session?.executeRead(tx =>
@@ -365,9 +368,11 @@ class ProfileService {
           const soulExists = result?.records.some(record => record.get('s') !== null);
 
           if (!soulExists) {
+            //@ts-ignore
             await this.createSoul(userName, smartWalletAddress, soulMetadata);
           }
           else {
+            //@ts-ignore
             await this.saveSoul(userName, soulMetadata)
     
           };
@@ -480,7 +485,7 @@ class ProfileService {
       const tokenService: TokenService = new TokenService();
       try {
           // Verify the access token and get the username
-          const userName: string = await tokenService.verifyAccessToken(token);
+          const userName: string | Error = await tokenService.verifyAccessToken(token);
           
           const session: Session | undefined = this.driver?.session();
           const result: QueryResult | undefined = await session?.executeRead(tx =>
@@ -511,7 +516,7 @@ class ProfileService {
       const tokenService: TokenService = new TokenService();
       try {
           // Verify the access token and get the username
-          const userName: string = await tokenService.verifyAccessToken(token);
+          const userName: string | Error = await tokenService.verifyAccessToken(token);
           
           const session: Session | undefined = this.driver?.session();
           const result: QueryResult | undefined = await session?.executeRead(tx =>
@@ -542,7 +547,7 @@ class ProfileService {
   public async getCardCollection(token: string): Promise<CardCollection[]> {
       try {
         const tokenService: TokenService = new TokenService();
-        const userName: string = await tokenService.verifyAccessToken(token);
+        const userName: string | Error = await tokenService.verifyAccessToken(token);
     
         const session: Session | undefined = this.driver?.session();
     
@@ -585,7 +590,7 @@ class ProfileService {
         }
     
         const tokenService: TokenService = new TokenService();
-        const userName: string = await tokenService.verifyAccessToken(token);
+        const userName: string | Error = await tokenService.verifyAccessToken(token);
     
         const connection: rt.Connection = await getRethinkDB();
         
@@ -605,7 +610,7 @@ class ProfileService {
   public async getMutualMyNotes(token: string,): Promise<MyNote | {}> {
       try {
         const tokenService: TokenService = new TokenService();
-        const userName: string = await tokenService.verifyAccessToken(token);
+        const userName: string | Error = await tokenService.verifyAccessToken(token);
     
         const connection: rt.Connection = await getRethinkDB();
         
@@ -633,10 +638,10 @@ class ProfileService {
       }
     }
 
-    public async getMyNotes(token: string,): Promise<MyNote | {}> {
+  public async getMyNotes(token: string,): Promise<MyNote | {}> {
       try {
         const tokenService: TokenService = new TokenService();
-        const userName: string = await tokenService.verifyAccessToken(token);
+        const userName: string | Error = await tokenService.verifyAccessToken(token);
     
         const connection: rt.Connection = await getRethinkDB();
         
@@ -672,7 +677,7 @@ class ProfileService {
         }
     
         const tokenService: TokenService = new TokenService();
-        const userName: string = await tokenService.verifyAccessToken(token);
+        const userName: string | Error = await tokenService.verifyAccessToken(token);
     
         const connection: rt.Connection = await getRethinkDB();
         

@@ -19,6 +19,8 @@ import { authorizationBearerSchema } from './route.schema/schema.auth'
 import { changeProfilePicsSchema, getProfilePicsSchema, getProfilePictureSchema, likeProfilePicturePicSchema, newStatPointsSchema, updateMyNotesSchema, uploadDpBufferSchema } from './route.schema/schema.profile'
 import { soulMetaDataSchema } from '../game.services/profile.services/profile.schema'
 import ValidationError from '../outputs/validation.error'
+import BeatsService from '../game.services/beats.services/beats.service'
+import { BeatsActivitySchema, GetActivitySchema } from '../game.services/beats.services/beats.schema'
 
 
 const profile = (app: Elysia) => {
@@ -329,8 +331,48 @@ const profile = (app: Elysia) => {
     }, authorizationBearerSchema
   )
 
-  
-  
+  .post('/api/beats/set/status', async ({ headers, body }) => {
+    try {
+      const authorizationHeader: string | null = headers.authorization;
+      if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+        throw new Error('Bearer token not found in Authorization header');
+      }
+      const jwtToken: string = authorizationHeader.substring(7);
+
+      const driver: Driver = getDriver();
+      const beatsService: BeatsService = new BeatsService(driver);
+
+      const output = await beatsService.setBeatsClientStatus(jwtToken, body)
+
+      return output 
+
+    } catch(error: any) {
+      throw error
+      }
+    }, BeatsActivitySchema
+  )
+
+  .post('/api/beats/get/status', async ({ headers, body }) => {
+    try {
+      const authorizationHeader: string | null = headers.authorization;
+      if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+        throw new Error('Bearer token not found in Authorization header');
+      }
+      const jwtToken: string = authorizationHeader.substring(7);
+
+      const driver: Driver = getDriver();
+      const beatsService: BeatsService = new BeatsService(driver);
+
+      const output = await beatsService.getBeatsClientStatus(jwtToken, body);
+
+      return output 
+
+    } catch(error: any) {
+      throw error
+      }
+    }, GetActivitySchema
+  )  
+
 };
 
 export default profile;

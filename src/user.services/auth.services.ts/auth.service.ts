@@ -14,12 +14,10 @@ import { hash, compare } from 'bcrypt-ts'
 import ValidationError from '../../outputs/validation.error.js'
 
 //** NEW ACCOUNT DEFAULT VALUES
-import { cardInventory, playerStats, powerUpInventory, iveEquip, IveEquip } from '../../noobs/noobs.js'
+import { playerStats } from '../../noobs/noobs.js'
 
 //**  IMPORTED SERVICES
 import WalletService from '../wallet.services/wallet.service.js'
-import Replenishments from '../../game.services/replenishments.services/replenishments.service.js'
-import ProfileService from '../../game.services/profile.services/profile.service.js'
 import TokenService from '../token.services/token.service.js'
 import GoogleService from '../google.services/google.service.js'
 
@@ -30,13 +28,11 @@ import { nanoid } from "nanoid/async";
 import { Driver, QueryResult, Session,  ManagedTransaction } from 'neo4j-driver-core'
 
 //** TYPE INTERFACES
-import { LocalWallet, WalletData, UserData, ValidateSessionReturn, AuthenticateReturn, PlayerStats, TokenScheme, PlayerInfo, User, Suspended } from '../user.service.interface.js'
+import { WalletData, UserData, ValidateSessionReturn, AuthenticateReturn, TokenScheme, PlayerInfo, User, Suspended } from '../user.service.interface.js'
 
 //** GEO IP IMPORT
 import geoip from 'geoip-lite2'
 import { GoogleRegister } from './auth.interface.js'
-import { SuccessMessage } from '../../outputs/success.message.js'
-
 class AuthService {
 
   driver: Driver
@@ -48,7 +44,6 @@ class AuthService {
   // Registers a user.
   public async register(userData: User, ipAddress: string): Promise<void> {
     const walletService: WalletService = new WalletService();
-    const replenishService: Replenishments = new Replenishments();
   
     const userId: string = await nanoid();
     const { userName, password, deviceId } = userData as User;
@@ -84,10 +79,6 @@ class AuthService {
         )
       );
   
-      // Set energy for new users to 200
-      const currentTime: number = Math.floor(Date.now() / 1000);
-      await replenishService.setEnergy(userName, currentTime, 200, 1);
-  
     } catch (error: any) {
       // Handle unique constraints in the database
       if (error.code === 'Neo.ClientError.Schema.ConstraintValidationFailed') {
@@ -108,8 +99,6 @@ class AuthService {
   // Authenticates a user with the provided username and unencrypted password.
   public async authenticate(userName: string, unencryptedPassword: string): Promise<AuthenticateReturn> {
     const walletService: WalletService = new WalletService();
-    const profileService: ProfileService = new ProfileService();
-    const replenishService: Replenishments = new Replenishments();
     const tokenService: TokenService = new TokenService();
 
     try {
@@ -136,8 +125,7 @@ class AuthService {
         const { password, smartWalletAddress, playerStats, userId, username, ...safeProperties } = user.properties
 
         const walletPromise: Promise<WalletData> = walletService.getWalletBalance(smartWalletAddress);
-        const energyPromise: Promise<number> = replenishService.getEnergy(userName, playerStats);
-        const [ wallet, energy ] = await Promise.all([ walletPromise, energyPromise ]);
+        const [ wallet ] = await Promise.all([ walletPromise ]);
 
         const tokens: TokenScheme = await tokenService.generateTokens(userName);
         const { refreshToken, accessToken } = tokens as TokenScheme
@@ -146,7 +134,6 @@ class AuthService {
             wallet,
             safeProperties,
             playerStats,
-            energy,
             uuid: userId,
             refreshToken,
             accessToken,
@@ -166,7 +153,6 @@ class AuthService {
       try {
         // Create a new instance of the needed services class
         const walletService: WalletService = new WalletService();
-        const replenishService: Replenishments = new Replenishments();
         const tokenService: TokenService = new TokenService();
   
         const accessRefresh: TokenScheme = await tokenService.verifyRefreshToken(token);
@@ -191,10 +177,9 @@ class AuthService {
         
         // Import the user's smart wallet using the WalletService class
         const walletPromise: Promise<WalletData> = walletService.getWalletBalance(smartWalletAddress);
-        const energyPromise: Promise<number> = replenishService.getEnergy(username, playerStats) ;
   
         // const statsPromise = profileService.getStats(username);
-        const [ walletSmart, energy ] = await Promise.all([walletPromise, energyPromise ]);
+        const [ walletSmart ] = await Promise.all([walletPromise]);
   
         // Return an object containing the user's smart wallet, safe properties, success message, and JWT token
         return {
@@ -202,7 +187,6 @@ class AuthService {
           wallet: walletSmart,
           safeProperties,
           playerStats,
-          energy,
           uuid: userId,
           accessToken,
           refreshToken,
@@ -215,28 +199,9 @@ class AuthService {
         }
     }
 
-    public async authenticateBeatsClient(token: string): Promise<SuccessMessage | Error> {
-      try {
-        const tokenService: TokenService = new TokenService();
-        const userName: string | Error = await tokenService.verifyAccessToken(token);
-    
-        if (userName instanceof Error) {
-          console.log("Token verification failed");
-          return new Error("error encountered");
-        }
-    
-        return new SuccessMessage("Token is valid");
-      } catch (error: any) {
-        console.error("An error occurred during authentication:", error);
-        return new Error("authentication failed");
-      }
-    }
-    
-
 
   public async googleRegister(body: GoogleRegister , ipAddress: string): Promise<void | ValidationError> {
     const walletService: WalletService = new WalletService();
-    const replenishService: Replenishments = new Replenishments();
     const googleService: GoogleService = new GoogleService();
 
     const { serverToken, deviceId } = body
@@ -280,10 +245,6 @@ class AuthService {
         // Close the session
         await session.close()
   
-        // Set energy for new users to 200
-        const currentTime: number = Math.floor(Date.now() / 1000);
-        await replenishService.setEnergy(userName, currentTime, 200, 1)
-  
       } catch (error: any) {
         console.log(error)
         // Handle unique constraints in the database
@@ -306,17 +267,13 @@ class AuthService {
   public async googleLogin(token: string): Promise<AuthenticateReturn | ValidationError> {
     const googleService: GoogleService = new GoogleService();
     const playerInfo: PlayerInfo = await googleService.googleAuth(token);
-    const { displayName, playerId } = playerInfo as PlayerInfo;
+    const { playerId } = playerInfo as PlayerInfo;
 
-    const userName: string = displayName;
 
     const walletService: WalletService = new WalletService();
-    const profileService: ProfileService = new ProfileService();
-    const replenishService: Replenishments = new Replenishments();
     const tokenService: TokenService = new TokenService();
 
     try {
-
       const session: Session = this.driver.session();
       // Find the user node within a Read Transaction
       const result: QueryResult = await session.executeRead((tx: ManagedTransaction) =>
@@ -337,8 +294,7 @@ class AuthService {
       const { password, smartWalletAddress, playerStats, userId, username, ...safeProperties } = user.properties
 
       const walletPromise: Promise<WalletData> = walletService.getWalletBalance(smartWalletAddress);
-      const energyPromise: Promise<number> = replenishService.getEnergy(userName, playerStats);
-      const [ wallet, energy] = await Promise.all([walletPromise, energyPromise]);
+      const [ wallet ] = await Promise.all([walletPromise ]);
 
       const tokens: TokenScheme = await tokenService.generateTokens(playerId);
       const { refreshToken, accessToken } = tokens as TokenScheme
@@ -347,7 +303,6 @@ class AuthService {
           wallet,
           safeProperties,
           playerStats,
-          energy,
           uuid: userId,
           refreshToken,
           accessToken,

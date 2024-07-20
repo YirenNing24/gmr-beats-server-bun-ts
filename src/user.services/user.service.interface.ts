@@ -21,7 +21,7 @@ export interface ValidateSessionReturn {
   wallet: WalletData;
   safeProperties: SafeProperties;
   playerStats: PlayerStats;
-  energy: number;
+  energy?: number;
   uuid: string;
   accessToken: string;
   refreshToken: string;
@@ -49,7 +49,7 @@ export interface AuthenticateReturn {
   wallet: WalletData;
   safeProperties: SafeProperties;
   playerStats: PlayerStats;
-  energy: number;
+  energy?: number;
   uuid: string;
   refreshToken: string;
   accessToken: string;

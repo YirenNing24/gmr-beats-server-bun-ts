@@ -19,6 +19,7 @@ import { authorizationBearerSchema, beatsLoginSchema, googleServerTokenSchema, r
 import { ip } from 'elysia-ip';
 import TokenService from '../user.services/token.services/token.service';
 import { SuccessMessage } from '../outputs/success.message';
+import BeatsService from '../game.services/beats.services/beats.service';
 
 const auth = (app: Elysia): void => {
 
@@ -79,9 +80,9 @@ const auth = (app: Elysia): void => {
       const jwtToken: string = authorizationHeader.substring(7);
 
       const driver: Driver = getDriver();
-      const authService: AuthService = new AuthService(driver);
+      const beatsService: BeatsService = new BeatsService(driver);
 
-      const output: SuccessMessage | Error = await authService.authenticateBeatsClient(jwtToken);
+      const output: SuccessMessage | Error = await beatsService.authenticateBeatsClient(jwtToken);
       return output as SuccessMessage;
 
         }, authorizationBearerSchema
