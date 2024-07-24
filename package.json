@@ -23,7 +23,7 @@
     "@thirdweb-dev/storage": "^2.0.15",
     "@thirdweb-dev/wallets": "^2.5.39",
     "@types/jsonwebtoken": "^9.0.6",
-    "@types/node": "^20.14.11",
+    "@types/node": "^20.14.12",
     "@types/rethinkdb": "^2.3.21",
     "bcrypt-ts": "^4.0.1",
     "colyseus": "^0.15.17",
@@ -41,6 +41,6 @@
     "ollama": "^0.4.9",
     "redis": "^4.6.15",
     "rethinkdb": "^2.4.2",
-    "thirdweb": "^5.37.0"
+    "thirdweb": "^5.38.0"
   }
 }
