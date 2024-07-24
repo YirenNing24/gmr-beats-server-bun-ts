@@ -19,7 +19,8 @@ import { classicScoreStatsSchema } from '../game.services/leaderboard.services/l
 const scores = (app: Elysia): void => {
     app.post('/api/save/score/classic', async ({ headers, body }): Promise<void> => {
         try {
-            const authorizationHeader: string | null = headers.authorization;
+            const authorizationHeader: string = headers.authorization;
+            const apiKeyHeader: string | null = headers.apiKey;
             if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
                 throw new Error('Bearer token not found in Authorization header');
             }
@@ -27,8 +28,8 @@ const scores = (app: Elysia): void => {
 
 
             const driver: Driver = getDriver();
-            const scoreService:  ScoreService = new ScoreService(driver)
-            await scoreService.saveScoreClassic(body, jwtToken)
+            const scoreService:  ScoreService = new ScoreService(driver);
+            await scoreService.saveScoreClassic(body, jwtToken, apiKeyHeader);
 
         } catch (error: any) {
           throw error

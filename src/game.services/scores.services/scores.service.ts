@@ -7,6 +7,7 @@ import { ClassicScoreStats } from "../leaderboard.services/leaderboard.interface
 import TokenService from "../../user.services/token.services/token.service";
 import RewardService from "../rewards.services/rewards.service";
 import { SuccessMessage } from "../../outputs/success.message";
+import { error } from "console";
 
 class ScoreService {
 
@@ -16,12 +17,16 @@ class ScoreService {
     }   
 
     //* CLASSIC GAME MODE SAVE FUNCTION
-    public async saveScoreClassic(score: ClassicScoreStats, token: string): Promise<SuccessMessage> {
+    public async saveScoreClassic(score: ClassicScoreStats, token: string, apiKey: string): Promise<SuccessMessage> {
         try {
             const tokenService: TokenService = new TokenService();
             const rewardService: RewardService = new RewardService();
-            const userName: string = await tokenService.verifyAccessToken(token);
+            const userName: string | "" = await tokenService.verifyAccessToken(token);
+            const isAuthorized: boolean = await tokenService.verifyApiKey(apiKey);
 
+            if (!isAuthorized) {
+                throw new Error("Unauthorized");
+            }
 
             const songName: string = toPascalCase(score.songName);
 

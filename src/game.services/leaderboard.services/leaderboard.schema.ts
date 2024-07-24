@@ -2,7 +2,9 @@ import { t } from "elysia";
 
 export const classicScoreStatsSchema = {
     headers: t.Object({ 
-        authorization: t.String() }), 
+        authorization: t.String(),
+        apiKey: t.String()
+    }), 
     body: t.Object({
         difficulty: t.String(),
         score: t.Number(),
