@@ -18,8 +18,20 @@ export const classicScoreStatsSchema = {
         veryGood: t.Number(),
         good: t.Number(),
         bad: t.Number(),
-        miss: t.Number()
+        miss: t.Number(),
+        username: t.String(),
+        peerId: t.Number()
     })
+};
 
+
+export const getClassicScoreStatsSingle = {
+    headers: t.Object({ 
+        authorization: t.String()
+    }), 
+    body: t.Object({
+        peerId: t.Number()
+
+    })
 };
 

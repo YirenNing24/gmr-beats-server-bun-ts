@@ -13,23 +13,17 @@ import { ClassicScoreStats } from '../game.services/leaderboard.services/leaderb
 //** VALIDATION SCHEMA IMPORT
 import { authorizationBearerSchema } from './route.schema/schema.auth';
 import { ClassicLeaderboardRequestSchema } from './route.schema/schema.leaderboard';
-import { classicScoreStatsSchema } from '../game.services/leaderboard.services/leaderboard.schema';
+import { classicScoreStatsSchema, getClassicScoreStatsSingle } from '../game.services/leaderboard.services/leaderboard.schema';
 
 
 const scores = (app: Elysia): void => {
     app.post('/api/save/score/classic', async ({ headers, body }): Promise<void> => {
         try {
-            const authorizationHeader: string = headers.authorization;
             const apiKeyHeader: string | null = headers.apiKey;
-            if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
-                throw new Error('Bearer token not found in Authorization header');
-            }
-            const jwtToken: string = authorizationHeader.substring(7);
-
 
             const driver: Driver = getDriver();
             const scoreService:  ScoreService = new ScoreService(driver);
-            await scoreService.saveScoreClassic(body, jwtToken, apiKeyHeader);
+            await scoreService.saveScoreClassic(body, apiKeyHeader);
 
         } catch (error: any) {
           throw error
@@ -37,7 +31,7 @@ const scores = (app: Elysia): void => {
       }, classicScoreStatsSchema
     )
 
-    .get('/api/open/highscore/classic', async ({ headers }): Promise<ClassicScoreStats[]> => {
+    .get('/api/open/highscore/classic/all', async ({ headers }): Promise<ClassicScoreStats[]> => {
         try {
             const authorizationHeader = headers.authorization;
             if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
@@ -46,15 +40,34 @@ const scores = (app: Elysia): void => {
             const jwtToken: string = authorizationHeader.substring(7);
 
             const driver: Driver = getDriver();
-            const scoreService: ScoreService = new ScoreService(driver)
-            const output: ClassicScoreStats[] = await scoreService.getHighScoreClassic(jwtToken)
+            const scoreService: ScoreService = new ScoreService(driver);
+            const output: ClassicScoreStats[] = await scoreService.getAllHighScoreClassic(jwtToken);
 
-          return output as ClassicScoreStats[]
+          return output as ClassicScoreStats[];
         } catch (error: any) {
           throw error
         }
       }, authorizationBearerSchema
     )
+
+    .get('/api/open/highscore/classic/single', async ({ headers, body }): Promise<ClassicScoreStats[]> => {
+      try {
+          const authorizationHeader = headers.authorization;
+          if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+              throw new Error('Bearer token not found in Authorization header');
+          }
+          const jwtToken: string = authorizationHeader.substring(7);
+
+          const driver: Driver = getDriver();
+          const scoreService: ScoreService = new ScoreService(driver);
+          const output: ClassicScoreStats[] = await scoreService.getHighScoreClassic(body, jwtToken);
+
+        return output as ClassicScoreStats[];
+      } catch (error: any) {
+        throw error
+      }
+    }, getClassicScoreStatsSingle
+  )
 };
 
 

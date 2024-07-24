@@ -29,6 +29,8 @@ export interface ClassicScoreStats {
     good: number;
     bad: number;
     miss: number;
+    username: string;
+    peerId: number;
 }
 
 /**
@@ -45,4 +47,9 @@ export interface ClassicLeaderboardRequest {
     songName: string;
     period: string;
     difficulty: string;
+   }
+
+
+export interface ScorePeerId   { 
+    peerId: number;
    }
