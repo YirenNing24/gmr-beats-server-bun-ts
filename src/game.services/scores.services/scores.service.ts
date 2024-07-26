@@ -59,6 +59,7 @@ class ScoreService {
     //     }
     // }
 
+    
     //** BEATS SERVER EXCLUSIVE SERVICE */
     public async saveScoreClassic(score: ClassicScoreStats, apiKey: string): Promise<SuccessMessage> {
         try {
@@ -80,6 +81,7 @@ class ScoreService {
         }
     }
     
+
     //* CLASSIC GAME MODE RETRIEVE SCORE FUNCTION
     public async getHighScoreClassic(peerId: ScorePeerId, token: string): Promise<ClassicScoreStats[]> {
         try {

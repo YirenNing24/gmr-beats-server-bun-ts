@@ -16,7 +16,6 @@
     "@elysiajs/cors": "^0.6.0",
     "@elysiajs/eden": "^0.8.1",
     "@elysiajs/jwt": "^0.6.4",
-    "@influxdata/influxdb-client": "^1.33.2",
     "@thirdweb-dev/chains": "^0.1.120",
     "@thirdweb-dev/engine": "^0.0.11",
     "@thirdweb-dev/sdk": "^4.0.99",
@@ -36,9 +35,8 @@
     "google-auth-library": "^9.11.0",
     "hyperimport": "^0.2.0",
     "nanoid": "^4.0.2",
-    "neo4j-driver": "^5.22.0",
+    "neo4j-driver": "^5.23.0",
     "oauth-1.0a": "^2.2.6",
-    "ollama": "^0.4.9",
     "redis": "^4.6.15",
     "rethinkdb": "^2.4.2",
     "thirdweb": "^5.39.0"
