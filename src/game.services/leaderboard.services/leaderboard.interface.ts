@@ -51,5 +51,5 @@ export interface ClassicLeaderboardRequest {
 
 
 export interface ScorePeerId   { 
-    peerId: number;
+    peerId: string;
    }

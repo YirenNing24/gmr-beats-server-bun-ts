@@ -19,10 +19,10 @@ import { classicScoreStatsSchema, getClassicScoreStatsSingle } from '../game.ser
 const scores = (app: Elysia): void => {
     app.post('/api/save/score/classic', async ({ headers, body }): Promise<void> => {
         try {
-            const apiKeyHeader: string | null = headers.apiKey;
+            const apiKeyHeader: string | null = headers['x-api-key'];
 
             const driver: Driver = getDriver();
-            const scoreService:  ScoreService = new ScoreService(driver);
+            const scoreService: ScoreService = new ScoreService(driver);
             await scoreService.saveScoreClassic(body, apiKeyHeader);
 
         } catch (error: any) {
@@ -50,7 +50,7 @@ const scores = (app: Elysia): void => {
       }, authorizationBearerSchema
     )
 
-    .get('/api/open/highscore/classic/single', async ({ headers, body }): Promise<ClassicScoreStats[]> => {
+    .get('/api/open/highscore/classic/single/', async ({ headers, query }): Promise<ClassicScoreStats[]> => {
       try {
           const authorizationHeader = headers.authorization;
           if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
@@ -60,7 +60,7 @@ const scores = (app: Elysia): void => {
 
           const driver: Driver = getDriver();
           const scoreService: ScoreService = new ScoreService(driver);
-          const output: ClassicScoreStats[] = await scoreService.getHighScoreClassic(body, jwtToken);
+          const output: ClassicScoreStats[] = await scoreService.getHighScoreClassic(query, jwtToken);
 
         return output as ClassicScoreStats[];
       } catch (error: any) {

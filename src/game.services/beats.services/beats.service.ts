@@ -21,13 +21,14 @@ class BeatsService {
       const tokenService: TokenService = new TokenService();
       const userName: string | Error = await tokenService.verifyAccessToken(token);
 
+      //@ts-ignore
       if (userName instanceof Error) {
         console.log("Token verification failed");
         return new Error("error encountered");
       }
 
       const activity = { activity: 'lobby' };
-      // Await the result of setBeatsClientStatus
+
       this.setBeatsClientStatus(userName, activity);
 
       return new SuccessMessage(userName);
@@ -36,6 +37,7 @@ class BeatsService {
       return new Error("authentication failed");
     }
   }
+
 
   public async setBeatsClientStatus(username: string, beatsActivity: BeatsActivity): Promise<SuccessMessage | Error> {
     try {
@@ -52,6 +54,7 @@ class BeatsService {
     }
   }
 
+  
   public async getBeatsClientStatus(token: string, usernames: string[]): Promise<{ username: string, status: BeatsStatus }[] | Error> {
     try {
       const tokenService: TokenService = new TokenService();

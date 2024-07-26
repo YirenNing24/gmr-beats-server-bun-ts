@@ -69,10 +69,10 @@ class ScoreService {
                 throw new Error("Unauthorized");
             }
 
-
+            const scoreWithTime = { ...score, timestamp: Date.now() };
             const connection: rt.Connection = await getRethinkDB();
 
-            await rt.db('beats').table('classicScores').insert(score).run(connection);
+            await rt.db('beats').table('classicScores').insert(scoreWithTime).run(connection);
 
             return new SuccessMessage("Score saved")
         } catch (error: any) {
@@ -87,10 +87,13 @@ class ScoreService {
             await tokenService.verifyAccessToken(token);
     
             const connection: rt.Connection = await getRethinkDB();
-    
+
+            const idPeer = parseInt(peerId.peerId)
+
+
             const result: rt.Cursor = await rt.db('beats')
                 .table('classicScores')
-                .filter({ peerId })
+                .filter({ peerId: idPeer })
                 .run(connection);
     
             const classicScoreStats: ClassicScoreStats[] = await result.toArray();
