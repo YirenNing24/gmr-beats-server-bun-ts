@@ -9,7 +9,6 @@ import { getRethinkDB } from "../../db/rethink";
 
 //** IMPORTED SERVICES
 import TokenService from "../../user.services/token.services/token.service";
-import RewardService from "../rewards.services/rewards.service";
 import { SuccessMessage } from "../../outputs/success.message";
 
 

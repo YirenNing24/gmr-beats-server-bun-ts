@@ -9,11 +9,11 @@ import { getDriver } from '../db/memgraph'
 import LeaderboardService from '../game.services/leaderboard.services/leaderboard.services'
 
 //** TYPES IMPORTS
-import { getWeeklyLeaderboardSchema } from '../game.services/leaderboard.services/leaderboard.schema'
+import { getClassicLeaderboardSchema } from '../game.services/leaderboard.services/leaderboard.schema'
 
 
 const leaderboards = (app: Elysia): void => {
-  app.get('/api/leaderboard/weekly', async ({ headers, query }) => {
+  app.get('/api/leaderboard/classic', async ({ headers, query }) => {
     try {
       const authorizationHeader = headers.authorization;
       if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
@@ -24,13 +24,13 @@ const leaderboards = (app: Elysia): void => {
 
       const driver: Driver = getDriver();
       const leaderboardService: LeaderboardService = new LeaderboardService(driver);
-      const output = await leaderboardService.weeklyLeaderboard(jwtToken, query);
+      const output = await leaderboardService.leaderboard(jwtToken, query);
 
       return output
     } catch (error: any) {
       throw error;
       }
-    }, getWeeklyLeaderboardSchema
+    }, getClassicLeaderboardSchema
   );
 
 };

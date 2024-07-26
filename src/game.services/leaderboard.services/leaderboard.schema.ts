@@ -29,19 +29,19 @@ export const getClassicScoreStatsSingle = {
         authorization: t.String()
     }), 
     query: t.Object({
-        peerId: t.String()
+        peerId: t.String({})
 
     })
 };
 
-export const getWeeklyLeaderboardSchema = {
+export const getClassicLeaderboardSchema = {
     headers: t.Object({ 
         authorization: t.String()
     }), 
     query: t.Object({
         gameMode: t.String(), 
         songName: t.String(), 
-        period: t.String(),  
+        period: t.String(), 
         difficulty: t.String()
     })
 };
