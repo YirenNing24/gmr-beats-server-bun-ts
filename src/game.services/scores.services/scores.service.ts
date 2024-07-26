@@ -92,7 +92,6 @@ class ScoreService {
 
             const idPeer = parseInt(peerId.peerId)
 
-
             const result: rt.Cursor = await rt.db('beats')
                 .table('classicScores')
                 .filter({ peerId: idPeer })
