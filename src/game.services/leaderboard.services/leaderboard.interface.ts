@@ -74,7 +74,7 @@ export interface ScorePeerId {
  * @property {string} difficulty - The difficulty level for the leaderboard.
  */
 export interface LeaderboardQuery {
-    gameMode: string; 
+    // gameMode: string; 
     songName: string; 
     period: string;   
     difficulty: string; 

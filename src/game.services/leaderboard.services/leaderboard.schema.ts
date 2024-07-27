@@ -39,7 +39,7 @@ export const getClassicLeaderboardSchema = {
         authorization: t.String()
     }), 
     query: t.Object({
-        gameMode: t.String(), 
+        // gameMode: t.String(), 
         songName: t.String(), 
         period: t.String(), 
         difficulty: t.String()

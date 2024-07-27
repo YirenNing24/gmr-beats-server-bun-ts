@@ -21,11 +21,16 @@ class LeaderboardService {
 
 	public async leaderboard(token: string, query: LeaderboardQuery): Promise<ClassicScoreStats[]> {
 		try {
-			await this.verifyToken(token);
+
+			const tokenService: TokenService = new TokenService();
+			await tokenService.verifyAccessToken(token);
+		
 			const { songName, difficulty, period } = query;
 
+			const songTitle: string = this.correctSongName(songName)
+
 			const { startOfPeriod, endOfPeriod } = this.getPeriodDates(period);
-			const scores = await this.fetchScores(songName, difficulty);
+			const scores = await this.fetchScores(songTitle, difficulty.toLowerCase());
 			const filteredScores = this.filterScoresByPeriod(scores, startOfPeriod, endOfPeriod);
 
 			return filteredScores;
@@ -35,10 +40,14 @@ class LeaderboardService {
 		}
 	}
 
-	private async verifyToken(token: string): Promise<void> {
-		const tokenService: TokenService = new TokenService();
-		await tokenService.verifyAccessToken(token);
+	private correctSongName(songName: string): string {
+		let songTItle: string = songName
+		if (songName == "NoDoubt") {
+			songTItle = "No Doubt"
+		}
+		return songTItle
 	}
+
 
 	private getPeriodDates(period: string): { startOfPeriod: Date; endOfPeriod: Date } {
 		const now = new Date();
@@ -73,6 +82,7 @@ class LeaderboardService {
 		return { startOfPeriod, endOfPeriod };
 	}
 
+	
 	private async fetchScores(songName: string, difficulty: string): Promise<ClassicScoreStats[]> {
 		const connection: rt.Connection = await getRethinkDB();
 		const result: rt.Cursor = await rt.db('beats')
@@ -81,7 +91,7 @@ class LeaderboardService {
 			.run(connection);
 
 		const scores: ClassicScoreStats[] = await result.toArray();
-		connection.close();
+
 		return scores;
 	}
 

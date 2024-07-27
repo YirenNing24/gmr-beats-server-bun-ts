@@ -21,7 +21,6 @@ const leaderboards = (app: Elysia): void => {
       }
       const jwtToken: string = authorizationHeader.substring(7);
 
-
       const driver: Driver = getDriver();
       const leaderboardService: LeaderboardService = new LeaderboardService(driver);
       const output = await leaderboardService.leaderboard(jwtToken, query);
