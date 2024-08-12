@@ -15,11 +15,11 @@ import ValidationError from "../../outputs/validation.error";
 
 //** SERVICE IMPORTS
 import TokenService from "../../user.services/token.services/token.service";
-import { BuyCardData, BuyCardUpgradeData, StoreCardData, StoreCardUpgradeData } from "./store.interface";
+import { BuyCardData, BuyCardUpgradeData, StoreCardData, StoreCardUpgradeData, StorePackData } from "./store.interface";
 import { UserData } from "../../user.services/user.service.interface";
 
 //** CYPHER IMPORTS
-import { buyCardCypher, buyCardUpgradeCypher, getValidCardUpgrades, getValidCards } from "./store.cypher";
+import { buyCardCypher, buyCardUpgradeCypher, getValidCardPacks, getValidCardUpgrades, getValidCards } from "./store.cypher";
 
 //** SUCCESS MESSAGE IMPORT
 import { SuccessMessage } from "../../outputs/success.message";
@@ -44,13 +44,45 @@ export default class StoreService {
         );
         await session.close();
 
-        const cards: StoreCardData[] = result.records.map(record => {
-            const cardProperties: any = record.get("c").properties;
-            const { imageByte, ...cardData } = cardProperties;
-            return cardData as StoreCardData
-        });
+        const currentDate = new Date();
+        const cards: StoreCardData[] = result.records
+            .map(record => record.get("c").properties)
+            .filter(card => {
+                const [month, day, year] = card.endTime.split('/');
+                const endTime = new Date(`20${year}-${month}-${day}`);
+                return endTime >= currentDate;
+            });
 
         return cards as StoreCardData[];
+    } catch (error: any) {
+        console.error("Error fetching items:", error);
+        throw error
+    }
+  }
+
+
+
+  public async getValidCardPacks(token: string): Promise<StorePackData[]> {
+    try {
+        const tokenService: TokenService = new TokenService();
+        await tokenService.verifyAccessToken(token);
+
+        const session: Session = this.driver.session();
+        const result: QueryResult = await session.executeRead((tx: ManagedTransaction) =>
+            tx.run(getValidCardPacks)
+        );
+        await session.close();
+
+        const currentDate = new Date();
+        const packs: StorePackData[] = result.records
+            .map(record => record.get("c").properties)
+            .filter(card => {
+                const [month, day, year] = card.endTime.split('/');
+                const endTime = new Date(`20${year}-${month}-${day}`);
+                return endTime >= currentDate;
+            });
+
+        return packs as StorePackData[];
     } catch (error: any) {
         console.error("Error fetching items:", error);
         throw error
@@ -141,13 +173,13 @@ export default class StoreService {
         WHERE c.Name = $cardName
         RETURN COUNT(c) AS count, c.id as id
       `, { username, cardName });
-      const count: number = uniquenessCheck.records[0].get("count").toInt();
-      const id: string = uniquenessCheck.records[0].get("id");
+      // const count: number = uniquenessCheck.records[0].get("count").toInt();
+      // const id: string = uniquenessCheck.records[0].get("id");
   
       // If the card's name is unique, call the firstCardType function
-      if (count === 0) {
-        await rewardService.firstCardType(uri, id)
-      }
+      // if (count === 0) {
+      //   await rewardService.firstCardType(uri, id)
+      // }
   
       // Loop through each relationship type
       for (const rel of relationship) {
