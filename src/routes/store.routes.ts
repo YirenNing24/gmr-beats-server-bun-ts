@@ -81,6 +81,7 @@ const store = (app: Elysia) => {
   }, authorizationBearerSchema
   )
 
+
   .get('/api/store/card-packs/valid', async ({ headers }): Promise<StorePackData[]> => {
     try {
       const authorizationHeader: string = headers.authorization;
@@ -102,6 +103,7 @@ const store = (app: Elysia) => {
   }, authorizationBearerSchema
   )
 
+
   .post('/api/store/card-upgrade/buy', async ({ headers, body }): Promise<SuccessMessage> => {
     try {
       const authorizationHeader: string = headers.authorization;
@@ -118,7 +120,6 @@ const store = (app: Elysia) => {
       return output as SuccessMessage;
     } catch (error: any) {
       throw error
-
     }
   }, buyCardUpgradeSchema
   )
