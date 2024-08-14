@@ -10,7 +10,7 @@ import StoreService from '../game.services/store.services/store.service';
 
 //** TYPE INTERFACES
 import { SuccessMessage } from '../outputs/success.message';
-import { buyCardSchema, buyCardUpgradeSchema } from './route.schema/store.schema';
+import { buyCardPackSchema, buyCardSchema, buyCardUpgradeSchema } from './route.schema/store.schema';
 import { StoreCardData, StoreCardUpgradeData, StorePackData } from '../game.services/store.services/store.interface';
 
 //** SCHEMA IMPORT
@@ -39,6 +39,8 @@ const store = (app: Elysia) => {
       }
     }, authorizationBearerSchema
   )
+
+
   .post('/api/store/cards/buy', async ({ headers, body }): Promise<SuccessMessage> => {
       try {
         const authorizationHeader: string = headers.authorization;
@@ -59,6 +61,7 @@ const store = (app: Elysia) => {
       }
     }, buyCardSchema
   )
+
 
   .get('/api/store/card-upgrades/valid', async ({ headers }): Promise<StoreCardUpgradeData[]> => {
     try {
@@ -124,9 +127,25 @@ const store = (app: Elysia) => {
   }, buyCardUpgradeSchema
   )
 
+  .post('/api/store/card-packs/buy', async ({ headers, body }): Promise<SuccessMessage> => {
+    try {
+      const authorizationHeader: string = headers.authorization;
+      if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+        throw new Error('Bearer token not found in Authorization header');
+      }
+      const jwtToken: string = authorizationHeader.substring(7);
 
+      const driver: Driver = getDriver();
+      const storeService: StoreService = new StoreService(driver);
+      
+      const output: SuccessMessage = await storeService.buyCardPack(body, jwtToken);
 
-
+      return output as SuccessMessage;
+    } catch (error: any) {
+      throw error
+    }
+  }, buyCardPackSchema
+  )
 
 
 };

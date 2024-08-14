@@ -25,3 +25,14 @@ export const buyCardUpgradeSchema = {
     }),
         
 }
+
+
+export const buyCardPackSchema = {
+    headers: t.Object({ 
+        authorization: t.String() }), 
+    body: t.Object({ 
+        listingId: t.Number(), 
+        uri: t.String(),
+    }),
+        
+}
