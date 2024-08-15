@@ -22,6 +22,7 @@ import { UserData } from "../../user.services/user.service.interface";
 
 //** CYPHER IMPORT
 import { redeemBundle } from "./gacha.cypher";
+import { BuyCardData } from "../store.services/store.interface";
 
 
 
@@ -31,9 +32,13 @@ class GachaService {
         this.driver = driver;
     }
 
-    public openCardPack() {
+    public openCardPack(token: string, cardPackData: {uri: string, tokenId: number}) {
       try {
-            
+
+        
+
+
+
 
 
       } catch(error: any) {
