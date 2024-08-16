@@ -34,3 +34,24 @@ export interface BundleRewards {
     }[];
 }
 
+
+
+export interface PackData {
+    child: boolean;
+    currencyName: string;
+    description: string;
+    endTime: string;
+    id: string;
+    image: string;
+    lister: string;
+    listingId: number;
+    name: string;
+    pricePerToken: number;
+    quantity: number;
+    startTime: string;
+    tokenId: string;
+    type: string;
+    uploader: string;
+    uri: string;
+}
+

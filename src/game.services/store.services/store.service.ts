@@ -173,8 +173,6 @@ export default class StoreService {
 
   public async buyCardPack(buycardData: BuyCardData, token: string): Promise<SuccessMessage> {
     try {
-
-      console.log(buycardData)
       const tokenService: TokenService = new TokenService();
       const username: string = await tokenService.verifyAccessToken(token);
 
@@ -264,15 +262,19 @@ export default class StoreService {
         // Step 1: Get the parent pack's properties
         const packNameResult = await session.run(`
             MATCH (p:Pack {uri: $uri})
-            RETURN p.name AS name, p.quantity AS quantity
+            RETURN p.name AS name, p.quantity AS quantity, properties(p) AS props
         `, { uri });
 
         if (packNameResult.records.length === 0) {
             throw new Error(`Pack with URI ${uri} not found`);
         }
 
-        const parentPackName = packNameResult.records[0].get("name");
-        const parentPackQuantity = packNameResult.records[0].get("quantity");
+        const parentPackName: string = packNameResult.records[0].get("name");
+        const parentPackProps: StorePackData = packNameResult.records[0].get("props");
+
+        // Remove the quantity property from the parent pack's properties
+        //@ts-ignore
+        delete parentPackProps.quantity;
 
         // Step 2: Check if the user already owns this pack
         const uniquenessCheck = await session.run(`
@@ -295,13 +297,12 @@ export default class StoreService {
             `, { name: parentPackName });
 
         } else {
-            // Step 3: Create new pack if it doesn't exist
+            // Step 3: Create new pack if it doesn't exist and copy properties from the parent pack
             await session.run(`
                 MATCH (p:Pack {name: $name})
                 CREATE (u:User {username: $username})-[:OWNED]->(newPack:Pack)
-                SET newPack.name = p.name, newPack.quantity = 1, newPack.child = true
-                RETURN newPack
-            `, { username, name: parentPackName });
+                SET newPack = $props, newPack.quantity = 1, newPack.child = true
+            `, { username, name: parentPackName, props: parentPackProps });
 
             // Decrease quantity of the parent pack
             await session.run(`
@@ -318,6 +319,7 @@ export default class StoreService {
         await session.close();
     }
 }
+
 
 
 

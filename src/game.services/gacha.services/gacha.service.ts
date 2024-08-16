@@ -1,6 +1,11 @@
 //** MEMGRAPH DRIVER AND TYPES
 import { Driver, ManagedTransaction, QueryResult, RecordShape, Session } from "neo4j-driver";
 
+
+//** RETHINK DB
+import rt from "rethinkdb";
+import { getRethinkDB } from "../../db/rethink";
+
 //** THIRDWEB IMPORTS
 import { Pack, ThirdwebSDK } from "@thirdweb-dev/sdk";
 
@@ -17,7 +22,7 @@ import { PACK_ADDRESS, SECRET_KEY, CHAIN, SMART_WALLET_CONFIG } from "../../conf
 
 
 //** TYPE INTERFACES
-import { BundleRewards, RedeemBundle } from "./gacha.interface";
+import { BundleRewards, PackData, RedeemBundle } from "./gacha.interface";
 import { UserData } from "../../user.services/user.service.interface";
 
 //** CYPHER IMPORT
@@ -32,33 +37,38 @@ class GachaService {
       this.driver = driver;
     }
 
-    public async openCardPack(token: string, cardPackData: { name: string, quantity: number }) {
+    public async openCardPack(token: string, cardPackData: PackData) {
       try {
-        const tokenService: TokenService = new TokenService();
-        const username: string = await tokenService.verifyAccessToken(token);
+          const tokenService: TokenService = new TokenService();
+          const username: string = await tokenService.verifyAccessToken(token);
+  
+          const { name: cardPackName } = cardPackData; // Renamed to avoid conflict
+        
+          const session: Session = this.driver.session();
+          const result: QueryResult<RecordShape> = await session.executeRead((tx: ManagedTransaction) =>
+              tx.run(openCardpackCypher, { username, name: cardPackName }) // Using the renamed variable
+          );
+  
+          if (!result || result.records.length === 0) {
+              throw new ValidationError(`no data found`, "");
+          }
+  
+          const pack: PackData = result.records[0].get("pack");
 
-        const { name } = cardPackData
-      
-        const session: Session = this.driver.session();
-        const result: QueryResult<RecordShape> = await session.executeRead((tx: ManagedTransaction) =>
-          tx.run(openCardpackCypher, { username, name }) 
-        );
-
-        const pack = result.records[0].get("pack");
-
-
-
-
-
-
-
-
-
-      } catch(error: any) {
-        console.log(error);
-        throw error;
+          const connection: rt.Connection = await getRethinkDB();
+          const query: rt.Cursor = await rt.db('admin')
+            .table('cardPacks')
+            .filter({ packName: pack.name })
+            .run(connection);
+  
+          // Use `pack.name` or `cardPackName` as needed
+  
+      } catch (error: any) {
+          console.log(error);
+          throw error;
       }
-    }
+  }
+
     //Redeems a bundle for a user and returns the rewards obtaine
 
 
