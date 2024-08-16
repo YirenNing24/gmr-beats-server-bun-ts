@@ -21,21 +21,34 @@ import { BundleRewards, RedeemBundle } from "./gacha.interface";
 import { UserData } from "../../user.services/user.service.interface";
 
 //** CYPHER IMPORT
-import { redeemBundle } from "./gacha.cypher";
+import { openCardpackCypher, redeemBundle } from "./gacha.cypher";
 import { BuyCardData } from "../store.services/store.interface";
 
 
 
 class GachaService {
-    driver?: Driver;
-    constructor(driver?: Driver) {
-        this.driver = driver;
+    driver: Driver;
+    constructor(driver: Driver) {
+      this.driver = driver;
     }
 
-    public openCardPack(token: string, cardPackData: {uri: string, tokenId: number}) {
+    public async openCardPack(token: string, cardPackData: { name: string, quantity: number }) {
       try {
+        const tokenService: TokenService = new TokenService();
+        const username: string = await tokenService.verifyAccessToken(token);
 
-        
+        const { name } = cardPackData
+      
+        const session: Session = this.driver.session();
+        const result: QueryResult<RecordShape> = await session.executeRead((tx: ManagedTransaction) =>
+          tx.run(openCardpackCypher, { username, name }) 
+        );
+
+        const pack = result.records[0].get("pack");
+
+
+
+
 
 
 
