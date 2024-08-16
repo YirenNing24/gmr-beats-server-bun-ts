@@ -5,10 +5,11 @@ import { Driver, ManagedTransaction, QueryResult, RecordShape, Session } from "n
 import TokenService from "../../user.services/token.services/token.service";
 
 //** TYPE INTERFACES
-import { CardMetaData, InventoryCardData , InventoryCards, UpdateInventoryData } from "./inventory.interface";
+import { CardMetaData, CardPackData, InventoryCardData , InventoryCards, UpdateInventoryData } from "./inventory.interface";
 import { checkInventorySizeCypher, equipItemCypher, inventoryOpenCardCypher, openCardUpgradeCypher, unequipItemCypher } from "./inventory.cypher";
 import { SuccessMessage } from "../../outputs/success.message";
 import { StoreCardUpgradeData } from "../store.services/store.interface";
+import { Console } from "console";
 
 
 class InventoryService {
@@ -18,7 +19,7 @@ this.driver = driver;
     }
 
     //** CARD INVENTORY */
-    //Retrieves inventory card data for a user based on the provided access token.
+    // Retrieves inventory card data for a user based on the provided access token.
     public async cardInventoryOpen(token: string): Promise<InventoryCards>  {
       try {
           const tokenService: TokenService = new TokenService();
@@ -66,9 +67,10 @@ this.driver = driver;
           console.error("Error opening user inventory:", error);
           throw error;
       }
-  }
+    }
 
-  // Updates inventory data for a user based on the provided access token and update information.
+
+    // Updates inventory data for a user based on the provided access token and update information.
     public async equipItem(token: string, updateInventoryData: UpdateInventoryData[]): Promise<SuccessMessage> {
       try {
           const tokenService: TokenService = new TokenService();
@@ -172,6 +174,7 @@ this.driver = driver;
       }
     }
 
+
     private async checkInventorySize(userName: string): Promise<number | undefined> {
       try {
           const session: Session | undefined = this.driver?.session();
@@ -200,6 +203,65 @@ this.driver = driver;
           throw error;
       }
     }
+
+
+    public async packInventoryOpen(token: string) {
+        try {
+            const tokenService: TokenService = new TokenService();
+            const userName: string = await tokenService.verifyAccessToken(token);
+    
+            const session: Session | undefined = this.driver?.session();
+    
+            // Use a Read Transaction and only return the necessary properties
+            const result: QueryResult<RecordShape> | undefined = await session?.executeRead(
+                (tx: ManagedTransaction) =>
+                    tx.run(
+                        `MATCH (u:User {username: $userName})-[:OWNED]->(p:Pack)
+                         WHERE p.quantity > 0
+                         RETURN p.name as name, p as packProperties`,
+                        { userName }
+                    )
+            );
+    
+            await session?.close();
+    
+            // If no records found, return empty arrays
+            if (!result || result.records.length === 0) {
+                return [[]];
+            }
+    
+            // Create an object to store card packs
+            const cardPacks: { [uri: string]: Record<string, any> } = {};
+    
+            // Iterate over the result records
+            result.records.forEach((record) => {
+                const packUri: string | undefined = record.get("name");
+                const packProperties: Record<string, any> = record.get("packProperties")?.properties;
+    
+                if (packUri && packProperties) {
+                    // Extract the quantity if it exists
+                    if (packProperties.quantity && typeof packProperties.quantity === 'object') {
+                        packProperties.quantity = packProperties.quantity.toNumber();
+                    }
+    
+                    cardPacks[packUri] = packProperties;
+                }
+            });
+    
+            // Return the card packs object inside an array
+            return [cardPacks];
+        } catch (error: any) {
+            console.error("Error opening user inventory:", error);
+            throw error;
+        }
+    }
+    
+    
+    
+    
+
+
+
 
 
   }

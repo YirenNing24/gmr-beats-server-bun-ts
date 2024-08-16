@@ -10,7 +10,12 @@ export const inventoryOpenCardCypher = `
     RETURN c.uri as uri, c as card, TYPE(r) as relationshipType`;
 
 
-  
+export const packInventoryOpenCypher = `
+    MATCH (u:User {username: $userName})-[:OWNED]->(p:Pack)
+    OPTIONAL MATCH (u)-[r]->(c)
+    RETURN c.uri as uri, c as cardPack, TYPE(r) as relationshipType`;
+
+
 export const openCardUpgradeCypher = `
     MATCH (u:User{username: $userName})-[:OWNED]->(c:CardUpgrade)
     OPTIONAL MATCH (u)-[r]->(c)

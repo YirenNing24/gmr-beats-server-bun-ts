@@ -36,8 +36,9 @@ const inventory = (app: Elysia): void => {
             return error
             }
         }, authorizationBearerSchema
-    )
+        )
     
+
     .post('/api/card/inventory/equip-item', async ({ headers, body }): Promise<SuccessMessage> => {
          try {
              const authorizationHeader: string = headers.authorization || "";
@@ -56,6 +57,7 @@ const inventory = (app: Elysia): void => {
              }
          }, equipItemSchema
         )
+
 
     .post('/api/card/inventory/unequip-item', async ({ headers, body }): Promise<SuccessMessage> => {
             try {
@@ -76,6 +78,7 @@ const inventory = (app: Elysia): void => {
             }, equipItemSchema
         )
 
+
     .get('/api/upgrade/inventory/open', async ({ headers }): Promise<StoreCardUpgradeData[]> => {
         try {
             const authorizationHeader: string = headers.authorization;
@@ -93,11 +96,27 @@ const inventory = (app: Elysia): void => {
             return error
             }
         }, authorizationBearerSchema
-    )
+        )
 
 
-
-        
+    .get('/api/card-pack/inventory/open', async ({ headers }) => {
+            try {
+                const authorizationHeader = headers.authorization;
+                if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+                    throw new Error('Bearer token not found in Authorization header');
+                }
+                const jwtToken: string = authorizationHeader.substring(7);
+    
+                const driver: Driver = getDriver();
+                const inventoryService: InventoryService = new InventoryService(driver);
+                const output = await inventoryService.packInventoryOpen(jwtToken);
+    
+                return output
+                } catch (error: any) {
+                return error
+                }
+            }, authorizationBearerSchema
+        )
 
 };
 
