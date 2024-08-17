@@ -23,7 +23,7 @@ import { buyCardCypher, buyCardUpgradeCypher, getValidCardPacks, getValidCardUpg
 
 //** SUCCESS MESSAGE IMPORT
 import { SuccessMessage } from "../../outputs/success.message";
-import RewardService from "../rewards.services/rewards.service";
+
 
 
 export default class StoreService {
@@ -276,13 +276,13 @@ export default class StoreService {
         //@ts-ignore
         delete parentPackProps.quantity;
 
-        // Step 2: Check if the user already owns this pack
-        const uniquenessCheck = await session.run(`
+        // Step 2: Check if the user exists and already owns this pack
+        const userOwnsPack = await session.run(`
             MATCH (u:User {username: $username})-[:OWNED]->(p:Pack {name: $name})
             RETURN p AS pack
         `, { username, name: parentPackName });
 
-        if (uniquenessCheck.records.length > 0) {
+        if (userOwnsPack.records.length > 0) {
             // Update quantity of the owned pack
             await session.run(`
                 MATCH (u:User {username: $username})-[:OWNED]->(p:Pack {name: $name})
@@ -297,12 +297,22 @@ export default class StoreService {
             `, { name: parentPackName });
 
         } else {
-            // Step 3: Create new pack if it doesn't exist and copy properties from the parent pack
+            // Step 3: Ensure the user exists before creating a new pack
+            const userExists = await session.run(`
+                MATCH (u:User {username: $username})
+                RETURN u
+            `, { username });
+
+            if (userExists.records.length === 0) {
+                throw new Error(`User with username ${username} not found`);
+            }
+
+            // Create a new pack and associate it with the user
             await session.run(`
-                MATCH (p:Pack {name: $name})
-                CREATE (u:User {username: $username})-[:OWNED]->(newPack:Pack)
+                MATCH (u:User {username: $username})
+                CREATE (u)-[:OWNED]->(newPack:Pack)
                 SET newPack = $props, newPack.quantity = 1, newPack.child = true
-            `, { username, name: parentPackName, props: parentPackProps });
+            `, { username, props: parentPackProps });
 
             // Decrease quantity of the parent pack
             await session.run(`
@@ -319,6 +329,7 @@ export default class StoreService {
         await session.close();
     }
 }
+
 
 
 

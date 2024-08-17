@@ -36,7 +36,30 @@ export interface BundleRewards {
 
 
 
+export interface PackDataItem {
+	child: boolean;
+	currencyName: string;
+	description: string;
+	endTime: string;
+	id: string;
+	image: string;
+	lister: string;
+	listingId: number;
+	name: string;
+	pricePerToken: number;
+	quantity: number;
+	startTime: string;
+	tokenId: string;
+	type: string;
+	uploader: string;
+	uri: string;
+}
+
 export interface PackData {
+	[key: string]: PackDataItem;
+}
+
+export interface OpenPackData {
     child: boolean;
     currencyName: string;
     description: string;
@@ -55,3 +78,15 @@ export interface PackData {
     uri: string;
 }
 
+
+export interface CardPackRate {
+    cardPackData: CardNameWeight[];
+    packName: string;
+
+}
+
+
+export interface CardNameWeight {
+    cardName: string;
+    weight: number;
+}

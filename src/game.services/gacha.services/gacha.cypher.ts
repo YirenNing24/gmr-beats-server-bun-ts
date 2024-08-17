@@ -5,9 +5,9 @@ export const redeemBundle: string = `
 
 
 export const openCardpackCypher: string = `
-    MATCH (u:User {username: $userName})-[:OWNED]->(p:Pack {$name})
+    MATCH (u:User {username: $username})-[:OWNED]->(p:Pack {name: $name})
     WHERE p.quantity > 0
-    RETURN p as pack`;
+    RETURN p as pack, u.smartWalletAddress as walletAddress`;
 
 
     

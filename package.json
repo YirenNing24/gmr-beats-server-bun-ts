@@ -34,6 +34,7 @@
     "geoip-lite2": "^2.1.40",
     "google-auth-library": "^9.13.0",
     "hyperimport": "^0.2.0",
+    "lucky-item": "^2.0.2",
     "nanoid": "^4.0.2",
     "neo4j-driver": "^5.23.0",
     "oauth-1.0a": "^2.2.6",
