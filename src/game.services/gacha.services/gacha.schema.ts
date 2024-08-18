@@ -29,22 +29,15 @@ export const packDataSchema = {
 		t.String(), // Dynamic keys like "X:IN TEST"
 		t.Object({
 			child: t.Boolean(),
-			currencyName: t.String(),
 			description: t.String(),
-			endTime: t.String(),
 			id: t.String(),
 			image: t.String(),
-			lister: t.String(),
-			listingId: t.Number(),
 			name: t.String(),
-			pricePerToken: t.Number(),
 			quantity: t.Number(),
-			startTime: t.String(),
-			tokenId: t.String(),
 			type: t.String(),
 			uploader: t.String(),
 			uri: t.String(),
 		})
 	),
-	headers: t.Object({ authorization: t.String() })
+	headers: t.Object({ authorization: t.String() }),
 };

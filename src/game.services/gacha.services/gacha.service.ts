@@ -13,6 +13,7 @@ import ValidationError from "../../outputs/validation.error";
 
 //** IMPORTED SERVICES
 import TokenService from "../../user.services/token.services/token.service";
+import InventoryService from "../inventory.services/inventory.service";
 
 //** CONFIG IMPORT
 import { SECRET_KEY, CHAIN, PRIVATE_KEY, EDITION_ADDRESS } from "../../config/constants";
@@ -68,7 +69,7 @@ class GachaService {
   
           const { cardPackData } = cardPackContent;
   
-          const rewardCards: string[] = await this.rollCardPack(cardPackData, walletAddress);
+          const rewardCards: string[] = await this.rollCardPack(cardPackData, walletAddress, username);
           
           return rewardCards;
       } catch (error: any) {
@@ -78,7 +79,7 @@ class GachaService {
   }
   
 
-  private async rollCardPack(cardNameWeight: CardNameWeight[], walletAddress: string) {
+  private async rollCardPack(cardNameWeight: CardNameWeight[], walletAddress: string, username: string) {
     try {
         // Use luckyItem to get the weighted items
         const weightedItems: CardNameWeight[] = luckyItem.itemsBy(cardNameWeight, 'weight', 3);
@@ -87,7 +88,8 @@ class GachaService {
         const cardNames: string[] = weightedItems.map(item => item.cardName);
 
         // Transfer the reward cards
-        await this.transferRewardCards(cardNames, walletAddress);
+        await this.transferRewardCards(cardNames, walletAddress, username);
+
 
         return cardNames;
     } catch (error: any) {
@@ -97,7 +99,7 @@ class GachaService {
   }
 
 
-  private async transferRewardCards(rewardCards: string[], walletAddress: string) {
+  private async transferRewardCards(rewardCards: string[], walletAddress: string, username: string) {
     const session: Session = this.driver.session();
     try {
         // Initialize the ThirdwebSDK with your private key and chain
@@ -107,6 +109,8 @@ class GachaService {
 
         const cardContract: Edition = await sdk.getContract(EDITION_ADDRESS, 'edition');
 
+
+        let cardIDs: Array<string> = []
         // Iterate over the rewardCards and execute the query for each card
         for (const cardName of rewardCards) {
             // Cypher query to find the card
@@ -130,14 +134,15 @@ class GachaService {
             }
 
             const card: CardMetaData = record.get('c').properties;
-
-            
-            const tokenId: string = card.tokenId; // Assuming there's a tokenId property
-
+            const { id } = card
+            cardIDs.push(id);
 
             // Example: Transfer 1 unit of the tokenId to the walletAddress
-            await cardContract.transfer(walletAddress, tokenId, 1);
+            await cardContract.transfer(walletAddress, id, 1);
+
         }
+
+        await this.updateInventory(username, rewardCards, cardIDs);
     } catch (error: any) {
         console.error(error);
         throw error;
@@ -146,6 +151,24 @@ class GachaService {
         await session.close();
     }
 }
+  private async updateInventory(username: string, cardName: string[], tokenId: string[]) {
+    const inventoryService: InventoryService = new InventoryService();
+    try {
+
+
+
+
+        const session: Session = this.driver.session();
+        const result: QueryResult<RecordShape> = await session.executeRead((tx: ManagedTransaction) =>
+            tx.run("cypher here", { username,  })
+        );
+
+
+
+    } catch(error: any) {
+      throw error
+    }
+  }
 
 
 

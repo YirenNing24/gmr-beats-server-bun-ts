@@ -37,22 +37,15 @@ export interface BundleRewards {
 
 
 export interface PackDataItem {
-	child: boolean;
-	currencyName: string;
-	description: string;
-	endTime: string;
-	id: string;
-	image: string;
-	lister: string;
-	listingId: number;
-	name: string;
-	pricePerToken: number;
-	quantity: number;
-	startTime: string;
-	tokenId: string;
-	type: string;
-	uploader: string;
-	uri: string;
+    child: boolean;
+    description: string;
+    id: string;
+    image: string;
+    name: string;
+    quantity: number;
+    type: string;
+    uploader: string;
+    uri: string;
 }
 
 export interface PackData {
