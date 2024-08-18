@@ -10,4 +10,6 @@ export const openCardpackCypher: string = `
     RETURN p as pack, u.smartWalletAddress as walletAddress`;
 
 
-    
+export const deductCardpack: string = `
+    MATCH (u:User {username: $username})-[:OWNED]->(p:Pack {name: $name})
+    p.quantity = p.quantity - 1`;

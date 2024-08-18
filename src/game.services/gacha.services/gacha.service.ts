@@ -13,13 +13,13 @@ import ValidationError from "../../outputs/validation.error";
 
 //** IMPORTED SERVICES
 import TokenService from "../../user.services/token.services/token.service";
-import InventoryService from "../inventory.services/inventory.service";
 
 //** CONFIG IMPORT
 import { SECRET_KEY, CHAIN, PRIVATE_KEY, EDITION_ADDRESS } from "../../config/constants";
 
 //** CYPHER IMPORT
-import { openCardpackCypher } from "./gacha.cypher";
+import { deductCardpack, openCardpackCypher } from "./gacha.cypher";
+import { buyCardCypher } from "../store.services/store.cypher";
 
 //** LUCKY ITEM IMPORT
 import luckyItem from 'lucky-item'
@@ -28,8 +28,7 @@ import luckyItem from 'lucky-item'
 import { CardNameWeight, CardPackRate, PackData, PackDataItem } from "./gacha.interface";
 import { CardMetaData } from "../inventory.services/inventory.interface";
 import { UserData } from "../../user.services/user.service.interface";
-import StoreService from "../store.services/store.service";
-import { buyCardCypher } from "../store.services/store.cypher";
+
 
 
 class GachaService {
@@ -46,12 +45,12 @@ class GachaService {
   
           // Assuming you know the pack name or ID key you want to work with
           const packName: string = Object.keys(packData)[0];
-  
+
           const session: Session = this.driver.session();
           const result: QueryResult<RecordShape> = await session.executeRead((tx: ManagedTransaction) =>
               tx.run(openCardpackCypher, { username, name: packName })
           );
-  
+
           if (!result || result.records.length === 0) {
               throw new ValidationError(`no data found`, "");
           }
@@ -69,10 +68,15 @@ class GachaService {
           const cardPackContent = cardPack[0];
   
           const { cardPackData } = cardPackContent;
-  
-          const rewardCards: string[] = await this.rollCardPack(cardPackData, walletAddress, username);
           
-          return rewardCards;
+          //@ts-ignore
+          const rewardCards: string[] = await this.rollCardPack(cardPackData, walletAddress, username, pack.id);
+
+           await session.executeRead((tx: ManagedTransaction) =>
+             tx.run(deductCardpack, { username, name: packName })
+         );
+
+        return rewardCards;
       } catch (error: any) {
           console.log(error);
           throw error;
@@ -80,7 +84,7 @@ class GachaService {
   }
   
 
-  private async rollCardPack(cardNameWeight: CardNameWeight[], walletAddress: string, username: string) {
+  private async rollCardPack(cardNameWeight: CardNameWeight[], walletAddress: string, username: string, packId: string) {
     try {
         // Use luckyItem to get the weighted items
         const weightedItems: CardNameWeight[] = luckyItem.itemsBy(cardNameWeight, 'weight', 3);
@@ -89,7 +93,7 @@ class GachaService {
         const cardNames: string[] = weightedItems.map(item => item.cardName);
 
         // Transfer the reward cards
-        await this.transferRewardCards(cardNames, walletAddress, username);
+        await this.transferRewardCards(cardNames, walletAddress, username, packId);
 
 
         return cardNames;
@@ -100,7 +104,7 @@ class GachaService {
   }
 
 
-  private async transferRewardCards(rewardCards: string[], walletAddress: string, username: string) {
+  private async transferRewardCards(rewardCards: string[], walletAddress: string, username: string, packId: string) {
     const session: Session = this.driver.session();
     try {
         // Initialize the ThirdwebSDK with your private key and chain
@@ -144,6 +148,8 @@ class GachaService {
 
         await this.updateInventory(username, rewardCards, cardIDs);
 
+        await cardContract.burn(packId, 1);
+
     } catch (error: any) {
         console.error(error);
         throw error;
@@ -171,6 +177,7 @@ private async updateInventory(username: string, cardNames: string[], tokenIds: s
 
         // Create relationships for all cards using a separate Cypher query
         await this.createCardRelationship(username, cardNames, tokenIds, inventoryCurrentSize, inventorySize);
+        
 
     } catch (error: any) {
         throw error;
@@ -209,6 +216,10 @@ private async createCardRelationship(username: string, cardNames: string[], toke
 
 
   }
+
+
+
+  
 
 }
 
