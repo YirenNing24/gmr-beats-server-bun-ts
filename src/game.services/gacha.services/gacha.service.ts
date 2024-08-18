@@ -25,8 +25,11 @@ import { openCardpackCypher } from "./gacha.cypher";
 import luckyItem from 'lucky-item'
 
 //** TYPE INTERFACES
-import { CardNameWeight, CardPackRate, PackData } from "./gacha.interface";
+import { CardNameWeight, CardPackRate, PackData, PackDataItem } from "./gacha.interface";
 import { CardMetaData } from "../inventory.services/inventory.interface";
+import { UserData } from "../../user.services/user.service.interface";
+import StoreService from "../store.services/store.service";
+import { buyCardCypher } from "../store.services/store.cypher";
 
 
 class GachaService {
@@ -35,16 +38,14 @@ class GachaService {
       this.driver = driver;
   }
 
+
   public async openCardPack(token: string, packData: PackData): Promise<string[]> {
       try {
           const tokenService: TokenService = new TokenService();
           const username: string = await tokenService.verifyAccessToken(token);
   
           // Assuming you know the pack name or ID key you want to work with
-          const packName = Object.keys(packData)[0];
-          const cardPackDetails = packData[packName];
-  
-          console.log(cardPackDetails);
+          const packName: string = Object.keys(packData)[0];
   
           const session: Session = this.driver.session();
           const result: QueryResult<RecordShape> = await session.executeRead((tx: ManagedTransaction) =>
@@ -57,7 +58,7 @@ class GachaService {
   
           const pack: PackData = result.records[0].get("pack").properties;
           const walletAddress: string = result.records[0].get("walletAddress");
-  
+          
           const connection: rt.Connection = await getRethinkDB();
           const query: rt.Cursor = await rt.db('admin')
               .table('cardPacks')
@@ -139,10 +140,10 @@ class GachaService {
 
             // Example: Transfer 1 unit of the tokenId to the walletAddress
             await cardContract.transfer(walletAddress, id, 1);
-
         }
 
         await this.updateInventory(username, rewardCards, cardIDs);
+
     } catch (error: any) {
         console.error(error);
         throw error;
@@ -150,31 +151,64 @@ class GachaService {
         // Always close the session after execution
         await session.close();
     }
-}
-  private async updateInventory(username: string, cardName: string[], tokenId: string[]) {
-    const inventoryService: InventoryService = new InventoryService();
+  }
+
+
+private async updateInventory(username: string, cardNames: string[], tokenIds: string[]): Promise<void> {
     try {
-
-        const size = inventoryService.checkInventorySize(username)
-
-
-
-
         const session: Session = this.driver.session();
         const result: QueryResult<RecordShape> = await session.executeRead((tx: ManagedTransaction) =>
-            tx.run("cypher here", { username,  })
+            tx.run(buyCardCypher, { username })
         );
 
+        await session.close();
 
+        const userData: UserData = result.records[0].get("u");
 
-    } catch(error: any) {
-      throw error
+        // Decide the relationship type based on inventory and bag size
+        const inventorySize: number = userData.properties.inventorySize.toNumber();
+        const inventoryCurrentSize: number = result.records[0].get("inventoryCurrentSize").toNumber();
+
+        // Create relationships for all cards using a separate Cypher query
+        await this.createCardRelationship(username, cardNames, tokenIds, inventoryCurrentSize, inventorySize);
+
+    } catch (error: any) {
+        throw error;
     }
   }
 
 
+private async createCardRelationship(username: string, cardNames: string[], tokenIds: string[], inventoryCurrentSize: number, inventorySize: number): Promise<void> {
+    try {
+        const session: Session = this.driver.session();
+        for (let i = 0; i < cardNames.length; i++) {
+            const cardName = cardNames[i];
+            const tokenId = tokenIds[i];
+
+            // Decide the relationship type
+            const relationship: string = (inventorySize < inventoryCurrentSize + 1) ? "BAGGED" : "INVENTORY";
+
+            // Create the relationship using the card's name and token ID
+            await session.run(`
+                MATCH (u:User {username: $username}), (c:Card {name: $cardName, tokenId: $tokenId})
+                CREATE (u)-[:${relationship}]->(c)
+                SET c.transferred = true
+            `, { username, cardName, tokenId });
+
+            // Update the inventory size
+            inventoryCurrentSize++;
+        }
+        await session.close();
+    } catch (error: any) {
+        console.error("Error creating relationship:", error);
+        throw error;
+    }
 
 
+
+
+
+  }
 
 }
 
