@@ -155,6 +155,8 @@ class GachaService {
     const inventoryService: InventoryService = new InventoryService();
     try {
 
+        const size = inventoryService.checkInventorySize(username)
+
 
 
 

@@ -175,7 +175,7 @@ this.driver = driver;
     }
 
 
-    private async checkInventorySize(userName: string): Promise<number | undefined> {
+    public async checkInventorySize(userName: string): Promise<number | undefined> {
       try {
           const session: Session | undefined = this.driver?.session();
   
