@@ -12,4 +12,5 @@ export const openCardpackCypher: string = `
 
 export const deductCardpack: string = `
     MATCH (u:User {username: $username})-[:OWNED]->(p:Pack {name: $name})
-    p.quantity = p.quantity - 1`;
+    SET p.quantity = p.quantity - 1
+    `;

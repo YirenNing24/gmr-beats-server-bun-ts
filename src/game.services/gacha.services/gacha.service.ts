@@ -25,7 +25,7 @@ import { buyCardCypher } from "../store.services/store.cypher";
 import luckyItem from 'lucky-item'
 
 //** TYPE INTERFACES
-import { CardNameWeight, CardPackRate, PackData, PackDataItem } from "./gacha.interface";
+import { CardNameWeight, CardPackRate, PackData } from "./gacha.interface";
 import { CardMetaData } from "../inventory.services/inventory.interface";
 import { UserData } from "../../user.services/user.service.interface";
 
@@ -86,8 +86,11 @@ class GachaService {
 
   private async rollCardPack(cardNameWeight: CardNameWeight[], walletAddress: string, username: string, packId: string) {
     try {
+
+
         // Use luckyItem to get the weighted items
-        const weightedItems: CardNameWeight[] = luckyItem.itemsBy(cardNameWeight, 'weight', 3);
+        const cardCount: number = cardNameWeight.length;
+        const weightedItems: CardNameWeight[] = luckyItem.itemsBy(cardNameWeight, 'weight', cardCount);
         
         // Extract the card names from the weighted items
         const cardNames: string[] = weightedItems.map(item => item.cardName);
@@ -114,41 +117,54 @@ class GachaService {
 
         const cardContract: Edition = await sdk.getContract(EDITION_ADDRESS, 'edition');
 
-
-        let cardIDs: Array<string> = []
+        let cardIDs: Array<string> = [];
         // Iterate over the rewardCards and execute the query for each card
         for (const cardName of rewardCards) {
             // Cypher query to find the card
             const query = `
-                MATCH (c:Card {name: $cardName})
-                WHERE c.transferred = false OR c.transferred IS NULL
-                AND NOT EXISTS((c)-[:INVENTORY | BAGGED ]->(:User))
+                MATCH (c:Card {name: $cardName}), (u:User {username: $username})
+                WHERE (c.transferred = false OR c.transferred IS NULL)
+                AND NOT EXISTS((u)-[:INVENTORY]->(c))
                 RETURN c
             `;
 
             // Execute the query and retrieve the matching card
             const result: QueryResult<RecordShape> = await session.executeRead((tx: ManagedTransaction) =>
-                tx.run(query, { cardName })
+                tx.run(query, { cardName, username })
             );
 
-            // Extract the card from the query result
-            const record = result.records[0];
-            if (!record) {
+            // Check if the result has any records
+            if (result.records.length === 0) {
                 console.log(`No card found for name: ${cardName}`);
                 continue;
             }
 
-            const card: CardMetaData = record.get('c').properties;
-            const { id } = card
+            // Extract the card from the query result
+            const record = result.records[0];
+            if (!record) {
+                console.log(`No record found for card: ${cardName}`);
+                continue;
+            }
+
+            const card = record.get('c').properties;
+            if (!card || !card.id) {
+                console.log(`Card data is missing or incomplete for name: ${cardName}`);
+                continue;
+            }
+
+            const { id, name } = card;
+            console.log("Found card:", id, name);
             cardIDs.push(id);
 
             // Example: Transfer 1 unit of the tokenId to the walletAddress
             await cardContract.transfer(walletAddress, id, 1);
         }
-
-        await this.updateInventory(username, rewardCards, cardIDs);
-
-        await cardContract.burn(packId, 1);
+        if (cardIDs.length > 0) {
+            await this.updateInventory(username, rewardCards, cardIDs);
+            await cardContract.burn(packId, 1);
+        } else {
+            console.log('No valid cards were found to transfer.');
+        }
 
     } catch (error: any) {
         console.error(error);
@@ -157,10 +173,11 @@ class GachaService {
         // Always close the session after execution
         await session.close();
     }
-  }
+    }
 
 
-private async updateInventory(username: string, cardNames: string[], tokenIds: string[]): Promise<void> {
+
+  private async updateInventory(username: string, cardNames: string[], tokenIds: string[]): Promise<void> {
     try {
         const session: Session = this.driver.session();
         const result: QueryResult<RecordShape> = await session.executeRead((tx: ManagedTransaction) =>
@@ -177,7 +194,7 @@ private async updateInventory(username: string, cardNames: string[], tokenIds: s
 
         // Create relationships for all cards using a separate Cypher query
         await this.createCardRelationship(username, cardNames, tokenIds, inventoryCurrentSize, inventorySize);
-        
+
 
     } catch (error: any) {
         throw error;
@@ -185,7 +202,7 @@ private async updateInventory(username: string, cardNames: string[], tokenIds: s
   }
 
 
-private async createCardRelationship(username: string, cardNames: string[], tokenIds: string[], inventoryCurrentSize: number, inventorySize: number): Promise<void> {
+  private async createCardRelationship(username: string, cardNames: string[], tokenIds: string[], inventoryCurrentSize: number, inventorySize: number): Promise<void> {
     try {
         const session: Session = this.driver.session();
         for (let i = 0; i < cardNames.length; i++) {
@@ -210,11 +227,6 @@ private async createCardRelationship(username: string, cardNames: string[], toke
         console.error("Error creating relationship:", error);
         throw error;
     }
-
-
-
-
-
   }
 
 

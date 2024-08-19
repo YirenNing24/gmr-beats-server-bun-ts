@@ -28,6 +28,9 @@ const app = new Elysia()
     maxAge: 600,
   }))
 
+
+  
+
 routes(app)
 
 initDriver(NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD);

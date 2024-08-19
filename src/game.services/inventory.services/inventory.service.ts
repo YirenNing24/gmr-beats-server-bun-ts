@@ -227,7 +227,7 @@ this.driver = driver;
     
             // If no records found, return empty arrays
             if (!result || result.records.length === 0) {
-                return [[]];
+                return [];
             }
     
             // Create an object to store card packs
