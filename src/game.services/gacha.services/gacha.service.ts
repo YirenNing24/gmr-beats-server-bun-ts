@@ -86,8 +86,6 @@ class GachaService {
 
   private async rollCardPack(cardNameWeight: CardNameWeight[], walletAddress: string, username: string, packId: string) {
     try {
-
-
         // Use luckyItem to get the weighted items
         const cardCount: number = cardNameWeight.length;
         const weightedItems: CardNameWeight[] = luckyItem.itemsBy(cardNameWeight, 'weight', cardCount);
@@ -117,50 +115,55 @@ class GachaService {
 
         const cardContract: Edition = await sdk.getContract(EDITION_ADDRESS, 'edition');
 
-        let cardIDs: Array<string> = [];
-        // Iterate over the rewardCards and execute the query for each card
+        const cardIDs: Array<string> = [];
+        const cardNames: Array<string> = [];
+        const amounts: Array<number> = [];
+
         for (const cardName of rewardCards) {
-            // Cypher query to find the card
+            // Cypher query to find one card for each name in rewardCards
             const query = `
-                MATCH (c:Card {name: $cardName}), (u:User {username: $username})
-                WHERE (c.transferred = false OR c.transferred IS NULL)
-                AND NOT EXISTS((u)-[:INVENTORY]->(c))
+                MATCH (c:Card)
+                WHERE c.name = $cardName 
+                AND (c.transferred = false OR c.transferred IS NULL)
                 RETURN c
+                LIMIT 1
             `;
 
             // Execute the query and retrieve the matching card
             const result: QueryResult<RecordShape> = await session.executeRead((tx: ManagedTransaction) =>
-                tx.run(query, { cardName, username })
+                tx.run(query, { cardName })
             );
 
-            // Check if the result has any records
             if (result.records.length === 0) {
-                console.log(`No card found for name: ${cardName}`);
+                console.log(`No valid card found for: ${cardName}`);
                 continue;
             }
 
-            // Extract the card from the query result
             const record = result.records[0];
-            if (!record) {
-                console.log(`No record found for card: ${cardName}`);
-                continue;
-            }
-
             const card = record.get('c').properties;
-            if (!card || !card.id) {
-                console.log(`Card data is missing or incomplete for name: ${cardName}`);
-                continue;
-            }
-
             const { id, name } = card;
-            console.log("Found card:", id, name);
-            cardIDs.push(id);
+            if (id) {
+                cardIDs.push(id);
+                cardNames.push(name);
+                amounts.push(1); // Add 1 to the amounts array for each card
 
-            // Example: Transfer 1 unit of the tokenId to the walletAddress
-            await cardContract.transfer(walletAddress, id, 1);
+                // Set transferred = true in the database first
+                const updateQuery = `
+                    MATCH (c:Card {id: $id})
+                    SET c.transferred = true
+                `;
+                await session.run(updateQuery, { id });
+            }
         }
+
+        console.log(cardNames, " ", cardIDs, " ", amounts);
+
         if (cardIDs.length > 0) {
-            await this.updateInventory(username, rewardCards, cardIDs);
+            // Use transferBatch with the amounts array
+            await cardContract.transferBatch(walletAddress, cardIDs, amounts);
+
+            // Update inventory and burn pack if cards were transferred
+            await this.updateInventory(username, cardNames, cardIDs);
             await cardContract.burn(packId, 1);
         } else {
             console.log('No valid cards were found to transfer.');
@@ -170,64 +173,97 @@ class GachaService {
         console.error(error);
         throw error;
     } finally {
-        // Always close the session after execution
         await session.close();
     }
-    }
+}
 
 
 
-  private async updateInventory(username: string, cardNames: string[], tokenIds: string[]): Promise<void> {
+
+private async updateInventory(username: string, cardNames: string[], tokenIds: string[]): Promise<void> {
+    const session: Session = this.driver.session();
     try {
-        const session: Session = this.driver.session();
+        // Query to get the user's current inventory size
+        const query = `
+            MATCH (u:User {username: $username})-[:INVENTORY]->(c:Card)
+            RETURN u, COUNT(c) AS inventoryCurrentSize
+        `;
+
+        // Execute the query to get the user and inventory size
         const result: QueryResult<RecordShape> = await session.executeRead((tx: ManagedTransaction) =>
-            tx.run(buyCardCypher, { username })
+            tx.run(query, { username })
         );
 
-        await session.close();
+        // Check if the query returned results
+        if (!result || result.records.length === 0) {
+            // If no records are returned, set inventorySize and inventoryCurrentSize to 0
+            const inventorySize = 0;
+            const inventoryCurrentSize = 0;
+            
+            // Proceed to create the card relationships
+            await this.createCardRelationship(session, username, cardNames, tokenIds, inventoryCurrentSize, inventorySize);
+            return;
+        }
 
-        const userData: UserData = result.records[0].get("u");
-
-        // Decide the relationship type based on inventory and bag size
+        // Extract user data and inventoryCurrentSize from the result
+        const userData = result.records[0].get("u");
         const inventorySize: number = userData.properties.inventorySize.toNumber();
         const inventoryCurrentSize: number = result.records[0].get("inventoryCurrentSize").toNumber();
 
-        // Create relationships for all cards using a separate Cypher query
-        await this.createCardRelationship(username, cardNames, tokenIds, inventoryCurrentSize, inventorySize);
-
+        // Proceed to create the card relationships
+        await this.createCardRelationship(session, username, cardNames, tokenIds, inventoryCurrentSize, inventorySize);
 
     } catch (error: any) {
+        console.error(error);
         throw error;
-    }
-  }
-
-
-  private async createCardRelationship(username: string, cardNames: string[], tokenIds: string[], inventoryCurrentSize: number, inventorySize: number): Promise<void> {
-    try {
-        const session: Session = this.driver.session();
-        for (let i = 0; i < cardNames.length; i++) {
-            const cardName = cardNames[i];
-            const tokenId = tokenIds[i];
-
-            // Decide the relationship type
-            const relationship: string = (inventorySize < inventoryCurrentSize + 1) ? "BAGGED" : "INVENTORY";
-
-            // Create the relationship using the card's name and token ID
-            await session.run(`
-                MATCH (u:User {username: $username}), (c:Card {name: $cardName, tokenId: $tokenId})
-                CREATE (u)-[:${relationship}]->(c)
-                SET c.transferred = true
-            `, { username, cardName, tokenId });
-
-            // Update the inventory size
-            inventoryCurrentSize++;
-        }
+    } finally {
         await session.close();
+    }
+}
+
+
+private async createCardRelationship(session: Session, username: string, cardNames: string[], tokenIds: string[], inventoryCurrentSize: number, inventorySize: number): Promise<void> {
+    try {
+        // Prepare the data for the query
+        const cards = cardNames.map((name, i) => ({
+            name,
+            tokenId: tokenIds[i]
+        }));
+
+        // Variable to keep track of available inventory space
+        let remainingInventorySlots = inventorySize - inventoryCurrentSize;
+
+        // Iterate over the cards and assign the correct relationship based on remaining slots
+        for (let i = 0; i < cards.length; i++) {
+            const relationship = remainingInventorySlots > 0 ? "INVENTORY" : "BAGGED";
+
+            // Generate the Cypher query for each card
+            const query = `
+                MATCH (u:User {username: $username}), (c:Card {name: $cardName, id: $tokenId})
+                SET c.transferred = true
+                CREATE (u)-[:${relationship}]->(c)
+            `;
+
+            // Execute the query for each card
+            await session.run(query, {
+                username,
+                cardName: cards[i].name,
+                tokenId: cards[i].tokenId
+            });
+
+            // Decrement remaining inventory slots if the card was added to INVENTORY
+            if (remainingInventorySlots > 0) {
+                remainingInventorySlots--;
+            }
+        }
+
     } catch (error: any) {
         console.error("Error creating relationship:", error);
         throw error;
     }
-  }
+}
+
+
 
 
 
