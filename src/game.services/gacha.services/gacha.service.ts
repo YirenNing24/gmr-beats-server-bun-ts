@@ -19,15 +19,13 @@ import { SECRET_KEY, CHAIN, PRIVATE_KEY, EDITION_ADDRESS } from "../../config/co
 
 //** CYPHER IMPORT
 import { deductCardpack, openCardpackCypher } from "./gacha.cypher";
-import { buyCardCypher } from "../store.services/store.cypher";
+
 
 //** LUCKY ITEM IMPORT
 import luckyItem from 'lucky-item'
 
 //** TYPE INTERFACES
 import { CardNameWeight, CardPackRate, PackData } from "./gacha.interface";
-import { CardMetaData } from "../inventory.services/inventory.interface";
-import { UserData } from "../../user.services/user.service.interface";
 
 
 
@@ -156,8 +154,6 @@ class GachaService {
             }
         }
 
-        console.log(cardNames, " ", cardIDs, " ", amounts);
-
         if (cardIDs.length > 0) {
             // Use transferBatch with the amounts array
             await cardContract.transferBatch(walletAddress, cardIDs, amounts);
@@ -175,12 +171,10 @@ class GachaService {
     } finally {
         await session.close();
     }
-}
+  }
 
 
-
-
-private async updateInventory(username: string, cardNames: string[], tokenIds: string[]): Promise<void> {
+  private async updateInventory(username: string, cardNames: string[], tokenIds: string[]): Promise<void> {
     const session: Session = this.driver.session();
     try {
         // Query to get the user's current inventory size
@@ -219,55 +213,50 @@ private async updateInventory(username: string, cardNames: string[], tokenIds: s
     } finally {
         await session.close();
     }
-}
+  }
 
 
-private async createCardRelationship(session: Session, username: string, cardNames: string[], tokenIds: string[], inventoryCurrentSize: number, inventorySize: number): Promise<void> {
-    try {
-        // Prepare the data for the query
-        const cards = cardNames.map((name, i) => ({
-            name,
-            tokenId: tokenIds[i]
-        }));
+  private async createCardRelationship(session: Session, username: string, cardNames: string[], tokenIds: string[], inventoryCurrentSize: number, inventorySize: number): Promise<void> {
+        try {
+            // Prepare the data for the query
+            const cards = cardNames.map((name, i) => ({
+                name,
+                tokenId: tokenIds[i]
+            }));
 
-        // Variable to keep track of available inventory space
-        let remainingInventorySlots = inventorySize - inventoryCurrentSize;
+            // Variable to keep track of available inventory space
+            let remainingInventorySlots = inventorySize - inventoryCurrentSize;
 
-        // Iterate over the cards and assign the correct relationship based on remaining slots
-        for (let i = 0; i < cards.length; i++) {
-            const relationship = remainingInventorySlots > 0 ? "INVENTORY" : "BAGGED";
+            // Iterate over the cards and assign the correct relationship based on remaining slots
+            for (let i = 0; i < cards.length; i++) {
+                const relationship = remainingInventorySlots > 0 ? "INVENTORY" : "BAGGED";
 
-            // Generate the Cypher query for each card
-            const query = `
-                MATCH (u:User {username: $username}), (c:Card {name: $cardName, id: $tokenId})
-                SET c.transferred = true
-                CREATE (u)-[:${relationship}]->(c)
-            `;
+                // Generate the Cypher query for each card
+                const query = `
+                    MATCH (u:User {username: $username}), (c:Card {name: $cardName, id: $tokenId})
+                    SET c.transferred = true
+                    CREATE (u)-[:${relationship}]->(c)
+                `;
 
-            // Execute the query for each card
-            await session.run(query, {
-                username,
-                cardName: cards[i].name,
-                tokenId: cards[i].tokenId
-            });
+                // Execute the query for each card
+                await session.run(query, {
+                    username,
+                    cardName: cards[i].name,
+                    tokenId: cards[i].tokenId
+                });
 
-            // Decrement remaining inventory slots if the card was added to INVENTORY
-            if (remainingInventorySlots > 0) {
-                remainingInventorySlots--;
+                // Decrement remaining inventory slots if the card was added to INVENTORY
+                if (remainingInventorySlots > 0) {
+                    remainingInventorySlots--;
+                }
             }
+
+        } catch (error: any) {
+            console.error("Error creating relationship:", error);
+            throw error;
         }
+  }
 
-    } catch (error: any) {
-        console.error("Error creating relationship:", error);
-        throw error;
-    }
-}
-
-
-
-
-
-  
 
 }
 
