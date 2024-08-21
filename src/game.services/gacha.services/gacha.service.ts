@@ -82,7 +82,7 @@ class GachaService {
   }
   
 
-  private async rollCardPack(cardNameWeight: CardNameWeight[], walletAddress: string, username: string, packId: string) {
+  private async rollCardPack(cardNameWeight: CardNameWeight[], walletAddress: string, username: string, packId: string): Promise<string[]> {
     try {
         // Use luckyItem to get the weighted items
         const cardCount: number = cardNameWeight.length;
@@ -103,7 +103,7 @@ class GachaService {
   }
 
 
-  private async transferRewardCards(rewardCards: string[], walletAddress: string, username: string, packId: string) {
+  private async transferRewardCards(rewardCards: string[], walletAddress: string, username: string, packId: string): Promise<void> {
     const session: Session = this.driver.session();
     try {
         // Initialize the ThirdwebSDK with your private key and chain
