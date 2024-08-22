@@ -43,6 +43,7 @@ const rewards = (app: Elysia) => {
      }, authorizationBearerSchema
     )
 
+    
   .post('/api/reward/claim/ownership', async ({ headers, body }): Promise<SuccessMessage> => {
       try {
         const authorizationHeader: string = headers.authorization;
@@ -63,6 +64,7 @@ const rewards = (app: Elysia) => {
         }
      }, claimCardOwnershipRewardSchema
     )
+
 
   .post('/api/reward/claim/zodiac', async ({ headers, body }): Promise<SuccessMessage> => {
       try {
