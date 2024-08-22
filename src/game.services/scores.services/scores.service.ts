@@ -9,7 +9,10 @@ import { getRethinkDB } from "../../db/rethink";
 
 //** IMPORTED SERVICES
 import TokenService from "../../user.services/token.services/token.service";
+import RewardService from "../rewards.services/rewards.service";
+
 import { SuccessMessage } from "../../outputs/success.message";
+import { RewardData } from "../rewards.services/reward.interface";
 
 
 class ScoreService {
@@ -72,6 +75,25 @@ class ScoreService {
             const scoreWithTime = { ...score, timestamp: Date.now() };
             const connection: rt.Connection = await getRethinkDB();
 
+            const rewardService: RewardService = new RewardService();
+
+            const rewardData: RewardData = { songName: score.songName, songRewardType: 'first', type: 'song' };
+            const isFirstSongComplete: boolean = await rewardService.checkSongReward(score.username, rewardData);
+
+            if (!isFirstSongComplete) {
+
+                const dataReward = {
+                    username: score.username,
+                    type: rewardData.type,
+    
+                    songName: score.songName,
+                    songRewardType: rewardData.songRewardType,
+    
+                    rewardName: 'First time completing ' + score.songName,
+                };
+                rewardService.setMissionReward(score.username, dataReward)
+            }
+
             await rt.db('beats').table('classicScores').insert(scoreWithTime).run(connection);
 
             return new SuccessMessage("Score saved")
@@ -88,8 +110,7 @@ class ScoreService {
             await tokenService.verifyAccessToken(token);
     
             const connection: rt.Connection = await getRethinkDB();
-
-            const idPeer = parseInt(peerId.peerId)
+            const idPeer: number = parseInt(peerId.peerId)
 
             const result: rt.Cursor = await rt.db('beats')
                 .table('classicScores')
@@ -126,6 +147,7 @@ class ScoreService {
             throw error;
         }
     }
+    
     
 }
 
