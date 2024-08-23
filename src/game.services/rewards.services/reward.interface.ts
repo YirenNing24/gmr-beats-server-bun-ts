@@ -12,16 +12,16 @@ export interface AnimalMatch {
 
 export interface RewardData {
     username?: string;
-    type?: 'song';
+    type?: string;
 
     songName?: string;
-    songRewardType?: 'first';
+    songRewardType?: string;
 
     reward?: string;
     rewardName?: string;
     
     claimed?: boolean;
-    claimedAt?: Time
+    claimedAt?: string
     eligible?: boolean;
 
 

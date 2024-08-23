@@ -664,7 +664,9 @@ class RewardService {
                 .filter({ username, ...rewardData })
                 .run(connection);
 
-            const missionReward: RewardData[] = result.toArray() as unknown as RewardData[];
+            const missionReward: RewardData[] = await result.toArray() as unknown as RewardData[];
+
+            console.log(missionReward)
 
             if (!missionReward[0].claimed) {
                 await this.sendMissionReward(missionReward[0])

@@ -13,7 +13,7 @@ import { RewardData } from '../game.services/rewards.services/reward.interface';
 
 //** SCHEMA IMPORT
 import { authorizationBearerSchema } from './route.schema/schema.auth';
-import { claimCardOwnershipRewardSchema } from '../game.services/rewards.services/rewards.schema';
+import { claimCardOwnershipRewardSchema, claimMissionRewardSchema } from '../game.services/rewards.services/rewards.schema';
 
 //** OUTPUT MESSSAGE IMPORT
 import { SuccessMessage } from '../outputs/success.message';
@@ -131,6 +131,29 @@ const rewards = (app: Elysia) => {
         }
      }, authorizationBearerSchema
     )
+
+  .post('/api/reward/mission/claim', async ({ headers, body }): Promise<SuccessMessage> => {
+      try {
+        const authorizationHeader: string = headers.authorization;
+        if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+          throw new Error('Bearer token not found in Authorization header');
+        }
+        const jwtToken: string = authorizationHeader.substring(7);
+
+        const driver: Driver = getDriver();
+        const rewardService: RewardService = new RewardService(driver)
+        
+        const output: SuccessMessage = await rewardService.claimMissionReward(jwtToken, body);
+
+        return output as SuccessMessage;
+      } catch (error: any) {
+        throw error
+
+        }
+     }, claimMissionRewardSchema
+    )
+
+
 }
 
 export default rewards
