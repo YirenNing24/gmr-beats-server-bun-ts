@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  tails-tavern-engine:
+  maryann-engine:
     image: thirdweb/engine:latest
     ports:
       - "3005:3005"
@@ -9,28 +9,38 @@ services:
       ENCRYPTION_PASSWORD: "encryption_password"
       THIRDWEB_API_SECRET_KEY: "PNWiY4YmCbt0gQauQrguXkYd9RdK0dNYKEc5sO5qN0cj17QMvm9ES1e3DC4fBmoiVQly3nk8CIFPCo_2vk5-8w"
       ADMIN_WALLET_ADDRESS: "0x0AfF10A2220aa27fBe83C676913aebeb3801DfB6"
-      POSTGRES_CONNECTION_URL: "postgresql://postgres:postgres@tails-tavern-postgres:5432/postgres?sslmode=disable"
+      POSTGRES_CONNECTION_URL: "postgresql://postgres:postgres@maryann-postgres:5432/postgres?sslmode=disable"
       ENABLE_HTTPS: "false"
-      REDIS_URL: "redis://tails-tavern-keydb:6378/0"
+      REDIS_URL: "redis://maryann-keydb:6379"
     deploy:
       resources:
         limits:
-          cpus: '4'
+          cpus: '1'
     restart: always
     pull_policy: always
 
-  tails-tavern-postgres:
+  maryann-postgres:
     image: postgres:latest
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ""
+      POSTGRES_PASSWORD: "your_secure_password"  # Set a secure password
       POSTGRES_DB: postgres
     ports:
       - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
     restart: always
 
-  tails-tavern-keydb:
+  maryann-keydb:
     image: eqalpha/keydb:latest
     ports:
-      - "6378:6379"
+      - "6379:6379"
+    volumes:
+      - keydb-data:/data
     restart: always
+
+volumes:
+  postgres-data:
+    driver: local
+  keydb-data:
+    driver: local
