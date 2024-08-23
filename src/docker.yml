@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  tails-tavern-engine:
+    image: thirdweb/engine:latest
+    ports:
+      - "3005:3005"
+    environment:
+      ENCRYPTION_PASSWORD: "encryption_password"
+      THIRDWEB_API_SECRET_KEY: "PNWiY4YmCbt0gQauQrguXkYd9RdK0dNYKEc5sO5qN0cj17QMvm9ES1e3DC4fBmoiVQly3nk8CIFPCo_2vk5-8w"
+      ADMIN_WALLET_ADDRESS: "0x0AfF10A2220aa27fBe83C676913aebeb3801DfB6"
+      POSTGRES_CONNECTION_URL: "postgresql://postgres:postgres@tails-tavern-postgres:5432/postgres?sslmode=disable"
+      ENABLE_HTTPS: "false"
+      REDIS_URL: "redis://tails-tavern-keydb:6378/0"
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+    restart: always
+    pull_policy: always
+
+  tails-tavern-postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ""
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    restart: always
+
+  tails-tavern-keydb:
+    image: eqalpha/keydb:latest
+    ports:
+      - "6378:6379"
+    restart: always
