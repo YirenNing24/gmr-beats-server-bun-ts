@@ -27,7 +27,7 @@ import { CHAIN, EDITION_ADDRESS, SECRET_KEY, SMART_WALLET_CONFIG } from "../conf
 
 //**NANOID IMPORT
 import { nanoid } from "nanoid/async";
-import { timeStamp } from "console";
+
 
 
 class SocialService {
@@ -76,6 +76,7 @@ class SocialService {
     }
   }
 
+
    //** Unfollows a user.
   public async unfollow(toUnfollow: { toUnfollow: string }, token: string): Promise<FollowResponse> {
     try {
@@ -108,6 +109,7 @@ class SocialService {
       throw error;
     }
   }
+
 
   //** Retrieves profile information for a user's view of another user's profile.
   public async viewProfile(viewUsername: string, token: string): Promise<ViewProfileData> {
@@ -169,6 +171,7 @@ class SocialService {
     }
   }
   
+
   //** Retrieves a list of users who are mutual followers with the specified user.
   public async getMutual(token: string): Promise<MutualData[]> {
     try {
@@ -220,7 +223,7 @@ class SocialService {
   public async getMutualMyNotes(usernames: string[]): Promise<MyNote[]> {
     try {
 
-  
+      setInterval
       const connection: rt.Connection = await getRethinkDB();
       
       // Retrieve the latest note for the user
@@ -284,6 +287,7 @@ class SocialService {
     }
   }
 
+
   //** Sets the online status for a user in the system.
   public async setStatusOnline(activity: string, userAgent: string, osName: string, ipAddress: string, token: string): Promise<void> {
     try {
@@ -310,6 +314,7 @@ class SocialService {
       throw error;
     }
   }
+
 
   public async sendCardGift(token: string, cardGiftData: CardGiftData): Promise<SuccessMessage> {
     const session: Session | undefined = this.driver?.session();
@@ -353,6 +358,7 @@ class SocialService {
     }
   }
   
+
   private async cardGiftSending(cardGiftData: CardGiftData, cardGiftSending: CardGiftSending, userName: string) {
     try {
 
@@ -375,6 +381,7 @@ class SocialService {
     }
   }
   
+
   private async sendGiftromWallet(cardGfitSending: CardGiftSending, cardData: CardGiftData) {
     try {
 
@@ -405,7 +412,9 @@ class SocialService {
     }
   }
 
+
   public async postFanMoments(token: string, postFanMoment: PostFanMoment): Promise<SuccessMessage | Error> {
+
     try {
       const tokenService: TokenService = new TokenService();
       const userName: string = await tokenService.verifyAccessToken(token);
@@ -433,6 +442,7 @@ class SocialService {
       throw new Error(`Failed to post fan moment: ${error.message}`);
     }
   }
+
 
   public async getHotFanMomentPosts(token: string, limit: number, offset: number): Promise<PostFanMoment[]> {
     try {
@@ -480,6 +490,7 @@ class SocialService {
     }
   }
   
+
   public async getMyFanMomentPosts(token: string, limit: number, offset: number): Promise<PostFanMoment[]> {
     try {
       const tokenService: TokenService = new TokenService();
@@ -521,6 +532,7 @@ class SocialService {
     }
   }
 
+
   public async getLatestFanMomentPosts(token: string, limit: number, offset: number): Promise<PostFanMoment[]> {
     try {
       const tokenService: TokenService = new TokenService();
@@ -561,6 +573,7 @@ class SocialService {
     }
   }
   
+
   public async getFollowingMomentPosts(token: string, limit: number, offset: number): Promise<PostFanMoment[]> {
     try {
       const tokenService: TokenService = new TokenService();
@@ -618,6 +631,7 @@ class SocialService {
     }
   }
   
+
 	private calculateTrendScore(post: PostFanMoment): number {
 		const W_likes: number = 1;
 		const W_comments: number = 2;
@@ -629,6 +643,7 @@ class SocialService {
 		const trendScore: number = (likesCount * W_likes) + (commentsCount * W_comments) + (sharesCount * W_shares);
 		return trendScore;
 	}
+
 
   private formatTimeDifference(createdAt: number): string {
     const now = Date.now();
@@ -646,6 +661,7 @@ class SocialService {
     const years = Math.floor(days / 365);
     return `${years}y`;
   }
+
 
   public async likeFanMoment(token: string, fanMomentId: FanMomentId) {
     try {
@@ -686,6 +702,7 @@ class SocialService {
       throw new Error(`Failed to like fan moment: ${error.message}`);
     }
   }
+
 
   public async unlikeFanMoment(token: string, fanMomentId: FanMomentId) {
     try {
@@ -728,6 +745,7 @@ class SocialService {
     }
   }
 
+  
   public async commentFanMoment(token: string, fanMomentComment: FanMomentComment): Promise<SuccessMessage> {
     try {
       const tokenService: TokenService = new TokenService();
@@ -773,7 +791,6 @@ class SocialService {
     }
   }
   
-
 
 }
 

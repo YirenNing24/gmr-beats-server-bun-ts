@@ -1,12 +1,16 @@
-/**
- * Cypher query string to redeem a bundle for a user and return the user's local wallet and key.
- *
- * @constant {string} redeemBundle
- * @example
- * // Usage:
- * // MATCH (u:User {username: $userName}) 
- * // RETURN u.localWallet as localWallet, u.localWalletKey as localWalletKey
- */
+
 export const redeemBundle: string = `
-MATCH (u:User {username: $userName}) 
-RETURN u.localWallet as localWallet, u.localWalletKey as localWalletKey`;
+    MATCH (u:User {username: $userName}) 
+    RETURN u.localWallet as localWallet, u.localWalletKey as localWalletKey`;
+
+
+export const openCardpackCypher: string = `
+    MATCH (u:User {username: $username})-[:OWNED]->(p:Pack {name: $name})
+    WHERE p.quantity > 0
+    RETURN p as pack, u.smartWalletAddress as walletAddress`;
+
+
+export const deductCardpack: string = `
+    MATCH (u:User {username: $username})-[:OWNED]->(p:Pack {name: $name})
+    SET p.quantity = p.quantity - 1
+    `;

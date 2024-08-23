@@ -2,7 +2,7 @@
 import { createSigner, createVerifier } from 'fast-jwt';
 
 //** CONFIG IMPORT
-import { JWT_SECRET } from '../../config/constants';
+import { JWT_SECRET, GAME_SERVER_KEY } from '../../config/constants';
 
 //** TYPE INTERFACE IMPORT
 import { TokenScheme } from '../user.service.interface';
@@ -42,6 +42,7 @@ class TokenService {
 
 			return accessToken as string;
 		} catch (error: any) {
+			console.log(error);
 			return error
 		}
 	}
@@ -55,7 +56,7 @@ class TokenService {
 
 			return userName as string;
 		} catch (error: any) {
-		  console.log(error)
+		  console.log(error);
 		  return error;
 		}
 	}
@@ -71,6 +72,19 @@ class TokenService {
 			return tokens as TokenScheme;
 		} catch (error: any) {
 			return error;
+		}
+	}
+
+	public async verifyApiKey(apiKey: string): Promise<boolean> {
+		try {
+			if (GAME_SERVER_KEY == apiKey) {
+				return true;
+			}
+			else {
+				return false
+			}
+		} catch(error: any) {
+		  throw error;
 		}
 	}
 

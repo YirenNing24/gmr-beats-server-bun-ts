@@ -1,9 +1,16 @@
 //** MEMGRAPH DRIVER AND TYPES
-import { Driver, ManagedTransaction, QueryResult, Session } from "neo4j-driver";
+import { Driver } from "neo4j-driver";
 
 //** VALIDATION ERROR
-import { ClassicScoreStats } from "./leaderboard.interface";
+import { ClassicScoreStats, LeaderboardQuery } from "./leaderboard.interface";
+
+//** SERVICE IMPORT
 import TokenService from "../../user.services/token.services/token.service";
+
+//** RETHINK DB IMPORT
+import rt from "rethinkdb";
+import { getRethinkDB } from "../../db/rethink";
+
 
 
 class LeaderboardService {
@@ -12,35 +19,88 @@ class LeaderboardService {
 		this.driver = driver;
 	}
 
-
-
-	public async weeklyLeaderboard(token: string, body: ClassicScoreStats): Promise<ClassicScoreStats[]> {
-		//* Weekly is from Monday to Sunday
+	public async leaderboard(token: string, query: LeaderboardQuery): Promise<ClassicScoreStats[]> {
 		try {
 
-			console.log(body)
 			const tokenService: TokenService = new TokenService();
 			await tokenService.verifyAccessToken(token);
+		
+			const { songName, difficulty, period } = query;
 
-			const date: Date = new Date();
+			const songTitle: string = this.correctSongName(songName)
 
-			const session: Session | undefined = this.driver?.session();
-			const result: QueryResult | undefined = await session?.executeRead((tx: ManagedTransaction) =>
-			tx.run(`
-`,
-				{  })
-			);
-			await session?.close();
-	
-			const classicScoreStats: ClassicScoreStats[] | undefined = result?.records.map(record => record.get('s').properties);
-	
-			return classicScoreStats as ClassicScoreStats[];
+			const { startOfPeriod, endOfPeriod } = this.getPeriodDates(period);
+			const scores = await this.fetchScores(songTitle, difficulty.toLowerCase());
+			const filteredScores = this.filterScoresByPeriod(scores, startOfPeriod, endOfPeriod);
+
+			return filteredScores;
 		} catch (error: any) {
-			console.log(error)
+			console.log(error);
 			throw error;
 		}
 	}
 
+	private correctSongName(songName: string): string {
+		let songTItle: string = songName
+		if (songName == "NoDoubt") {
+			songTItle = "No Doubt"
+		}
+		return songTItle
+	}
+
+
+	private getPeriodDates(period: string): { startOfPeriod: Date; endOfPeriod: Date } {
+		const now = new Date();
+		let startOfPeriod: Date;
+		let endOfPeriod: Date;
+
+		switch (period) {
+			case "Daily":
+				startOfPeriod = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+				endOfPeriod = new Date(startOfPeriod);
+				endOfPeriod.setUTCDate(startOfPeriod.getUTCDate() + 1);
+				break;
+
+			case "Weekly":
+				const dayOfWeek = now.getUTCDay(); // Sunday - Saturday: 0 - 6
+				const diffToMonday = (dayOfWeek + 6) % 7; // Calculate how many days to subtract to get to Monday
+				startOfPeriod = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - diffToMonday, 0, 0, 0, 0));
+				endOfPeriod = new Date(startOfPeriod);
+				endOfPeriod.setUTCDate(startOfPeriod.getUTCDate() + 7); // Add 7 days to Monday to get the next Monday
+				break;
+
+			case "Monthly":
+				startOfPeriod = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
+				endOfPeriod = new Date(startOfPeriod);
+				endOfPeriod.setUTCMonth(startOfPeriod.getUTCMonth() + 1); // Add 1 month
+				break;
+
+			default:
+				throw new Error("Invalid period specified");
+		}
+
+		return { startOfPeriod, endOfPeriod };
+	}
+
+	
+	private async fetchScores(songName: string, difficulty: string): Promise<ClassicScoreStats[]> {
+		const connection: rt.Connection = await getRethinkDB();
+		const result: rt.Cursor = await rt.db('beats')
+			.table('classicScores')
+			.filter(rt.row('songName').eq(songName).and(rt.row('difficulty').eq(difficulty)))
+			.run(connection);
+
+		const scores: ClassicScoreStats[] = await result.toArray();
+
+		return scores;
+	}
+
+	private filterScoresByPeriod(scores: ClassicScoreStats[], startOfPeriod: Date, endOfPeriod: Date): ClassicScoreStats[] {
+		return scores.filter(score => {
+			const scoreDate = new Date(score.timestamp);
+			return scoreDate >= startOfPeriod && scoreDate < endOfPeriod;
+		});
+	}
 }
 
 export default LeaderboardService;

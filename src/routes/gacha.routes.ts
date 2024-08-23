@@ -10,13 +10,12 @@ import { getDriver } from '../db/memgraph';
 import GachaService from '../game.services/gacha.services/gacha.service';
 
 //**  TYPE INTERFACE IMPORT
-import { BundleRewards } from '../game.services/gacha.services/gacha.interface';
-import { redeemBundleSchema } from '../game.services/gacha.services/gacha.schema';
+import { packDataSchema } from '../game.services/gacha.services/gacha.schema';
 
 
 
 const gacha = (app: Elysia): void => {
-    app.post('/api/gacha/bundle/redeem', async ({ headers, body }): Promise<BundleRewards> => {
+    app.post('/api/gacha/open/card-pack', async ({ headers, body }): Promise<string[]> => {
         try {
             const authorizationHeader: string = headers.authorization;
             if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
@@ -27,12 +26,13 @@ const gacha = (app: Elysia): void => {
             const driver: Driver = getDriver();
             const gachaService: GachaService = new GachaService(driver);
 
-            const output: BundleRewards = await gachaService.redeemBundle(body, jwtToken);
-            return output as BundleRewards
+            const output: string[] = await gachaService.openCardPack(jwtToken, body);
+
+            return output;
         } catch (error: any) {
             throw error
         } 
-     }, redeemBundleSchema
+     }, packDataSchema
     
     );
 

@@ -144,3 +144,24 @@ export interface StoreCardUpgradeData {
     uploaderBeats: string;
     uri: string;
 }
+
+
+
+export interface StorePackData {
+    currencyName: string;
+    description: string;
+    endTime: string; // Consider using a Date type if you need date manipulation
+    id: string;
+    image: string;
+    lister: string;
+    listingId: number;
+    name: string;
+    pricePerToken: number;
+    quantity: number;
+    startTime: string; // Consider using a Date type if you need date manipulation
+    tokenId: string;
+    type: string;
+    uploader: string;
+    uri: string;
+}
+

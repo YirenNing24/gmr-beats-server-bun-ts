@@ -100,8 +100,6 @@ export interface UpdateInventoryData {
 }
 
 
-
-
 /**
  * Type representing inventory card data indexed by URI.
  */
@@ -112,3 +110,25 @@ export type InventoryCardData = { [uri: string]: CardMetaData };
  * The first array contains owned and bagged cards, and the second array contains owned and equipped cards.
  */
 export type InventoryCards = [InventoryCardData[], InventoryCardData[]];
+
+
+
+export interface CardPackData {
+  child: boolean;
+  currencyName: string;
+  description: string;
+  endTime: string;
+  id: string;
+  image: string;
+  lister: string;
+  listingId: number;
+  name: string;
+  pricePerToken: number;
+  quantity: number;
+  startTime: string;
+  tokenId: string;
+  type: string;
+  uploader: string;
+  uri: string;
+}
+

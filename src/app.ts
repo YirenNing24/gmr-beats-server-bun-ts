@@ -12,9 +12,10 @@ import routes from "./routes/index";
 
 // Initialize Elysia app
 const app = new Elysia()
-  
+
+//@ts-ignore
   .use(cors({
-    origin: ['http://localhost:8085'],
+    origin: ['http://localhost:8087'],
     methods: ["GET", "POST", "HEAD", "PUT", "OPTIONS"],
     allowedHeaders: [
       "content-Type",
@@ -26,6 +27,9 @@ const app = new Elysia()
     credentials: true,
     maxAge: 600,
   }))
+
+
+  
 
 routes(app)
 

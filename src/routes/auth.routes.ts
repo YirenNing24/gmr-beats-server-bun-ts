@@ -18,6 +18,8 @@ import ValidationError from '../outputs/validation.error';
 import { authorizationBearerSchema, beatsLoginSchema, googleServerTokenSchema, registrationSchema } from './route.schema/schema.auth';
 import { ip } from 'elysia-ip';
 import TokenService from '../user.services/token.services/token.service';
+import { SuccessMessage } from '../outputs/success.message';
+import BeatsService from '../game.services/beats.services/beats.service';
 
 const auth = (app: Elysia): void => {
 
@@ -64,9 +66,25 @@ const auth = (app: Elysia): void => {
 
       const output: ValidateSessionReturn = await authService.validateSession(jwtToken);
       return output as ValidateSessionReturn;
-    } catch (error: any) {
+    } catch (error: any) {  
       throw error
     }
+        }, authorizationBearerSchema
+      )
+
+  .post('/api/validate/beats/client', async ({ headers }) => {
+      const authorizationHeader: string | null = headers.authorization;
+      if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+        throw new Error('Bearer token not found in Authorization header');
+      }
+      const jwtToken: string = authorizationHeader.substring(7);
+
+      const driver: Driver = getDriver();
+      const beatsService: BeatsService = new BeatsService(driver);
+
+      const output: SuccessMessage | Error = await beatsService.authenticateBeatsClient(jwtToken);
+      return output as SuccessMessage;
+
         }, authorizationBearerSchema
       )
 
@@ -83,7 +101,7 @@ const auth = (app: Elysia): void => {
       throw error
     }
       }, registrationSchema 
-      ) 
+      )
   
   .post('/api/register/google', async ({ body, ip }): Promise<void | ValidationError> => {
     try {

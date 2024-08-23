@@ -54,6 +54,8 @@ export const ENGINE_ACCESS_TOKEN: string = process.env.ENGINE_ACCESS_TOKEN || ""
 export const GOOGLE_CLIENT_ID: string  = process.env.GOOGLE_CLIENT_ID || ""
 export const GOOGLE_CLIENT_SECRET: string = process.env.GOOGLE_CLIENT_SECRET || ""
 
+export const GAME_SERVER_KEY: string = process.env.GAME_SERVER_KEY || ""
+
 const factoryAddress: string = FACTORIES[CHAIN.chainId];
 export const SMART_WALLET_CONFIG = {
   chain: CHAIN,

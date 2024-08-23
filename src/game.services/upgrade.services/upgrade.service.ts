@@ -175,7 +175,7 @@ class UpgradeService {
             const edition: Edition = await sdk.getContract(CARD_UPGRADE, "edition");
     
             for (const update of cardUpgradeUpdate) {
-                const res = await edition.erc1155.burn(update.id, update.quantityConsumed);
+                await edition.erc1155.burn(update.id, update.quantityConsumed);
             }
     
         } catch(error: any) {

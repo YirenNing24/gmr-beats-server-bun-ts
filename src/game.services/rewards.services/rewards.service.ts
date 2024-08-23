@@ -16,13 +16,17 @@ import { CardMetaData } from "../inventory.services/inventory.interface";
 import { SoulMetaData } from "../profile.services/profile.interface";
 import { SuccessMessage } from "../../outputs/success.message";
 
-interface CardOwned {
-    name: string;
-}
+//** RETHINK DB IMPORT
+import rt from "rethinkdb";
+import { getRethinkDB } from "../../db/rethink";
 
-interface AnimalMatch {
-    name: string;
-}
+//** TYPE INTERFACE IMPORT
+import { AnimalMatch, CardOwned, RewardData } from "./reward.interface";
+
+
+
+
+
 
 class RewardService {
 
@@ -90,6 +94,7 @@ class RewardService {
         }
     }
 
+
     public async ClaimCardOwnershipReward(token: string, cardName: CardOwned) {
         const tokenService: TokenService = new TokenService();
         const userName: string = await tokenService.verifyAccessToken(token);
@@ -135,6 +140,7 @@ class RewardService {
             }
         }
     }
+
 
     private async provideOwnershipReward(userName: string, cardName: string) {
         const session: Session | undefined = this.driver?.session();
@@ -194,6 +200,7 @@ class RewardService {
         }
     }
 
+
     private async sendRewardToken(smartWalletAddress: string, soulMetadata: SoulMetaData, ownership: string[]) {
         try {
             const sdk: ThirdwebSDK = ThirdwebSDK.fromPrivateKey(PRIVATE_KEY, CHAIN, {
@@ -219,6 +226,7 @@ class RewardService {
             throw error;
         }
     }
+
 
     public async provideHoroscopeReward(token: string, cardName: CardOwned): Promise<SuccessMessage> {
         const tokenService: TokenService = new TokenService();
@@ -272,6 +280,7 @@ class RewardService {
         }
     }
     
+
     private async provideHoroscopeRewardToUser(userName: string, cardName: string) {
         const session: Session | undefined = this.driver?.session();
         try {
@@ -328,6 +337,7 @@ class RewardService {
         }
     }
     
+
     private async sendRewardHoroscope(smartWalletAddress: string, soulMetadata: SoulMetaData, updatedhoroscopeMatch: string[]) {
         try {
             const sdk: ThirdwebSDK = ThirdwebSDK.fromPrivateKey(PRIVATE_KEY, CHAIN, {
@@ -352,6 +362,7 @@ class RewardService {
             throw error;
         }
     }
+
 
     public async provideAnimalReward(token: string, animalMatch: AnimalMatch) {
         const tokenService: TokenService = new TokenService();
@@ -400,6 +411,7 @@ class RewardService {
             throw error
         }
     }
+
 
     private async provideAnimalRewardToUser(userName: String, cardName: string) {
         const session: Session | undefined = this.driver?.session();
@@ -466,6 +478,7 @@ class RewardService {
         }
     }
 
+
     private async sendRewardAnimal(smartWalletAddress: string, soulMetadata: SoulMetaData, updatedAnimalMatch: string []) {
         try {
             const sdk: ThirdwebSDK = ThirdwebSDK.fromPrivateKey(PRIVATE_KEY, CHAIN, {
@@ -490,6 +503,7 @@ class RewardService {
             throw error
         }
     }
+
 
     public async firstScorer(userName: string, songName: string, smartWalletAddress: string, artist: string) {
         try {
@@ -533,8 +547,210 @@ class RewardService {
             throw error;
         }
     }
+
+
+    public async getMissionRewardList(token: string): Promise<RewardData[]> {
+        try {
+            const tokenService: TokenService = new TokenService();
+            const username: string = await tokenService.verifyAccessToken(token);
+
+            const connection: rt.Connection = await getRethinkDB();
+            const result = await rt.db('beats')
+                .table('missions')
+                .filter({ username })
+                .run(connection);
+
+            const availableMissionReward = result.toArray() as unknown as RewardData[]
+
+
+            return availableMissionReward
+        } catch(error: any) {
+          throw error
+        }
+    }
+
+
+    public async setMissionReward(username: string, rewardData: RewardData): Promise<void> {
+        try {
+            if (rewardData.type ==='song') {
+                await this.setSongReward(username, rewardData);
+            }
+
+        } catch(error: any) {
+          throw error
+        }
+    }
+
+
+    private async setSongReward(username: string, rewardData: RewardData): Promise<void> {
+        try {
+            // Ensure that dataReward is always initialized
+            let dataReward: RewardData | null = null;
+    
+            // Check if the song reward type is 'first'
+            if (rewardData.songRewardType === "first") {
+                dataReward = {
+                    username,
+                    type: rewardData.type,
+    
+                    songName: rewardData.songName,
+                    songRewardType: rewardData.songRewardType,
+    
+                    reward: '1000',
+                    rewardName: 'First time completing ' + rewardData.songName,
+    
+                    claimed: false,
+                    eligible: true,
+                };
+            }
+    
+            // Proceed only if dataReward was initialized
+            if (dataReward) {
+                const connection: rt.Connection = await getRethinkDB();
+                const result = await rt.db('beats')
+                    .table('missions')
+                    .insert(dataReward)
+                    .run(connection);
+    
+                // Optionally, handle the result of the insertion here
+                console.log('Reward inserted:', result);
+            } else {
+                // Optionally, handle cases where no reward data was set
+                console.warn('No reward data to insert.');
+            }
+    
+        } catch (error: any) {
+            // Log the error and rethrow it for further handling
+            console.error('Error setting song reward:', error);
+            throw error;
+        }
+    }
+    
+
+    public async checkSongReward(username: string, rewardData: RewardData): Promise<boolean> {
+        try {
+            const { songName, songRewardType } = rewardData;
+    
+            // Get the RethinkDB connection
+            const connection: rt.Connection = await getRethinkDB();
+    
+            // Query the 'missions' table with the specified filters
+            const result = await rt.db('beats')
+                .table('missions')
+                .filter({ username, songName, songRewardType })
+                .run(connection);
+    
+            // Process the result, if any data is returned, return true, otherwise false
+            const data: RewardData[] = await result.toArray(); // Convert cursor to an array
+    
+            return data.length > 0; // Return true if data exists, otherwise false
+    
+        } catch (error: any) {
+            // Log and throw the error for further handling
+            console.error('Error checking song reward:', error);
+            throw error;
+        }
+    }
+
+
+    public async claimMissionReward(token: string, rewardData: RewardData) {
+        try {
+            const tokenService: TokenService = new TokenService();
+            const username: string = await tokenService.verifyAccessToken(token);
+
+            const connection: rt.Connection = await getRethinkDB();
+            const result = await rt.db('beats')
+                .table('missions')
+                .filter({ username, ...rewardData })
+                .run(connection);
+
+            const missionReward: RewardData[] = await result.toArray() as unknown as RewardData[];
+
+            console.log(missionReward)
+
+            if (!missionReward[0].claimed) {
+                await this.sendMissionReward(missionReward[0])
+            }
+
+          return new SuccessMessage('Mission reward successfully claimed')
+        } catch(error: any) {
+          throw error
+        }
+    }
+
+
+    private async sendMissionReward(reward: RewardData) {
+        const session: Session | undefined = this.driver?.session();
+    
+        try {
+            const sdk: ThirdwebSDK = ThirdwebSDK.fromPrivateKey(PRIVATE_KEY, CHAIN, {
+                secretKey: SECRET_KEY,
+            });
+    
+            const { username } = reward;
+
+            const result: QueryResult | undefined = await session?.executeRead(tx =>
+                tx.run(`MATCH (u:User {username: $username}) RETURN u.smartWalletAddress AS smartWalletAddress`, { username })
+            );
+    
+            const smartWalletAddress = result?.records[0]?.get("smartWalletAddress");
+    
+            if (!smartWalletAddress) {
+                throw new Error(`No smart wallet address found for user: ${username}`);
+            }
+    
+            // Interact with the ERC1155 contract using the Thirdweb SDK to transfer rewards
+            const beatsToken: Token = await sdk.getContract(BEATS_TOKEN, "token");
+
+            //@ts-ignore
+            await beatsToken.transfer(smartWalletAddress, reward.reward);
+            this.updateMissionRewardData(reward);
+
+        } catch (error: any) {
+            console.error(`Error sending mission reward: ${error.message}`);
+            throw error;
+        } finally {
+            // Close the session after the transaction completes
+            await session?.close();
+        }
+    }
+
+
+    private async updateMissionRewardData(rewardData: RewardData) {
+        try {
+            const { username, songName, reward } = rewardData;
+    
+            const connection: rt.Connection = await getRethinkDB();
+    
+            await rt.db('beats')
+                .table('missions')
+                .filter({ username, songName, reward })
+                .update({
+                    claimed: true,
+                    claimedAt: rt.now()
+                })
+                .run(connection);
+    
+        } catch (error: any) {
+            console.error(`Error updating mission reward data: ${error.message}`);
+            throw error;
+        }
+    }
+
+
+
+
+    
+
+
+
+
+
+
     
     
 }
 
 export default RewardService;
+
+
