@@ -6,7 +6,7 @@ services:
     container_name: maryann-engine
     environment:
       ENCRYPTION_PASSWORD: "<encryption_password>"
-      THIRDWEB_API_SECRET_KEY: "<thirdweb_secret_key>"
+      THIRDWEB_API_SECRET_KEY: "PNWiY4YmCbt0gQauQrguXkYd9RdK0dNYKEc5sO5qN0cj17QMvm9ES1e3DC4fBmoiVQly3nk8CIFPCo_2vk5-8w"
       ADMIN_WALLET_ADDRESS: "0x0AfF10A2220aa27fBe83C676913aebeb3801DfB6"
       POSTGRES_CONNECTION_URL: "postgresql://postgres:postgres@maryann-postgres:5432/postgres?sslmode=disable"
       ENABLE_HTTPS: "true"
@@ -73,3 +73,19 @@ volumes:
     driver: local
   rethinkdb-data:
     driver: local
+
+
+docker run \
+  --network maryann-network \
+  --name maryann-engine \
+  -e ENCRYPTION_PASSWORD="<encryption_password>" \
+  -e THIRDWEB_API_SECRET_KEY="PNWiY4YmCbt0gQauQrguXkYd9RdK0dNYKEc5sO5qN0cj17QMvm9ES1e3DC4fBmoiVQly3nk8CIFPCo_2vk5-8w" \
+  -e ADMIN_WALLET_ADDRESS="0x0AfF10A2220aa27fBe83C676913aebeb3801DfB6" \
+  -e POSTGRES_CONNECTION_URL="postgresql://postgres:postgres@maryann-postgres:5432/postgres?sslmode=disable" \
+  -e ENABLE_HTTPS=true \
+  -e REDIS_URL="redis://maryann-redis:6379/0" \
+  -p 3005:3005 \
+  --pull=always \
+  --cpus="0.5" \
+  -d \
+  thirdweb/engine:latest
