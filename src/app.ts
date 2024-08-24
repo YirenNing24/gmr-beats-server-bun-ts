@@ -15,7 +15,7 @@ const app = new Elysia()
 
 //@ts-ignore
   .use(cors({
-    origin: ['http://localhost:8087'],
+    origin: ['http://localhost:8087', 'https://localhost:3005'],
     methods: ["GET", "POST", "HEAD", "PUT", "OPTIONS"],
     allowedHeaders: [
       "content-Type",
