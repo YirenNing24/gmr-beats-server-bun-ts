@@ -3,44 +3,73 @@ version: '3.8'
 services:
   maryann-engine:
     image: thirdweb/engine:latest
-    ports:
-      - "3005:3005"
+    container_name: maryann-engine
     environment:
-      ENCRYPTION_PASSWORD: "encryption_password"
-      THIRDWEB_API_SECRET_KEY: "PNWiY4YmCbt0gQauQrguXkYd9RdK0dNYKEc5sO5qN0cj17QMvm9ES1e3DC4fBmoiVQly3nk8CIFPCo_2vk5-8w"
+      ENCRYPTION_PASSWORD: "<encryption_password>"
+      THIRDWEB_API_SECRET_KEY: "<thirdweb_secret_key>"
       ADMIN_WALLET_ADDRESS: "0x0AfF10A2220aa27fBe83C676913aebeb3801DfB6"
       POSTGRES_CONNECTION_URL: "postgresql://postgres:postgres@maryann-postgres:5432/postgres?sslmode=disable"
-      ENABLE_HTTPS: "false"
-      REDIS_URL: "redis://maryann-keydb:6379"
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
+      ENABLE_HTTPS: "true"
+      REDIS_URL: "redis://maryann-keydb:6379/0"
+    ports:
+      - "3005:3005"
     restart: always
-    pull_policy: always
+    depends_on:
+      - maryann-postgres
+      - maryann-keydb
 
   maryann-postgres:
     image: postgres:latest
+    container_name: maryann-postgres
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "your_secure_password"  # Set a secure password
+      POSTGRES_PASSWORD: "your_secure_password"
       POSTGRES_DB: postgres
-    ports:
-      - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
     restart: always
 
   maryann-keydb:
     image: eqalpha/keydb:latest
+    container_name: maryann-keydb
     ports:
       - "6379:6379"
     volumes:
       - keydb-data:/data
     restart: always
 
+  maryann-memgraph:
+    image: memgraph/memgraph-platform:latest
+    container_name: maryann-memgraph
+    hostname: 271a7a74d2fc
+    environment:
+      MEMGRAPH: "--also-log-to-stderr"
+    ports:
+      - "3000:3000"
+      - "7444:7444"
+      - "7687:7687"
+    restart: always
+
+  maryann-rethink:
+    image: rethinkdb:latest
+    container_name: maryann-rethink
+    hostname: 5fd4ba0538e4
+    environment:
+      RETHINKDB_PACKAGE_VERSION: "2.4.4~0bookworm"
+    volumes:
+      - rethinkdb-data:/data
+    ports:
+      - "28015:28015"
+      - "29015:29015"
+      - "8080:8080"
+    restart: always
+
 volumes:
   postgres-data:
     driver: local
   keydb-data:
+    driver: local
+  rethinkdb-data:
     driver: local

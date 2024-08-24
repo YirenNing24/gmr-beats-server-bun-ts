@@ -35,7 +35,7 @@ class InitMemgraph {
 }
 
 
-//**  CREATE USER `alice@memgraph.com` IDENTIFIED BY '0042';  */
+
 
 export default InitMemgraph
 
