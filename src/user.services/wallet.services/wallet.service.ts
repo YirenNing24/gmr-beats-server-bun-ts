@@ -8,7 +8,7 @@ import { BEATS_TOKEN, GMR_TOKEN, ENGINE_ACCESS_TOKEN } from "../../config/consta
 import { WalletData } from "../user.service.interface";
 
 const engine = new Engine({
-  url: "http://localhost:3005",
+  url: "http://api.gmetarave.com:3005/",
   accessToken: ENGINE_ACCESS_TOKEN,
   
 });
