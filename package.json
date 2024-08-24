@@ -6,9 +6,10 @@
     "bun-types": "latest"
   },
   "scripts": {
-    "dev": "bun run --watch src/index.ts",
+    "dev": "NODE_TLS_REJECT_UNAUTHORIZED=0 bun run --watch src/index.ts",
     "start": "bun run --loader src/hello.zig"
   },
+
   "peerDependencies": {
     "typescript": "^5.5.2"
   },
