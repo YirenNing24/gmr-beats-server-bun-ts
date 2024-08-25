@@ -208,6 +208,9 @@ class AuthService {
     const playerInfo: PlayerInfo = await googleService.googleAuth(serverToken);
     const { displayName, playerId } = playerInfo as PlayerInfo;
 
+
+
+    console.log(playerInfo)
     const userName: string = displayName;
     const signupDate: number = Date.now()
     const suspended: Suspended = { until: null, reason: "" };
@@ -258,6 +261,7 @@ class AuthService {
               return new ValidationError(`An account already exists`,'An account already exists')}
           }
           throw error
+          
         } finally {
           await session.close()
         }
