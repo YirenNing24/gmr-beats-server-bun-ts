@@ -218,6 +218,37 @@ class SocialService {
       throw error;
     }
   }
+
+  public async getFollowersFollowingCount(token: string) {
+    try {
+      const tokenService: TokenService = new TokenService();
+      const username: string = await tokenService.verifyAccessToken(token);
+  
+      const session: Session = this.driver.session();
+      const result: QueryResult = await session.executeRead((tx: ManagedTransaction) =>
+        tx.run(
+          `
+          MATCH (u:User {username: $username})
+          OPTIONAL MATCH (u)-[:FOLLOW]->(following:User)
+          OPTIONAL MATCH (follower:User)-[:FOLLOW]->(u)
+          RETURN COUNT(DISTINCT following) as followingCount, COUNT(DISTINCT follower) as followerCount
+          `,
+          { username }
+        )
+      );
+  
+      await session.close();
+  
+      const followingCount = result.records[0].get("followingCount").toNumber();
+      const followerCount = result.records[0].get("followerCount").toNumber();
+  
+      return { followingCount, followerCount };
+    } catch (error) {
+      console.error("Error fetching followers/following count:", error);
+      throw error;
+    }
+  }
+  
   
 
   public async getMutualMyNotes(usernames: string[]): Promise<MyNote[]> {

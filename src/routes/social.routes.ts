@@ -46,6 +46,7 @@ const social = (app: Elysia) => {
         throw error
         }
       }, viewProfileSchema )
+      
 
     .post('/api/social/follow', async ({ headers, body }): Promise<FollowResponse> => {
         try {
@@ -67,6 +68,7 @@ const social = (app: Elysia) => {
       }, followResponseSchema
     )
 
+
     .post('/api/social/unfollow', async ({ headers, body }): Promise<FollowResponse> => {
       try {
           const authorizationHeader: string = headers.authorization;
@@ -87,6 +89,7 @@ const social = (app: Elysia) => {
       }, unFollowResponseSchema
     )
 
+
     .get('/api/social/list/mutual', async ({ headers }) => {
       try {
         const authorizationHeader: string = headers.authorization;
@@ -105,6 +108,27 @@ const social = (app: Elysia) => {
         }
       }, authorizationBearerSchema
     )
+
+
+    .get('/api/social/follower-following/count', async ({ headers }) => {
+      try {
+        const authorizationHeader: string = headers.authorization;
+        if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+          throw new Error('Bearer token not found in Authorization header');
+        }
+        const jwtToken: string = authorizationHeader.substring(7);
+
+        const driver: Driver = getDriver();
+        const socialService: SocialService = new SocialService(driver);
+
+        const output = await socialService.getFollowersFollowingCount(jwtToken);
+        return output;
+      } catch (error: any) {
+        throw error
+        }
+      }, authorizationBearerSchema
+    )
+
 
     .get('/api/social/mutual/:conversingUsername', async ({ headers, params }): Promise<PrivateMessage[]> => {
       try {
@@ -125,6 +149,7 @@ const social = (app: Elysia) => {
         }
       }, getMutualConversationSchema
     )
+
 
     .post('/api/social/status/online', async ({ headers, body }): Promise<void> => {
       try {
@@ -148,6 +173,7 @@ const social = (app: Elysia) => {
       }, setOnlineStatusSchema
     )
     
+
     .get('/api/social/mutual/online', async ({ headers }): Promise<PlayerStatus[]> => {
       try {
         const authorizationHeader: string = headers.authorization;
@@ -166,6 +192,7 @@ const social = (app: Elysia) => {
         }
       }, authorizationBearerSchema
     )
+
 
     .post('/api/social/gift/card', async ({ headers, body }): Promise<SuccessMessage> => {
       try {
@@ -186,6 +213,7 @@ const social = (app: Elysia) => {
       }, cardGiftSchema
     )
 
+
     .post('/api/social/fanmoments/post', async ({ headers, body }): Promise<SuccessMessage | Error> => {
       try {
         const authorizationHeader: string = headers.authorization;
@@ -204,6 +232,7 @@ const social = (app: Elysia) => {
       }
       }, postFanMomentSchema
     )
+
 
     .get('/api/social/hot/fanmoments', async ({ headers, query }): Promise<PostFanMoment[]> => {
       try {
@@ -229,6 +258,7 @@ const social = (app: Elysia) => {
       }, getFanMomentSchema
     )
 
+
     .get('/api/social/my/fanmoments', async ({ headers, query }): Promise<PostFanMoment[]> => {
       try {
         const authorizationHeader: string = headers.authorization;
@@ -251,6 +281,7 @@ const social = (app: Elysia) => {
         }
       }, getFanMomentSchema
     )
+
 
     .get('/api/social/latest/fanmoments', async ({ headers, query }): Promise<PostFanMoment[]> => {
       try {
@@ -275,6 +306,7 @@ const social = (app: Elysia) => {
       }, getFanMomentSchema
     )
 
+
     .get('/api/social/following/fanmoments', async ({ headers, query }): Promise<PostFanMoment[]> => {
       try {
         const authorizationHeader: string = headers.authorization;
@@ -298,6 +330,7 @@ const social = (app: Elysia) => {
       }, getFanMomentSchema
     )
 
+
     .post('/api/social/fanmoments/like', async ({ headers, body }): Promise<SuccessMessage | Error> => {
       try {
         const authorizationHeader: string = headers.authorization;
@@ -317,6 +350,7 @@ const social = (app: Elysia) => {
       }, likeFanMomentSchema
     )
 
+
     .post('/api/social/fanmoments/unlike', async ({ headers, body }): Promise<SuccessMessage | Error> => {
       try {
         const authorizationHeader: string = headers.authorization;
@@ -335,6 +369,7 @@ const social = (app: Elysia) => {
       }
       }, likeFanMomentSchema
     )
+
 
     .post('/api/social/fanmoments/comment', async ({ headers, body}): Promise<SuccessMessage>=> {
       try {
