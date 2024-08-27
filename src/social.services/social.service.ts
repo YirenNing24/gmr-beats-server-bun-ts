@@ -30,6 +30,8 @@ import { nanoid } from "nanoid/async";
 
 
 
+
+
 class SocialService {
 
   private driver:Driver
@@ -196,7 +198,7 @@ class SocialService {
         playerStats: record.get("playerStats") || ""
       })) as MutualData[];
   
-      const usernames = users.map(user => user.username);
+      const usernames: string[] = users.map(user => user.username);
   
       const profileService: ProfileService = new ProfileService();
       const profilePics: ProfilePicture[] = await profileService.getDisplayPic(token, usernames);
@@ -218,6 +220,7 @@ class SocialService {
       throw error;
     }
   }
+
 
   public async getFollowersFollowingCount(token: string) {
     try {
@@ -248,7 +251,53 @@ class SocialService {
       throw error;
     }
   }
+
+
+  public async getFollowersFollowing(token: string) {
+    try {
+      const tokenService: TokenService = new TokenService();
+      const username: string = await tokenService.verifyAccessToken(token);
   
+      const session: Session = this.driver.session();
+      const result: QueryResult = await session.executeRead((tx: ManagedTransaction) =>
+        tx.run(
+          `
+            MATCH (u:User {username: $username})
+            OPTIONAL MATCH (u)-[:FOLLOW]->(following:User)
+            OPTIONAL MATCH (follower:User)-[:FOLLOW]->(u)
+            RETURN 
+              COLLECT(DISTINCT following.username) as followingUsernames,
+              COLLECT(DISTINCT follower.username) as followerUsernames
+          `,
+          { username }
+        )
+      );
+  
+      await session.close();
+  
+      const followingUsernames: string[] = result.records[0].get("followingUsernames");
+      const followerUsernames: string[] = result.records[0].get("followerUsernames");
+  
+      const profileService: ProfileService = new ProfileService();
+  
+      // Fetch profile pictures for followers and those being followed
+      const followingPics: ProfilePicture[] = await profileService.getDisplayPic(token, followingUsernames);
+      const followerPics: ProfilePicture[] = await profileService.getDisplayPic(token, followerUsernames);
+  
+      // Create mappings of usernames to profile pictures
+      const followingPicsMap = new Map(followingPics.map(pic => [pic.userName, pic]));
+      const followerPicsMap = new Map(followerPics.map(pic => [pic.userName, pic]));
+  
+      // Pair usernames with their profile pictures
+      const followingUsernamesWithPics = followingUsernames.map(username => followingPicsMap.get(username) || null);
+      const followerUsernamesWithPics = followerUsernames.map(username => followerPicsMap.get(username) || null);
+  
+      return { followingUsernames: followingUsernamesWithPics, followerUsernames: followerUsernamesWithPics };
+    } catch (error) {
+      console.error("Error fetching followers' and following usernames with profile pictures:", error);
+      throw error;
+    }
+  }
   
 
   public async getMutualMyNotes(usernames: string[]): Promise<MyNote[]> {

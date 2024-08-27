@@ -46,7 +46,7 @@ const social = (app: Elysia) => {
         throw error
         }
       }, viewProfileSchema )
-      
+
 
     .post('/api/social/follow', async ({ headers, body }): Promise<FollowResponse> => {
         try {
@@ -128,6 +128,26 @@ const social = (app: Elysia) => {
         }
       }, authorizationBearerSchema
     )
+
+    .get('/api/social/follower-following', async ({ headers }) => {
+      try {
+        const authorizationHeader: string = headers.authorization;
+        if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+          throw new Error('Bearer token not found in Authorization header');
+        }
+        const jwtToken: string = authorizationHeader.substring(7);
+
+        const driver: Driver = getDriver();
+        const socialService: SocialService = new SocialService(driver);
+
+        const output = await socialService.getFollowersFollowing(jwtToken)
+        return output;
+      } catch (error: any) {
+        throw error
+        }
+      }, authorizationBearerSchema
+    )
+
 
 
     .get('/api/social/mutual/:conversingUsername', async ({ headers, params }): Promise<PrivateMessage[]> => {
