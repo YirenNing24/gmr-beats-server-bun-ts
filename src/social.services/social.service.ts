@@ -275,22 +275,31 @@ class SocialService {
   
       await session.close();
   
-      // Filter duplicates by username
       const followingUsers: { username: string, level: number, playerStats: any }[] = this.removeDuplicates(result.records[0].get("followingUsers"));
       const followerUsers: { username: string, level: number, playerStats: any }[] = this.removeDuplicates(result.records[0].get("followerUsers"));
   
       const profileService: ProfileService = new ProfileService();
-      
-      // Fetch profile pictures for following users
-      for (const user of followingUsers) {
-        const profilePic = await profileService.getDisplayPic(token, [user.username]);
-        user.profilePicture = profilePic.length > 0 ? profilePic[0].profilePicture : null;
+  
+      // Combine both following and followers usernames
+      const allUsernames = [...new Set([...followingUsers.map(user => user.username), ...followerUsers.map(user => user.username)])];
+  
+      // Fetch profile pictures in a batch
+      const profilePics: ProfilePicture[] = await profileService.getDisplayPic(token, allUsernames);
+  
+      // Map profile pictures by username
+      const profilePicMap: { [key: string]: string | null } = {};
+      for (const profile of profilePics) {
+        profilePicMap[profile.userName] = profile.profilePicture;
       }
   
-      // Fetch profile pictures for follower users
+      // Assign profile pictures to following users
+      for (const user of followingUsers) {
+        user.profilePicture = profilePicMap[user.username] || null;
+      }
+  
+      // Assign profile pictures to follower users
       for (const user of followerUsers) {
-        const profilePic = await profileService.getDisplayPic(token, [user.username]);
-        user.profilePicture = profilePic.length > 0 ? profilePic[0].profilePicture : null;
+        user.profilePicture = profilePicMap[user.username] || null;
       }
   
       return { following: followingUsers, followers: followerUsers };
