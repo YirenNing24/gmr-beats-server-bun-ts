@@ -275,23 +275,21 @@ class SocialService {
   
       await session.close();
   
-      const followingUsers: { username: string, level: number, playerStats: any }[] = result.records[0].get("followingUsers");
-      const followerUsers: { username: string, level: number, playerStats: any }[] = result.records[0].get("followerUsers");
+      // Filter duplicates by username
+      const followingUsers: { username: string, level: number, playerStats: any }[] = this.removeDuplicates(result.records[0].get("followingUsers"));
+      const followerUsers: { username: string, level: number, playerStats: any }[] = this.removeDuplicates(result.records[0].get("followerUsers"));
   
       const profileService: ProfileService = new ProfileService();
       
       // Fetch profile pictures for following users
-
       for (const user of followingUsers) {
         const profilePic = await profileService.getDisplayPic(token, [user.username]);
-        //@ts-ignore
         user.profilePicture = profilePic.length > 0 ? profilePic[0].profilePicture : null;
       }
   
       // Fetch profile pictures for follower users
       for (const user of followerUsers) {
         const profilePic = await profileService.getDisplayPic(token, [user.username]);
-        //@ts-ignore
         user.profilePicture = profilePic.length > 0 ? profilePic[0].profilePicture : null;
       }
   
@@ -301,6 +299,16 @@ class SocialService {
       throw error;
     }
   }
+  
+  // Helper method to remove duplicates based on username
+  private removeDuplicates(users: { username: string, level: number, playerStats: any }[]): { username: string, level: number, playerStats: any }[] {
+    const uniqueUsers: { [key: string]: { username: string, level: number, playerStats: any } } = {};
+    users.forEach(user => {
+      uniqueUsers[user.username] = user;
+    });
+    return Object.values(uniqueUsers);
+  }
+  
   
   
 
