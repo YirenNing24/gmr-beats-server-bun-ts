@@ -277,6 +277,9 @@ class SocialService {
   
       const followingUsernames: string[] = result.records[0].get("followingUsernames");
       const followerUsernames: string[] = result.records[0].get("followerUsernames");
+
+      console.log(followerUsernames);
+      console.log(followerUsernames)
   
       const profileService: ProfileService = new ProfileService();
   
