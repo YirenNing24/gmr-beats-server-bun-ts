@@ -266,8 +266,8 @@ class SocialService {
             OPTIONAL MATCH (u)-[:FOLLOW]->(following:User)
             OPTIONAL MATCH (follower:User)-[:FOLLOW]->(u)
             RETURN 
-              COLLECT(DISTINCT following.username) as followingUsernames,
-              COLLECT(DISTINCT follower.username) as followerUsernames
+              COLLECT(DISTINCT { username: following.username, level: following.level, playerStats: following.playerStats }) as followingUsers,
+              COLLECT(DISTINCT { username: follower.username, level: follower.level, playerStats: follower.playerStats }) as followerUsers
           `,
           { username }
         )
@@ -275,26 +275,33 @@ class SocialService {
   
       await session.close();
   
-      const followingUsernames: string[] = result.records[0].get("followingUsernames");
-      const followerUsernames: string[] = result.records[0].get("followerUsernames");
-
-      console.log(followerUsernames);
-      console.log(followingUsernames)
+      const followingUsers: { username: string, level: number, playerStats: any }[] = result.records[0].get("followingUsers");
+      const followerUsers: { username: string, level: number, playerStats: any }[] = result.records[0].get("followerUsers");
   
       const profileService: ProfileService = new ProfileService();
+      
+      // Fetch profile pictures for following users
+
+      for (const user of followingUsers) {
+        const profilePic = await profileService.getDisplayPic(token, [user.username]);
+        //@ts-ignore
+        user.profilePicture = profilePic.length > 0 ? profilePic[0].profilePicture : null;
+      }
   
-      // Fetch profile pictures for followers and those being followed
-      const following: ProfilePicture[] = await profileService.getDisplayPic(token, followingUsernames);
-      const followers: ProfilePicture[] = await profileService.getDisplayPic(token, followerUsernames);
-
-
-
-      return { following, followers };
+      // Fetch profile pictures for follower users
+      for (const user of followerUsers) {
+        const profilePic = await profileService.getDisplayPic(token, [user.username]);
+        //@ts-ignore
+        user.profilePicture = profilePic.length > 0 ? profilePic[0].profilePicture : null;
+      }
+  
+      return { following: followingUsers, followers: followerUsers };
     } catch (error) {
-      console.error("Error fetching followers' and following usernames with profile pictures:", error);
+      console.error("Error fetching followers and following users with profile pictures:", error);
       throw error;
     }
   }
+  
   
 
   public async getMutualMyNotes(usernames: string[]): Promise<MyNote[]> {
