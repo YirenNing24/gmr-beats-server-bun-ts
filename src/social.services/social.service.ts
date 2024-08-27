@@ -283,6 +283,10 @@ class SocialService {
       // Fetch profile pictures for followers and those being followed
       const followingPics: ProfilePicture[] = await profileService.getDisplayPic(token, followingUsernames);
       const followerPics: ProfilePicture[] = await profileService.getDisplayPic(token, followerUsernames);
+
+
+      console.log(followerPics)
+
   
       // Create mappings of usernames to profile pictures
       const followingPicsMap = new Map(followingPics.map(pic => [pic.userName, pic]));
