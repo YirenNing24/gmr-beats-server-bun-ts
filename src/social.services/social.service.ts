@@ -291,12 +291,15 @@ class SocialService {
       // Create mappings of usernames to profile pictures
       const followingPicsMap = new Map(followingPics.map(pic => [pic.userName, pic]));
       const followerPicsMap = new Map(followerPics.map(pic => [pic.userName, pic]));
+
+
+      console.log(followerPicsMap)
   
       // Pair usernames with their profile pictures
-      const followingUsernamesWithPics = followingUsernames.map(username => followingPicsMap.get(username) || null);
-      const followerUsernamesWithPics = followerUsernames.map(username => followerPicsMap.get(username) || null);
+      // const followingUsernamesWithPics = followingUsernames.map(username => followingPicsMap.get(username) || null);
+      // const followerUsernamesWithPics = followerUsernames.map(username => followerPicsMap.get(username) || null);
   
-      return { followingUsernames: followingUsernamesWithPics, followerUsernames: followerUsernamesWithPics };
+      // return { followingUsernames: followingUsernamesWithPics, followerUsernames: followerUsernamesWithPics };
     } catch (error) {
       console.error("Error fetching followers' and following usernames with profile pictures:", error);
       throw error;
