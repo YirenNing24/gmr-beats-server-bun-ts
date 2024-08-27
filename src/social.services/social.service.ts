@@ -281,13 +281,10 @@ class SocialService {
       const profileService: ProfileService = new ProfileService();
   
       // Fetch profile pictures for followers and those being followed
-      const followingPics: ProfilePicture[] = await profileService.getDisplayPic(token, followingUsernames);
-      const followerPics: ProfilePicture[] = await profileService.getDisplayPic(token, followerUsernames);
+      const following: ProfilePicture[] = await profileService.getDisplayPic(token, followingUsernames);
+      const followers: ProfilePicture[] = await profileService.getDisplayPic(token, followerUsernames);
 
 
-      // Create mappings of usernames to profile pictures
-      const following = new Map(followingPics.map(pic => [pic.userName, pic]));
-      const followers = new Map(followerPics.map(pic => [pic.userName, pic]));
 
       return { following, followers };
     } catch (error) {
