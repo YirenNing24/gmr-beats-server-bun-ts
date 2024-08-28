@@ -19,12 +19,14 @@ import { FollowResponse, ViewProfileData, ViewedUserData,
          CardGiftData, CardGiftSending, PostFanMoment, 
          FanMomentId, FanMomentComment, PostComment } from "./social.services.interface";
 
-import { MyNote, NotificationData, ProfilePicture } from "../game.services/profile.services/profile.interface";
+import { MyNote, ProfilePicture } from "../game.services/profile.services/profile.interface";
 import { SuccessMessage } from "../outputs/success.message";
+import { NotificationData } from "../game.services/notification.services/notification.interface";
 
 //** IMPORTED SERVICES 
 import TokenService from "../user.services/token.services/token.service";
 import ProfileService from "../game.services/profile.services/profile.service";
+import NotificationService from "../game.services/notification.services/notification.service";
 
 //** CONFIG IMPORT
 import { CHAIN, EDITION_ADDRESS, SECRET_KEY, SMART_WALLET_CONFIG } from "../config/constants";
@@ -60,8 +62,9 @@ class SocialService {
       if (result.records.length === 0) {
         throw new Error(`User to follow not found`);
       } else {
-        const profileService: ProfileService = new ProfileService();
         const id: string = await nanoid();
+
+        const notificationService: NotificationService = new NotificationService();
 
         // Properly creating a new Date object for notification
         const notification: NotificationData = {
@@ -73,7 +76,7 @@ class SocialService {
           date: new Date(),
         };
 
-        await profileService.createNotification(notification);
+        notificationService.createNotification(notification);
         return { status: "Followed" } as FollowResponse;
       }
     } catch (error: any) {

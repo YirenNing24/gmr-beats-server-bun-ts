@@ -13,7 +13,7 @@ import { SuccessMessage } from "../../outputs/success.message";
 import TokenService from "../../user.services/token.services/token.service";
 
 //** TYPE INTERFACES
-import { UpdateStatsFailed, ProfilePicture, StatPoints, SoulMetaData, CardCollection, PictureLikes, BufferData, MyNote, NotificationData } from "./profile.interface";
+import { UpdateStatsFailed, ProfilePicture, StatPoints, SoulMetaData, CardCollection, PictureLikes, BufferData, MyNote } from "./profile.interface";
 import { PlayerStats } from "../../user.services/user.service.interface";
 
 
@@ -268,7 +268,6 @@ class ProfileService {
     
   public async getDisplayPic(token: string, userNames: (string | undefined)[]): Promise<ProfilePicture[]> {
     try {
-
       const tokenService: TokenService = new TokenService();
       await tokenService.verifyAccessToken(token);
 
@@ -695,49 +694,7 @@ class ProfileService {
     }
 
 
-  public async getNotification(token: string): Promise<NotificationData[]> {
-    try {
-      const tokenService: TokenService = new TokenService();
-      const recipient: string | Error = await tokenService.verifyAccessToken(token);
 
-      const connection: rt.Connection = await getRethinkDB();
-        
-      // Retrieve the latest note for the user
-      const cursor: rt.Cursor = await rt
-        .db('beats')
-        .table('notification')
-        .filter({ recipient })
-        .orderBy(rt.desc('date'))
-        .run(connection);
-      
-      const notificationsArray: NotificationData[] = await cursor.toArray();
-
-      return notificationsArray;
-    } catch(error: any) {
-      console.log(error);
-      throw error;
-    }
-  }
-
-
-  public async createNotification(notificationData: NotificationData): Promise<void> {
-    try {
-
-
-      const connection: rt.Connection = await getRethinkDB();
-      
-      // Retrieve the latest note for the user
-      await rt.db('beats')
-        .table('notifications')
-        .insert(notificationData)
-        .run(connection);
-      
-    } catch(error: any) {
-      console.log(error);
-      throw error;
-    }
-  }
-    
     
 
 }
