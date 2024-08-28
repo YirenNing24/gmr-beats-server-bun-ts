@@ -33,7 +33,7 @@ class NotificationService {
           // Retrieve the latest note for the user
           const cursor: rt.Cursor = await rt
             .db('beats')
-            .table('notification')
+            .table('notifications')
             .filter({ recipient })
             .orderBy(rt.desc('date'))
             .run(connection);
