@@ -294,11 +294,13 @@ class SocialService {
   
       // Assign profile pictures to following users
       for (const user of followingUsers) {
+        //@ts-ignore
         user.profilePicture = profilePicMap[user.username] || null;
       }
   
       // Assign profile pictures to follower users
       for (const user of followerUsers) {
+        //@ts-ignore
         user.profilePicture = profilePicMap[user.username] || null;
       }
   
@@ -463,7 +465,7 @@ class SocialService {
   private async cardGiftSending(cardGiftData: CardGiftData, cardGiftSending: CardGiftSending, userName: string) {
     try {
 
-      await this.sendGiftromWallet(cardGiftSending, cardGiftData); 
+      await this.sendGiftFromWallet(cardGiftSending, cardGiftData); 
       const { receiver, id, cardName } = cardGiftData
 
       const session: Session | undefined = this.driver?.session();
@@ -483,10 +485,10 @@ class SocialService {
   }
   
 
-  private async sendGiftromWallet(cardGfitSending: CardGiftSending, cardData: CardGiftData) {
+  private async sendGiftFromWallet(cardGiftSending: CardGiftSending, cardData: CardGiftData) {
     try {
 
-      const { localWalletKey, localWallet, receiverWalletAddress } = cardGfitSending;
+      const { localWalletKey, localWallet, receiverWalletAddress } = cardGiftSending;
 
       const wallet: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
       await wallet.import({
