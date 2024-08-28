@@ -9,6 +9,7 @@ import social from './social.routes'
 import store from './store.routes'
 import upgrade from './upgrade.routes'
 import rewards from './rewards.routes'
+import notification from './notification.routes'
 
 import chat from './chat.routes'
 
@@ -27,7 +28,8 @@ const routes = (app: any): void => {
         leaderboards,
         chat,
         upgrade,
-        rewards
+        rewards,
+        notification
     ].forEach(route => route(app));
 }
 
