@@ -11,7 +11,7 @@ import { authorizationBearerSchema } from './route.schema/schema.auth';
 
 
 const notification = (app: Elysia): void => {
-    app.get('api/notification', async ({ headers }) => {
+    app.get('api/notification', async ({ headers }): Promise<NotificationData> => {
       try {
         const authorizationHeader: string | null = headers.authorization;
         if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
@@ -25,7 +25,7 @@ const notification = (app: Elysia): void => {
         return output;
       } catch (error: any) {
         throw error
-        }
+         }
         }, authorizationBearerSchema
     ) 
     
