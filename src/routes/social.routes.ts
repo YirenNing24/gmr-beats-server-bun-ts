@@ -133,7 +133,7 @@ const social = (app: Elysia) => {
     )
     
 
-    .get('/api/social/follower-following/:username?', async ({ headers, params }) => {
+    .get('/api/social/follower-following/:username', async ({ headers, params }) => {
       try {
         // Extract the Authorization header and check for the Bearer token
         const authorizationHeader: string = headers.authorization;
