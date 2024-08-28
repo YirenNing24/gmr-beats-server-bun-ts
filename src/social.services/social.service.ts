@@ -31,7 +31,7 @@ import { CHAIN, EDITION_ADDRESS, SECRET_KEY, SMART_WALLET_CONFIG } from "../conf
 
 //**NANOID IMPORT
 import { nanoid } from "nanoid/async";
-import { followCypher } from "./social.cypher";
+import { followCypher, getFollowersFollowingCountCypher } from "./social.cypher";
 
 
 
@@ -226,35 +226,32 @@ class SocialService {
   }
 
 
-  public async getFollowersFollowingCount(token: string) {
+  public async getFollowersFollowingCount(token: string, username: string = "") {
     try {
       const tokenService: TokenService = new TokenService();
-      const username: string = await tokenService.verifyAccessToken(token);
   
+      // Use the passed username if it's not an empty string or null, otherwise verify the token
+      const resolvedUsername: string = username && username.trim() !== "" ? username : await tokenService.verifyAccessToken(token);
+    
       const session: Session = this.driver.session();
       const result: QueryResult = await session.executeRead((tx: ManagedTransaction) =>
-        tx.run(
-          `
-          MATCH (u:User {username: $username})
-          OPTIONAL MATCH (u)-[:FOLLOW]->(following:User)
-          OPTIONAL MATCH (follower:User)-[:FOLLOW]->(u)
-          RETURN COUNT(DISTINCT following) as followingCount, COUNT(DISTINCT follower) as followerCount
-          `,
-          { username }
+        tx.run(getFollowersFollowingCountCypher,
+          { username: resolvedUsername }
         )
       );
-  
+    
       await session.close();
-  
+    
       const followingCount = result.records[0].get("followingCount").toNumber();
       const followerCount = result.records[0].get("followerCount").toNumber();
-  
+    
       return { followingCount, followerCount };
     } catch (error) {
       console.error("Error fetching followers/following count:", error);
       throw error;
     }
   }
+  
 
 
   public async getFollowersFollowing(token: string) {

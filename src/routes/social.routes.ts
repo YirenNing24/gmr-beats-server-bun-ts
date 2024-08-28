@@ -18,7 +18,7 @@ import { SuccessMessage } from '../outputs/success.message';
 //** VALIDATION SCHEMA IMPORT
 import { followResponseSchema, getMutualConversationSchema, setOnlineStatusSchema, unFollowResponseSchema, viewProfileSchema } from './route.schema/schema.social';
 import { authorizationBearerSchema } from './route.schema/schema.auth';
-import { cardGiftSchema, commentFanMomentSchema, getFanMomentSchema, likeFanMomentSchema, postFanMomentSchema } from '../social.services/social.schema';
+import { cardGiftSchema, commentFanMomentSchema, getFanMomentSchema, getFollowersFollowingSchema, likeFanMomentSchema, postFanMomentSchema } from '../social.services/social.schema';
 
 
 
@@ -110,24 +110,27 @@ const social = (app: Elysia) => {
     )
 
 
-    .get('/api/social/follower-following/count', async ({ headers }) => {
+    .get('/api/social/follower-following/count/:username', async ({ headers, params }) => {  // Changed to handle path parameters
       try {
         const authorizationHeader: string = headers.authorization;
         if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
           throw new Error('Bearer token not found in Authorization header');
         }
         const jwtToken: string = authorizationHeader.substring(7);
-
+    
         const driver: Driver = getDriver();
         const socialService: SocialService = new SocialService(driver);
-
-        const output = await socialService.getFollowersFollowingCount(jwtToken);
+    
+        // Extract the username from the path parameters
+        const playerUsername: string = params.username || "";  // Fallback if no username is provided
+    
+        const output = await socialService.getFollowersFollowingCount(jwtToken, playerUsername);
         return output;
       } catch (error: any) {
-        throw error
-        }
-      }, authorizationBearerSchema
-    )
+        throw error;
+      }
+    }, getFollowersFollowingSchema)
+    
 
     .get('/api/social/follower-following', async ({ headers }) => {
       try {

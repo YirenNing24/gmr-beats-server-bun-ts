@@ -76,3 +76,9 @@ export const getFanMomentSchema= {
 	})
 };
 
+export const getFollowersFollowingSchema= {
+	headers: t.Object({ authorization: t.String() }),
+    params: t.Object({ 
+        username: t.String(),
+    })
+};

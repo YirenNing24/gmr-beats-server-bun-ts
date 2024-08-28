@@ -8,3 +8,10 @@ export const followCypher: string = `
     followed: true} 
     AS follow
     `
+
+export const getFollowersFollowingCountCypher: string =           `
+    MATCH (u:User {username: $username})
+    OPTIONAL MATCH (u)-[:FOLLOW]->(following:User)
+    OPTIONAL MATCH (follower:User)-[:FOLLOW]->(u)
+    RETURN COUNT(DISTINCT following) as followingCount, COUNT(DISTINCT follower) as followerCount
+    `
