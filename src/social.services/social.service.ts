@@ -14,14 +14,17 @@ import { LocalWalletNode } from "@thirdweb-dev/wallets/evm/wallets/local-wallet-
 import ValidationError from "../outputs/validation.error";
 
 //** TYPE INTERFACE IMPORTS
-import { FollowResponse, ViewProfileData, ViewedUserData, MutualData, PlayerStatus, SetPlayerStatus, CardGiftData, CardGiftSending, PostFanMoment, FanMomentId, FanMomentComment, PostComment } from "./social.services.interface";
-import { SuccessMessage } from "../outputs/success.message";
+import { FollowResponse, ViewProfileData, ViewedUserData, 
+         MutualData, PlayerStatus, SetPlayerStatus, 
+         CardGiftData, CardGiftSending, PostFanMoment, 
+         FanMomentId, FanMomentComment, PostComment } from "./social.services.interface";
+
 import { MyNote, NotificationData, ProfilePicture } from "../game.services/profile.services/profile.interface";
+import { SuccessMessage } from "../outputs/success.message";
 
 //** IMPORTED SERVICES 
 import TokenService from "../user.services/token.services/token.service";
 import ProfileService from "../game.services/profile.services/profile.service";
-
 
 //** CONFIG IMPORT
 import { CHAIN, EDITION_ADDRESS, SECRET_KEY, SMART_WALLET_CONFIG } from "../config/constants";
@@ -29,8 +32,6 @@ import { CHAIN, EDITION_ADDRESS, SECRET_KEY, SMART_WALLET_CONFIG } from "../conf
 //**NANOID IMPORT
 import { nanoid } from "nanoid/async";
 import { followCypher } from "./social.cypher";
-
-
 
 
 
