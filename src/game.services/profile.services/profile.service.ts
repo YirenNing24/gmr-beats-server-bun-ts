@@ -728,7 +728,7 @@ class ProfileService {
       
       // Retrieve the latest note for the user
       await rt.db('beats')
-        .table('notification')
+        .table('notifications')
         .insert(notificationData)
         .run(connection);
       
