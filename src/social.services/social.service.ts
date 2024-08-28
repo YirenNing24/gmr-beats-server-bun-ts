@@ -73,7 +73,7 @@ class SocialService {
           date: new Date(),
         };
 
-        profileService.createNotification(notification);
+        await profileService.createNotification(notification);
         return { status: "Followed" } as FollowResponse;
       }
     } catch (error: any) {

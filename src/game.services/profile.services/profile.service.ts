@@ -724,12 +724,10 @@ class ProfileService {
     try {
 
 
-
-
       const connection: rt.Connection = await getRethinkDB();
       
       // Retrieve the latest note for the user
-      rt.db('beats')
+      await rt.db('beats')
         .table('notification')
         .insert(notificationData)
         .run(connection);
