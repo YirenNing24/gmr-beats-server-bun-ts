@@ -16,17 +16,19 @@ import ValidationError from "../outputs/validation.error";
 //** TYPE INTERFACE IMPORTS
 import { FollowResponse, ViewProfileData, ViewedUserData, MutualData, PlayerStatus, SetPlayerStatus, CardGiftData, CardGiftSending, PostFanMoment, FanMomentId, FanMomentComment, PostComment } from "./social.services.interface";
 import { SuccessMessage } from "../outputs/success.message";
-import { MyNote, ProfilePicture } from "../game.services/profile.services/profile.interface";
+import { MyNote, NotificationData, ProfilePicture } from "../game.services/profile.services/profile.interface";
 
 //** IMPORTED SERVICES 
 import TokenService from "../user.services/token.services/token.service";
 import ProfileService from "../game.services/profile.services/profile.service";
+
 
 //** CONFIG IMPORT
 import { CHAIN, EDITION_ADDRESS, SECRET_KEY, SMART_WALLET_CONFIG } from "../config/constants";
 
 //**NANOID IMPORT
 import { nanoid } from "nanoid/async";
+import { followCypher } from "./social.cypher";
 
 
 
@@ -42,35 +44,36 @@ class SocialService {
 
   public async follow(toFollow: { toFollow: string }, token: string): Promise<FollowResponse> {
     try {
-
       const tokenService: TokenService = new TokenService();
       const userName: string = await tokenService.verifyAccessToken(token);
 
-      const userToFollow: string = toFollow.toFollow
+      const userToFollow: string = toFollow.toFollow;
       const session: Session = this.driver.session();
       const result: QueryResult = await session.executeWrite((tx: ManagedTransaction) =>
-        tx.run( 
-          `
-          MATCH (u:User {username: $userName}) 
-          MATCH (p:User {username: $userToFollow})
-          MERGE (u)-[r:FOLLOW]->(p)
-          ON CREATE SET u.createdAt = timestamp()
-          RETURN p 
-          {.*, 
-            followed: true} 
-            AS follow
-          `,
+        tx.run(followCypher,
           { userName, userToFollow }
-        ));
+        )
+      );
       await session.close();
 
       if (result.records.length === 0) {
-        throw new Error(
-          `User to follow not found`
-        )
+        throw new Error(`User to follow not found`);
       } else {
+        const profileService: ProfileService = new ProfileService();
+        const id: string = await nanoid();
+
+        // Properly creating a new Date object for notification
+        const notification: NotificationData = {
+          id,
+          recipient: userToFollow,
+          sender: userName,
+          read: false,
+          type: "followed",
+          date: new Date(),
+        };
+
+        profileService.createNotification(notification);
         return { status: "Followed" } as FollowResponse;
-       
       }
     } catch (error: any) {
       console.error("Something went wrong: ", error);
@@ -79,7 +82,7 @@ class SocialService {
   }
 
 
-   //** Unfollows a user.
+  //** Unfollows a user.
   public async unfollow(toUnfollow: { toUnfollow: string }, token: string): Promise<FollowResponse> {
     try {
 
@@ -321,8 +324,6 @@ class SocialService {
   }
   
   
-  
-
   public async getMutualMyNotes(usernames: string[]): Promise<MyNote[]> {
     try {
 

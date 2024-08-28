@@ -723,15 +723,15 @@ class ProfileService {
   public async createNotification(notificationData: NotificationData): Promise<void> {
     try {
 
-      const id: string = await nanoid()
-      const notification: NotificationData = { ...notificationData, id }
+
+
 
       const connection: rt.Connection = await getRethinkDB();
       
       // Retrieve the latest note for the user
       rt.db('beats')
         .table('notification')
-        .insert(notification)
+        .insert(notificationData)
         .run(connection);
       
     } catch(error: any) {
