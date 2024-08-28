@@ -254,10 +254,12 @@ class SocialService {
   
 
 
-  public async getFollowersFollowing(token: string) {
+  public async getFollowersFollowing(token: string, username: string = "") {
     try {
       const tokenService: TokenService = new TokenService();
-      const username: string = await tokenService.verifyAccessToken(token);
+  
+      // Use the passed username if it's not an empty string or null, otherwise verify the token
+      const resolvedUsername: string = username && username.trim() !== "" ? username : await tokenService.verifyAccessToken(token);
   
       const session: Session = this.driver.session();
       const result: QueryResult = await session.executeRead((tx: ManagedTransaction) =>
@@ -270,7 +272,7 @@ class SocialService {
               COLLECT(DISTINCT { username: following.username, level: following.level, playerStats: following.playerStats }) as followingUsers,
               COLLECT(DISTINCT { username: follower.username, level: follower.level, playerStats: follower.playerStats }) as followerUsers
           `,
-          { username }
+          { username: resolvedUsername }
         )
       );
   
@@ -311,6 +313,7 @@ class SocialService {
       throw error;
     }
   }
+  
   
   // Helper method to remove duplicates based on username
   private removeDuplicates(users: { username: string, level: number, playerStats: any }[]): { username: string, level: number, playerStats: any }[] {

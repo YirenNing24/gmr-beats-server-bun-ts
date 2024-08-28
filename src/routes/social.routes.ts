@@ -129,29 +129,34 @@ const social = (app: Elysia) => {
       } catch (error: any) {
         throw error;
       }
-    }, getFollowersFollowingSchema)
+    }, getFollowersFollowingSchema
+    )
     
 
-    .get('/api/social/follower-following', async ({ headers }) => {
+    .get('/api/social/follower-following/:username?', async ({ headers, params }) => {
       try {
+        // Extract the Authorization header and check for the Bearer token
         const authorizationHeader: string = headers.authorization;
         if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
           throw new Error('Bearer token not found in Authorization header');
         }
         const jwtToken: string = authorizationHeader.substring(7);
-
+    
         const driver: Driver = getDriver();
         const socialService: SocialService = new SocialService(driver);
-
-        const output = await socialService.getFollowersFollowing(jwtToken)
+    
+        // Extract the username from the path parameters (if provided)
+        const playerUsername: string = params.username || "";  // Fallback if no username is provided
+    
+        // Call the getFollowersFollowing method with the token and username
+        const output = await socialService.getFollowersFollowing(jwtToken, playerUsername);
         return output;
       } catch (error: any) {
-        throw error
-        }
-      }, authorizationBearerSchema
+        throw error;
+      }
+    }, getFollowersFollowingSchema
     )
-
-
+    
 
     .get('/api/social/mutual/:conversingUsername', async ({ headers, params }): Promise<PrivateMessage[]> => {
       try {
