@@ -23,7 +23,7 @@ const chat = (app: Elysia): void => {
           const authorizationHeader: string = ws.data.headers.authorization || "";
 
           if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
-            throw new ValidationError('jwt issue', '');
+            throw new ValidationError('jwt issue', 'jwt issue');
           }
 
           const jwtToken: string = authorizationHeader.substring(7);
@@ -53,6 +53,45 @@ const chat = (app: Elysia): void => {
       
     }
   ), changeProfilePicsSchema
+  
+
+  app.ws('/api/ws/group-chat', {
+    async open(ws) {
+      try {
+        const room: string = 'all';
+        const authorizationHeader: string = ws.data.headers.authorization || "";
+
+        if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+          throw new ValidationError('jwt issue', 'jwt issue');
+        }
+
+        const jwtToken: string = authorizationHeader.substring(7);
+
+        //@ts-ignore
+        const chatService: ChatService = new ChatService(ws);
+        chatService.groupChatRoom(jwtToken);
+        ws?.subscribe('all');
+      } catch (error: any) {
+        throw error;
+      }
+    },
+
+    async message(ws, message) {
+      try {
+        const newMessage: NewMessage = message as NewMessage;
+
+        newMessage?.roomId && (await insertChats(newMessage));
+        //@ts-ignore
+        const timeService: TimeService = new TimeService(ws);
+        newMessage?.timestamp && (await timeService.getServerDateTime(newMessage));
+      } catch (error: any) {
+        console.error('Error in WebSocket message event:', error);
+        throw error;
+      }
+    }
+    
+  }
+), changeProfilePicsSchema
 
 
 };

@@ -6,13 +6,36 @@
  * @property {string} message - The message describing the result.
  * @property {string} roomId - The ID of the associated room.
  * @property {number} ts - The timestamp associated with the result.
+ * @property {boolean} seen - Whether the message has been seen
  */
 export interface Result {
   id: string;
   message: string;
+  roomName: string;
+  members: string[]
+  ts: number;
+  seen: boolean;
+}
+
+
+/**
+ * Represents the result of an operation.
+ *
+ * @interface Result
+ * @property {string} id - The ID associated with the result.
+ * @property {string} message - The message describing the result.
+ * @property {string} roomId - The ID of the associated room.
+ * @property {number} ts - The timestamp associated with the result.
+ * @property {boolean} seen - Whether the message has been seen
+ */
+export interface GroupResult {
+  id: string;
+  message: string;
   roomId: string;
   ts: number;
+  seen: boolean;
 }
+
 
 /**
 * Represents data about the sender.
@@ -43,7 +66,8 @@ export interface SenderData {
 export interface NewMessage {
   id?: string;
   message: string;
-  roomId: string;
+  roomId?: string;
+  group?: boolean
   sender: SenderData;
   receiver: string;
   ts: number;

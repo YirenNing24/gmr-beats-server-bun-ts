@@ -7,11 +7,13 @@ import rt from "rethinkdb";
 import { getRethinkDB } from "../db/rethink";
 
 //** TYPE INTERFACE
-import { PrivateMessage, NewMessage, Result } from "./chat.interface";
+import { PrivateMessage, NewMessage, Result, GroupResult } from "./chat.interface";
 import TokenService from "../user.services/token.services/token.service";
+import { RouteSchema } from "elysia";
 
 
 const watchedRooms: Record<string, boolean> = {};
+const watchedGroupRooms: Record<string, boolean> = {};
 
 class ChatService {
 
@@ -106,13 +108,41 @@ class ChatService {
         watchedRooms[room] = true;
       }
 
+
     } catch (error: any) {
       throw error
     }
   }
 
 
-  
+  public async groupChatRoom(token: string) {
+
+    const tokenService: TokenService = new TokenService();
+    const username: string = await tokenService.verifyAccessToken(token);
+    
+    const ws: ElysiaWS<any, RouteSchema, { request: {}; store: {};}> | undefined = this.websocket;
+    const connection: rt.Connection = await getRethinkDB();
+
+    let query1: rt.Sequence = rt.db('beats').table("group").filter(rt.row('members').contains(username));
+
+    if (!watchedGroupRooms[username]) {
+      query1.changes().run(connection, (error, cursor) => {
+        if (error) throw error;
+        cursor.each((error, row)  => {
+          if (error) throw error;
+          if (row.new_val) {
+            const room_data: GroupResult = row.new_val;
+            const roomData: string = JSON.stringify(room_data);
+            ws?.send(roomData)
+          }
+        })
+      });
+      watchedGroupRooms[username] = true;
+    }
+  }
+
+
+
 
   public async privateInboxData(token: string, conversingUsername: string): Promise<PrivateMessage[]> {
     try {
@@ -163,7 +193,7 @@ export const insertChats = async (newMessage: NewMessage): Promise<void> => {
       const connection: rt.Connection = await getRethinkDB();
 
       // Check if message.receiver has a value, if it has then the message is a private message
-      const table: string = newMessage.receiver ? "private" : "chats";
+      const table: string = newMessage.group ? "group" : (newMessage.receiver ? "private" : "chats");
 
       insertMessage(connection, newMessage, table);
     }
