@@ -21,122 +21,98 @@ class ChatService {
     this.websocket = websocket;
   }
 
-  /**
-   * Verifies the token and retrieves the username.
-   */
-  private async verifyToken(token: string): Promise<string> {
-    const tokenService: TokenService = new TokenService();
-    return await tokenService.verifyAccessToken(token);
-  }
-
-  /**
-   * Handles change feed events for a query and sends the data to the WebSocket.
-   */
-  private async handleChangeFeed(query: rt.Sequence, ws: ElysiaWS<any>, room: string) {
-    const connection: rt.Connection = await getRethinkDB();
-    
-    query.changes().run(connection, (error, cursor) => {
-      if (error) {
-        console.error("Error running change feed query:", error);
-        return;
+  public async chatRoom(room: string, token: string): Promise<void> {
+    try {
+      const tokenService: TokenService = new TokenService();
+      const username: string = await tokenService.verifyAccessToken(token);
+      
+      const ws = this.websocket;
+      const connection: rt.Connection = await getRethinkDB();
+      let query: rt.Sequence = rt.db('beats').table("chats").filter({ roomId: room });
+      
+      if (!watchedRooms[room]) {
+        query.changes().run(connection, (error, cursor) => {
+          if (error) {
+            console.error("Error running change feed query:", error);
+            return;
+          }
+      
+          cursor.each((error, row) => {
+            if (error) {
+              console.error("Error processing change feed row:", error);
+              return;
+            }
+            if (row.new_val) {
+              const roomNewVal: Result = row.new_val;
+              const roomData: string = JSON.stringify(roomNewVal);
+              app.server?.publish('all', roomData);
+            }
+          });
+        });
+      
+        watchedRooms[room] = true;
       }
-
-      cursor.each((error, row) => {
+      let orderedQuery: rt.Sequence = query.orderBy(rt.desc("ts")).limit(4);
+      orderedQuery.run(connection, async (error, cursor) => {
         if (error) {
-          console.error("Error processing change feed row:", error);
+          console.error(error);
           return;
         }
 
-        if (row.new_val) {
-          const roomData: string = JSON.stringify(row.new_val);
+        try {
+          const result: Result[] = await cursor.toArray();
+          const room_data = {
+            chat: result,
+            handle: room,
+          };
+          const roomData: string = JSON.stringify(room_data);
+
+
           ws?.send(roomData);
+        } catch (error: any) {
+          throw error
         }
       });
-    });
-
-    watchedRooms[room] = true;
-  }
-
-  /**
-   * Runs the query and sends initial chat data to the WebSocket.
-   */
-  private async runInitialQuery(query: rt.Sequence, room: string, ws: ElysiaWS<any>): Promise<void> {
-    const connection: rt.Connection = await getRethinkDB();
-    
-    query.run(connection, async (error, cursor) => {
-      if (error) {
-        console.error("Error running query:", error);
-        return;
+      let query2: rt.Sequence = rt.db('beats').table("private").filter({ roomId: username });
+      if (!watchedRooms[username]) {
+        query2.changes().run(connection, (error, cursor) => {
+          if (error) throw error;
+          cursor.each((error, row)  => {
+            if (error) throw error;
+            if (row.new_val) {
+              const room_data: Result = row.new_val;
+              const roomData: string = JSON.stringify(room_data);
+              ws?.send(roomData)
+              
+            }
+          })
+        });
+        watchedRooms[room] = true;
       }
 
-      try {
-        const result: Result[] = await cursor.toArray();
-        const room_data = {
-          chat: result,
-          handle: room,
-        };
-        const roomData: string = JSON.stringify(room_data);
-        ws?.send(roomData);
-      } catch (err: any) {
-        console.error("Error sending initial chat data:", err);
-        throw err;
+      let query3: rt.Sequence = rt.db('beats').table("private").filter({ receiver: username });
+      if (!watchedRooms[username]) {
+        query3.changes().run(connection, (error, cursor) => {
+          if (error) throw error;
+          cursor.each((error, row)  => {
+            if (error) throw error;
+            if (row.new_val) {
+              const room_data: Result = row.new_val;
+              const roomData: string = JSON.stringify(room_data);
+              ws?.send(roomData)
+            }
+          })
+        });
+        watchedRooms[room] = true;
       }
-    });
-  }
-
-  /**
-   * Handles the public chat room data and sets up change feed listeners.
-   */
-  private async setupPublicRoom(room: string, ws: ElysiaWS<any>) {
-    const query: rt.Sequence = rt.db('beats').table("chats").filter({ roomId: room });
-    
-    if (!watchedRooms[room]) {
-      await this.handleChangeFeed(query, ws, room);
-    }
-
-    const orderedQuery: rt.Sequence = query.orderBy(rt.desc("ts")).limit(4);
-    await this.runInitialQuery(orderedQuery, room, ws);
-  }
-
-  /**
-   * Handles the private chat room and receiver data and sets up change feed listeners.
-   */
-  private async setupPrivateRoom(username: string, ws: ElysiaWS<any>) {
-    const privateRoomQuery: rt.Sequence = rt.db('beats').table("private").filter({ roomId: username });
-
-    if (!watchedRooms[username]) {
-      await this.handleChangeFeed(privateRoomQuery, ws, username);
-    }
-
-    const receiverQuery: rt.Sequence = rt.db('beats').table("private").filter({ receiver: username });
-
-    if (!watchedRooms[username]) {
-      await this.handleChangeFeed(receiverQuery, ws, username);
-    }
-  }
-
-  /**
-   * Main function that sets up both public and private rooms.
-   */
-  public async chatRoom(room: string, token: string): Promise<void> {
-    try {
-      const username: string = await this.verifyToken(token);
-      const ws = this.websocket;
-
-      // Setup public room
-      //@ts-ignore
-      await this.setupPublicRoom(room, ws);
-
-      // Setup private room for the user (both as roomId and receiver)
-      //@ts-ignore
-      await this.setupPrivateRoom(username, ws);
 
     } catch (error: any) {
-      console.error("Error in chatRoom function:", error);
-      throw error;
+      throw error
     }
   }
 
+
+  
 
   public async privateInboxData(token: string, conversingUsername: string): Promise<PrivateMessage[]> {
     try {
