@@ -12,7 +12,6 @@ import TimeService from "../game.services/time.services/time.service";
 import ValidationError from "../outputs/validation.error";
 import { changeProfilePicsSchema } from "./route.schema/schema.profile";
 import { SuccessMessage } from "../outputs/success.message";
-import { authorizationBearerSchema } from "./route.schema/schema.auth";
 import { newGroupChatSchema } from "../chat.services/chat.schema";
 
 const chat = (app: Elysia): void => {
@@ -55,7 +54,7 @@ const chat = (app: Elysia): void => {
   ), changeProfilePicsSchema
   
 
-  app.post('api/login/google', async ({ headers, body }) => {
+  app.post('api/chat/new-group-chat', async ({ headers, body }) => {
     try {
       const authorizationHeader: string | null = headers.authorization;
       if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
@@ -64,7 +63,6 @@ const chat = (app: Elysia): void => {
       const jwtToken: string = authorizationHeader.substring(7);
 
       const chatService: ChatService = new ChatService();
-      //@ts-ignore
       const output: SuccessMessage = await chatService.createGroupChat(jwtToken, body)
   
       return output
