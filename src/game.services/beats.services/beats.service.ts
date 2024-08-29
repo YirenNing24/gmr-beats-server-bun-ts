@@ -29,7 +29,7 @@ class BeatsService {
 
       const activity = { activity: 'lobby' };
 
-      this.setBeatsClientStatus(userName, activity);
+      await this.setBeatsClientStatus(userName, activity);
 
       return new SuccessMessage(userName);
     } catch (error: any) {
