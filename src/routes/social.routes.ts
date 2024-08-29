@@ -18,7 +18,9 @@ import { SuccessMessage } from '../outputs/success.message';
 //** VALIDATION SCHEMA IMPORT
 import { followResponseSchema, getMutualConversationSchema, setOnlineStatusSchema, unFollowResponseSchema, viewProfileSchema } from './route.schema/schema.social';
 import { authorizationBearerSchema } from './route.schema/schema.auth';
-import { cardGiftSchema, commentFanMomentSchema, getFanMomentSchema, getFollowersFollowingSchema, likeFanMomentSchema, postFanMomentSchema } from '../social.services/social.schema';
+import { cardGiftSchema, commentFanMomentSchema, getBeatsClientStatusSchema, getFanMomentSchema, getFollowersFollowingSchema, likeFanMomentSchema, postFanMomentSchema } from '../social.services/social.schema';
+import BeatsService from '../game.services/beats.services/beats.service';
+import { MutualStatus } from '../game.services/beats.services/beats.interface';
 
 
 
@@ -417,7 +419,27 @@ const social = (app: Elysia) => {
         throw error
       }
     }, commentFanMomentSchema
-  )
+    )
+
+    .post('/api/mutuals/status', async ({ headers, body }): Promise<Error | MutualStatus[]> => {
+      try {
+        const authorizationHeader: string = headers.authorization;
+        if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+          throw new Error('Bearer token not found in Authorization header');
+        }
+        const jwtToken: string = authorizationHeader.substring(7);
+
+
+        const driver: Driver = getDriver();
+        const beatsService: BeatsService = new BeatsService(driver);
+        const output: Error | MutualStatus[] = await beatsService.getBeatsClientStatus(jwtToken, body);
+
+        return output
+      } catch(error: any) {
+        throw error
+        }
+      }, getBeatsClientStatusSchema
+    )
 
 
   };

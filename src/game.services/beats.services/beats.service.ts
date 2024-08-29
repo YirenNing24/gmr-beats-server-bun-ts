@@ -7,7 +7,7 @@ import { Driver } from 'neo4j-driver-core';
 
 //** TYPE INTERFACE */
 import { SuccessMessage } from '../../outputs/success.message.js';
-import { BeatsActivity, BeatsStatus } from './beats.interface.js';    
+import { BeatsActivity, BeatsStatus, MutualStatus } from './beats.interface.js';    
 
 class BeatsService {
   driver: Driver;
@@ -55,22 +55,21 @@ class BeatsService {
   }
 
   
-  public async getBeatsClientStatus(token: string, usernames: string[]): Promise<{ username: string, status: BeatsStatus }[] | Error> {
+  public async getBeatsClientStatus(token: string, usernames: string[]): Promise<MutualStatus[] | Error> {
     try {
       const tokenService: TokenService = new TokenService();
       await tokenService.verifyAccessToken(token);
       
       // Create an array of promises for fetching statuses
-      const fetches = usernames.map(async (username) => {
+      const fetches:  Promise<MutualStatus>[] = usernames.map(async (username) => {
         const result = await keydb.HGETALL(username);
         // Cast to BeatsStatus type and return as an object
         return { username, status: result as unknown as BeatsStatus };
       });
   
       // Wait for all promises to resolve
-      const results = await Promise.all(fetches);
+      const results: MutualStatus[] = await Promise.all(fetches);
   
-      console.log(results);
       return results;
     } catch (error: any) {
       console.log(error);

@@ -8,5 +8,11 @@ export interface BeatsStatus {
 
 
 export interface BeatsActivity {
-    activity: string
+    activity: string;
+}
+
+
+export interface MutualStatus {
+    username: string;
+    status: BeatsStatus;
 }

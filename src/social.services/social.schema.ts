@@ -82,3 +82,11 @@ export const getFollowersFollowingSchema= {
         username: t.String(),
     })
 };
+
+
+export const getBeatsClientStatusSchema = {
+	headers: t.Object({ authorization: t.String() }),
+    body: t.Array(t.String())
+};
+
+
