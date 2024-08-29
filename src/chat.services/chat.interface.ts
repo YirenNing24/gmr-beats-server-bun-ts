@@ -68,7 +68,7 @@ export interface NewMessage {
   message: string;
   roomId?: string;
   group?: boolean
-  sender: SenderData;
+  sender?: SenderData;
   receiver: string;
   ts: number;
   timestamp: number;
@@ -95,4 +95,10 @@ export interface PrivateMessage {
   seen: boolean;
   sender: SenderData;
   ts: number;
+}
+
+
+export interface GroupChatData {
+  name: string;
+  members: string[];
 }

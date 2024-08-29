@@ -7,9 +7,9 @@ import rt from "rethinkdb";
 import { getRethinkDB } from "../db/rethink";
 
 //** TYPE INTERFACE
-import { PrivateMessage, NewMessage, Result, GroupResult } from "./chat.interface";
+import { PrivateMessage, NewMessage, Result, GroupResult, GroupChatData } from "./chat.interface";
 import TokenService from "../user.services/token.services/token.service";
-import { RouteSchema } from "elysia";
+import { SuccessMessage } from "../outputs/success.message";
 
 
 const watchedRooms: Record<string, boolean> = {};
@@ -30,8 +30,8 @@ class ChatService {
       
       const ws = this.websocket;
       const connection: rt.Connection = await getRethinkDB();
-      let query: rt.Sequence = rt.db('beats').table("chats").filter({ roomId: room });
-      
+
+      let query: rt.Sequence = rt.db('beats').table("chats").filter({ roomId: room });  
       if (!watchedRooms[room]) {
         query.changes().run(connection, (error, cursor) => {
           if (error) {
@@ -108,40 +108,26 @@ class ChatService {
         watchedRooms[room] = true;
       }
 
-
+      let groupChat: rt.Sequence = rt.db('beats').table("group").filter(rt.row('members').contains(username));
+      if (!watchedGroupRooms[username]) {
+        groupChat.changes().run(connection, (error, cursor) => {
+          if (error) throw error;
+          cursor.each((error, row)  => {
+            if (error) throw error;
+            if (row.new_val) {
+              const room_data: GroupResult = row.new_val;
+              const roomData: string = JSON.stringify(room_data);
+              ws?.send(roomData)
+            }
+          })
+        });
+        watchedGroupRooms[username] = true;
+      }
+    
     } catch (error: any) {
       throw error
     }
   }
-
-
-  public async groupChatRoom(token: string) {
-
-    const tokenService: TokenService = new TokenService();
-    const username: string = await tokenService.verifyAccessToken(token);
-    
-    const ws: ElysiaWS<any, RouteSchema, { request: {}; store: {};}> | undefined = this.websocket;
-    const connection: rt.Connection = await getRethinkDB();
-
-    let query1: rt.Sequence = rt.db('beats').table("group").filter(rt.row('members').contains(username));
-
-    if (!watchedGroupRooms[username]) {
-      query1.changes().run(connection, (error, cursor) => {
-        if (error) throw error;
-        cursor.each((error, row)  => {
-          if (error) throw error;
-          if (row.new_val) {
-            const room_data: GroupResult = row.new_val;
-            const roomData: string = JSON.stringify(room_data);
-            ws?.send(roomData)
-          }
-        })
-      });
-      watchedGroupRooms[username] = true;
-    }
-  }
-
-
 
 
   public async privateInboxData(token: string, conversingUsername: string): Promise<PrivateMessage[]> {
@@ -173,6 +159,37 @@ class ChatService {
       return messageData as PrivateMessage[]
     } catch (error: any) {
       throw error;
+    }
+  }
+
+
+  public async createGroupChat(token: string, groupChatData: GroupChatData) {
+    try {
+      const tokenService:  TokenService = new TokenService();
+      const username: string = await tokenService.verifyAccessToken(token);
+
+      const { name, members } = groupChatData
+
+      const newGroupChat = { 
+        message: `Welcome!`, 
+        group: true,
+        members,
+        roomId: name,
+        seen: false,
+        sender: username,
+        ts: Date.now(),
+      }
+
+      const connection: rt.Connection = await getRethinkDB();
+      await rt
+        .db('beats')
+        .table('group')
+        .insert(newGroupChat)
+        .run(connection);
+    
+      return new SuccessMessage("Group chat created successfully")
+    } catch(error: any) {
+      throw error
     }
   }
   
