@@ -120,6 +120,7 @@ class ChatService {
             if (row.new_val) {
               const room_data: GroupResult = row.new_val;
               const roomData: string = JSON.stringify(room_data);
+              console.log(roomData)
               ws?.send(roomData)
             }
           })
