@@ -3,7 +3,7 @@ import Elysia from "elysia";
 
 //** CHAT SERVICE IMPORT
 import ChatService, { insertChats } from "../chat.services/chat.socket.service";
-import { NewMessage } from "../chat.services/chat.interface";
+import { GroupResult, NewMessage } from "../chat.services/chat.interface";
 
 //** SERVER TIME SERVICE IMPORT
 import TimeService from "../game.services/time.services/time.service";
@@ -64,6 +64,25 @@ const chat = (app: Elysia): void => {
 
       const chatService: ChatService = new ChatService();
       const output: SuccessMessage = await chatService.createGroupChat(jwtToken, body)
+  
+      return output
+    } catch (error: any) {
+      return error;
+    }
+
+    }, newGroupChatSchema
+  )
+
+  app.get('api/chat/group-chats', async ({ headers }) => {
+    try {
+      const authorizationHeader: string | null = headers.authorization;
+      if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+        throw new Error('Bearer token not found in Authorization header');
+      }
+      const jwtToken: string = authorizationHeader.substring(7);
+
+      const chatService: ChatService = new ChatService();
+      const output: GroupResult[] = await chatService.getGroupChats(jwtToken);
   
       return output
     } catch (error: any) {

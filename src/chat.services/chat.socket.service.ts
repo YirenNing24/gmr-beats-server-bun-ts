@@ -196,6 +196,32 @@ class ChatService {
       throw error
     }
   }
+
+
+  public async getGroupChats(token: string): Promise<GroupResult[]> {
+    try {
+        const tokenService: TokenService = new TokenService();
+        const username: string = await tokenService.verifyAccessToken(token);
+
+        const connection: rt.Connection = await getRethinkDB();
+
+        // Query to find all group chats where the user's username is in the members array
+        const groupChat: rt.Cursor = await rt.db('beats')
+            .table("group")
+            .filter(rt.row('members').contains(username))
+            .run(connection);
+
+        // Convert the results to an array
+        const groupChatData: GroupResult[] = await groupChat.toArray();
+
+        // Return the group chat data
+        return groupChatData;
+    } catch (error: any) {
+        console.error("Error retrieving group chats:", error);
+        throw error;
+    }
+  }
+
   
   
 };

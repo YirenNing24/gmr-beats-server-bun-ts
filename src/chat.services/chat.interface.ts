@@ -30,10 +30,14 @@ export interface Result {
  */
 export interface GroupResult {
   id: string;
+  group: boolean;
+  members: string[]
   message: string;
   roomId: string;
-  ts: number;
   seen: boolean;
+  sender: string;
+  ts: number;
+
 }
 
 
