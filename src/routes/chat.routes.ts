@@ -13,6 +13,7 @@ import ValidationError from "../outputs/validation.error";
 import { changeProfilePicsSchema } from "./route.schema/schema.profile";
 import { SuccessMessage } from "../outputs/success.message";
 import { newGroupChatSchema } from "../chat.services/chat.schema";
+import { authorizationBearerSchema } from "./route.schema/schema.auth";
 
 const chat = (app: Elysia): void => {
   app.ws('/api/ws', {
@@ -89,7 +90,7 @@ const chat = (app: Elysia): void => {
       return error;
     }
 
-    }, newGroupChatSchema
+    }, authorizationBearerSchema
   )
 
 
