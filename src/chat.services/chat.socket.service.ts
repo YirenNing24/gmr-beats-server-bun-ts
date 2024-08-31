@@ -10,6 +10,7 @@ import { getRethinkDB } from "../db/rethink";
 import { PrivateMessage, NewMessage, Result, GroupResult, GroupChatData } from "./chat.interface";
 import TokenService from "../user.services/token.services/token.service";
 import { SuccessMessage } from "../outputs/success.message";
+import { ManagedTransaction, QueryResult } from "neo4j-driver";
 
 
 const watchedRooms: Record<string, boolean> = {};
@@ -216,6 +217,9 @@ class ChatService {
         throw error;
     }
   }
+
+
+
 
   
   

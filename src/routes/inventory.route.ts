@@ -118,6 +118,25 @@ const inventory = (app: Elysia): void => {
             }, authorizationBearerSchema
         )
 
+    .get('/api/chat/items', async ({ headers }) => {
+        try {
+            const authorizationHeader = headers.authorization;
+            if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+                throw new Error('Bearer token not found in Authorization header');
+            }
+            const jwtToken: string = authorizationHeader.substring(7);
+
+            const driver: Driver = getDriver();
+            const inventoryService: InventoryService = new InventoryService(driver);
+            const output = await inventoryService.getChatItems(jwtToken);
+
+            return output
+            } catch (error: any) {
+            return error
+            }
+        }, authorizationBearerSchema
+        )  
+
 };
 
 export default inventory;

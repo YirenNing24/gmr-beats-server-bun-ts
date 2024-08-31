@@ -255,6 +255,47 @@ this.driver = driver;
             throw error;
         }
     }
+
+
+    public async getChatItems(token: string): Promise<{ loudspeaker: { quantity: number } }> {
+        let session: Session | undefined;
+        try {
+            const tokenService: TokenService = new TokenService();
+            const username: string = await tokenService.verifyAccessToken(token);
+    
+            session = this.driver?.session();
+            const result: QueryResult | undefined = await session?.executeRead((tx: ManagedTransaction) =>
+                tx.run(
+                    `
+                    MATCH (u:User {username: $username})-[:OWNED]->(l:LoudSpeaker)
+                    RETURN l.quantity as quantity
+                    `,
+                    { username }
+                )
+            );
+    
+            // Process the result and return the chat items
+            if (!result || result.records.length === 0) {
+                // Handle the case where no data is found
+                return { loudspeaker: { quantity: 0 } };
+            }
+    
+            // Extract the returned data from the records
+            const quantity: number = result.records[0].get("quantity");
+            return { loudspeaker: { quantity } };
+    
+        } catch (error: any) {
+            // Handle errors appropriately
+            throw error;
+        } finally {
+            // Ensure the session is properly closed
+            if (session) {
+                await session.close();
+            }
+        }
+    }
+    
+    
     
     
     
