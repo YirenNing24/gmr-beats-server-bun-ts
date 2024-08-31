@@ -109,10 +109,6 @@ class ChatService {
       }
 
       let groupChat: rt.Sequence = rt.db('beats').table("group").filter(rt.row('members').contains(username));
-
-
-      console.log(groupChat)
-      if (!watchedGroupRooms[username]) {
         groupChat.changes().run(connection, (error, cursor) => {
           if (error) throw error;
           cursor.each((error, row)  => {
@@ -125,8 +121,7 @@ class ChatService {
             }
           })
         });
-        watchedGroupRooms[username] = true;
-      }
+
     
     } catch (error: any) {
       throw error
