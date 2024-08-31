@@ -281,7 +281,7 @@ this.driver = driver;
             }
     
             // Extract the returned data from the records
-            const quantity: number = result.records[0].get("quantity");
+            const quantity: number = result.records[0].get("quantity").toNumber();
             return { loudspeaker: { quantity } };
     
         } catch (error: any) {
