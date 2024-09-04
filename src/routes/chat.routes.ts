@@ -23,6 +23,7 @@ const chat = (app: Elysia): void => {
           const authorizationHeader: string = ws.data.headers.authorization || "";
 
           if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+            ws.terminate();
             throw new ValidationError('jwt issue', 'jwt issue');
           }
 
