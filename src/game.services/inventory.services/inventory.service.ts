@@ -297,6 +297,36 @@ this.driver = driver;
     
     
     
+    public async openGroupCardEquipped(token: string, groupName: string) {
+        try {
+            const tokenService: TokenService = new TokenService();
+            const username: string = await tokenService.verifyAccessToken(token);
+    
+            const session: Session | undefined = this.driver?.session();
+    
+            const result: QueryResult | undefined = await session?.executeRead((tx: ManagedTransaction) =>
+                tx.run(
+                    `
+                    MATCH (u:User {username: $username})-[:EQUIPPED]->(c:Card {group: $groupName})
+                    RETURN c
+                    `,
+                    { username, groupName }
+                )
+            );
+    
+            // Process the result and extract the equipped cards
+            const cards: CardMetaData[] = result?.records.map((record) => record.get('c')) || [];
+    
+            // Close the session
+            await session?.close();
+    
+            return cards;
+            
+        } catch (error: any) {
+            console.error(error);
+            throw error;
+        }
+    }
     
     
     
