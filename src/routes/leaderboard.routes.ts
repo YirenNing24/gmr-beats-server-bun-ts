@@ -10,6 +10,7 @@ import LeaderboardService from '../game.services/leaderboard.services/leaderboar
 
 //** TYPES IMPORTS
 import { getClassicLeaderboardSchema } from '../game.services/leaderboard.services/leaderboard.schema'
+import { ClassicScoreStats } from '../game.services/leaderboard.services/leaderboard.interface'
 
 
 const leaderboards = (app: Elysia): void => {
@@ -23,7 +24,7 @@ const leaderboards = (app: Elysia): void => {
 
       const driver: Driver = getDriver();
       const leaderboardService: LeaderboardService = new LeaderboardService(driver);
-      const output = await leaderboardService.leaderboard(jwtToken, query);
+      const output: ClassicScoreStats[] = await leaderboardService.leaderboard(jwtToken, query);
 
       return output
     } catch (error: any) {

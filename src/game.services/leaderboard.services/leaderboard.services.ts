@@ -30,8 +30,10 @@ class LeaderboardService {
 			const songTitle: string = this.correctSongName(songName)
 
 			const { startOfPeriod, endOfPeriod } = this.getPeriodDates(period);
-			const scores = await this.fetchScores(songTitle, difficulty.toLowerCase());
-			const filteredScores = this.filterScoresByPeriod(scores, startOfPeriod, endOfPeriod);
+			const scores: ClassicScoreStats[] = await this.fetchScores(songTitle, difficulty.toLowerCase());
+			const filteredScores: ClassicScoreStats[] = this.filterScoresByPeriod(scores, startOfPeriod, endOfPeriod);
+
+			console.log(filteredScores, "heyysss")
 
 			return filteredScores;
 		} catch (error: any) {

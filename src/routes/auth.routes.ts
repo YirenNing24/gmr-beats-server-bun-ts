@@ -4,7 +4,7 @@ import Elysia, { Context, t } from 'elysia'
 //** SERVICE IMPORT
 import AuthService from '../user.services/auth.services.ts/auth.service'
 
-//** MEMGRAPGH IMPORTS
+//** MEMGRAPH IMPORTS
 import { getDriver } from '../db/memgraph'
 import { Driver } from 'neo4j-driver'
 
