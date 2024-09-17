@@ -72,6 +72,8 @@ class ScoreService {
                 throw new Error("Unauthorized");
             }
 
+
+
             const scoreWithTime = { ...score, timestamp: Date.now() };
             const connection: rt.Connection = await getRethinkDB();
 
@@ -79,6 +81,8 @@ class ScoreService {
 
             const rewardData: RewardData = { songName: score.songName, songRewardType: 'first', type: 'song' };
             const isFirstSongComplete: boolean = await rewardService.checkSongReward(score.username, rewardData);
+
+            console.log(scoreWithTime)
 
             if (!isFirstSongComplete) {
 
@@ -98,6 +102,7 @@ class ScoreService {
 
             return new SuccessMessage("Score saved")
         } catch (error: any) {
+            console.log(error)
             throw error;
         }
     }
