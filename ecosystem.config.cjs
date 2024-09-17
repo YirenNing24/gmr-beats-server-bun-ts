@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: "my-bun-app",
+      name: "beats-game",
       script: "src/index.ts",
       interpreter: "/root/.bun/bin/bun",  // Use the absolute path
       env: {
