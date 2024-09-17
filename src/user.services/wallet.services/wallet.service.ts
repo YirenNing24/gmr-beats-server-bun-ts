@@ -7,10 +7,9 @@ import { BEATS_TOKEN, GMR_TOKEN, ENGINE_ACCESS_TOKEN } from "../../config/consta
 //**  TYPE INTERFACE
 import { WalletData } from "../user.service.interface";
 
-const engine = new Engine({
-  url: "https://localhost:3005",
-  accessToken: ENGINE_ACCESS_TOKEN,
-  
+const engine: Engine = new Engine({
+  url: "http://localhost:3005",
+  accessToken: ENGINE_ACCESS_TOKEN
 });
 
 class WalletService {
