@@ -26,14 +26,11 @@ class LeaderboardService {
 			await tokenService.verifyAccessToken(token);
 		
 			const { songName, difficulty, period } = query;
-
 			const songTitle: string = this.correctSongName(songName)
 
 			const { startOfPeriod, endOfPeriod } = this.getPeriodDates(period);
 			const scores: ClassicScoreStats[] = await this.fetchScores(songTitle, difficulty.toLowerCase());
 			const filteredScores: ClassicScoreStats[] = this.filterScoresByPeriod(scores, startOfPeriod, endOfPeriod);
-
-			console.log(filteredScores, "heyysss")
 
 			return filteredScores;
 		} catch (error: any) {
