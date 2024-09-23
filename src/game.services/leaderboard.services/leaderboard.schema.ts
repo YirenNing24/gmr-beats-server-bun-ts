@@ -2,8 +2,6 @@ import { t } from "elysia";
 
 
 
-
-
 export const classicScoreStatsSchema = {
     headers: t.Object({ 
         "x-api-key": t.String()

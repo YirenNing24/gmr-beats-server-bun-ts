@@ -117,7 +117,8 @@ class ScoreService {
             const connection: rt.Connection = await getRethinkDB();
             const idPeer: number = parseInt(peerId.peerId)
 
-            const result: rt.Cursor = await rt.db('beats')
+            const result: rt.Cursor = await rt
+                .db('beats')
                 .table('classicScores')
                 .filter({ peerId: idPeer })
                 .run(connection);

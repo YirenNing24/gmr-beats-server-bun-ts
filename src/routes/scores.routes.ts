@@ -12,7 +12,6 @@ import { ClassicScoreStats } from '../game.services/leaderboard.services/leaderb
 
 //** VALIDATION SCHEMA IMPORT
 import { authorizationBearerSchema } from './route.schema/schema.auth';
-import { ClassicLeaderboardRequestSchema } from './route.schema/schema.leaderboard';
 import { classicScoreStatsSchema, getClassicScoreStatsSingle } from '../game.services/leaderboard.services/leaderboard.schema';
 
 
