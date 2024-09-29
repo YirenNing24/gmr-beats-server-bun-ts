@@ -22,46 +22,6 @@ class ScoreService {
         this.driver = driver;
     }   
 
-    //* CLASSIC GAME MODE SAVE FUNCTION
-    // public async saveScoreClassic(score: ClassicScoreStats, token: string, apiKey: string): Promise<SuccessMessage> {
-    //     try {
-    //         const tokenService: TokenService = new TokenService();
-    //         const rewardService: RewardService = new RewardService();
-    //         const userName: string | "" = await tokenService.verifyAccessToken(token);
-    //         const isAuthorized: boolean = await tokenService.verifyApiKey(apiKey);
-
-    //         if (!isAuthorized) {
-    //             throw new Error("Unauthorized");
-    //         }
-
-    //         const songName: string = toPascalCase(score.songName);
-
-    //         const session: Session | undefined = this.driver?.session();
-    //         const result: QueryResult | undefined = await session?.executeRead((tx: ManagedTransaction) =>
-    //              tx.run(`MATCH (s:$songName)
-    //                      RETURN s as Song LIMIT 1`, { songName })
-    //         );
-
-    //         const result2 = await session?.executeWrite((tx: ManagedTransaction) => 
-    //             tx.run(`MATCH (u:User {username: $userName})
-    //                     CREATE (s:$songName)
-    //                     CREATE (u)-[:SCORE]->(s)
-    //                     SET s += $score
-    //                     RETURN u.smartWalletAddress as smartWalletAddress`, { songName, score, userName}))
-    //         await session?.close();
-
-    //         const smartWalletAddress: string = result2?.records[0].get("smartWalletAddress");
-    //         if (result?.records.length === 0) {
-    //             await rewardService.firstScorer(userName, score.songName, smartWalletAddress, score.artist);
-    //         };
-
-    //         return new SuccessMessage("Score saved")
-    //     } catch (error: any) {
-    //         throw error;
-    //     }
-    // }
-
-    
     //** BEATS SERVER EXCLUSIVE SERVICE */
     public async saveScoreClassic(score: ClassicScoreStats, apiKey: string): Promise<SuccessMessage> {
         try {
