@@ -13,17 +13,19 @@ import { ClassicScoreStats } from '../game.services/leaderboard.services/leaderb
 //** VALIDATION SCHEMA IMPORT
 import { authorizationBearerSchema } from './route.schema/schema.auth';
 import { classicScoreStatsSchema, getClassicScoreStatsSingle } from '../game.services/leaderboard.services/leaderboard.schema';
+import { SuccessMessage } from '../outputs/success.message';
 
 
 const scores = (app: Elysia): void => {
-    app.post('/api/save/score/classic', async ({ headers, body }): Promise<void> => {
+    app.post('/api/save/score/classic', async ({ headers, body }): Promise<SuccessMessage > => {
         try {
             const apiKeyHeader: string | null = headers['x-api-key'];
 
             const driver: Driver = getDriver();
             const scoreService: ScoreService = new ScoreService(driver);
-            await scoreService.saveScoreClassic(body, apiKeyHeader);
+            const result: SuccessMessage = await scoreService.saveScoreClassic(body, apiKeyHeader);
 
+            return result
         } catch (error: any) {
           throw error
         }

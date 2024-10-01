@@ -7,13 +7,25 @@ import { BEATS_TOKEN, GMR_TOKEN, ENGINE_ACCESS_TOKEN } from "../../config/consta
 //**  TYPE INTERFACE
 import { WalletData } from "../user.service.interface";
 
-const engine = new Engine({
+//** MEMGRAPH IMPORTS
+import { QueryResult } from "neo4j-driver";
+import { Driver, Session } from "neo4j-driver-core";
+
+
+//** ERROR CODES
+import ValidationError from '../../outputs/validation.error.js'
+
+export const engine: Engine = new Engine({
   url: "https://localhost:3005",
   accessToken: ENGINE_ACCESS_TOKEN,
   
 });
 
 class WalletService {
+  driver?: Driver;
+  constructor(driver?: Driver) {
+    this.driver = driver;
+  }
 
   //** Creates a wallet and returns the wallet address.
   public async createWallet(username: string): Promise<string> {
@@ -50,6 +62,34 @@ class WalletService {
       throw error;
     }
   }
+
+
+  public async getSmartWalletAddress(userName: string): Promise<string> {
+    try {
+        const session: Session | undefined = this.driver?.session();
+        
+        // Find the user node within a Read Transaction
+        const result: QueryResult | undefined = await session?.executeRead(tx =>
+            tx.run('MATCH (u:User {username: $userName}) RETURN u.smartWalletAddress AS smartWalletAddress', { userName })
+        );
+
+        await session?.close();
+        
+        // Verify the user exists
+        if (result?.records.length === 0) {
+            throw new ValidationError(`User with username '${userName}' not found.`, "");
+        }
+
+        // Retrieve the smartWalletAddress
+        const smartWalletAddress: string = result?.records[0].get('smartWalletAddress');
+        
+        return smartWalletAddress;
+    } catch (error: any) {
+        console.log(error);
+        throw error;
+    }
+}
+
 
 }
 
