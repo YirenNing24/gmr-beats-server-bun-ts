@@ -127,6 +127,30 @@ export default class StoreService {
   //   }
   // }
 
+    //Initiates a card purchase using the provided wallet information and listing ID.
+  // private async cardPurchase(localWallet: string, localWalletKey: string, listingId: number): Promise<void | Error> {
+  //     try {
+  //     const walletLocal: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
+  //     await walletLocal.import({
+  //       encryptedJson: localWallet,
+  //       password: localWalletKey,
+  //     });
+  //     const smartWallet: SmartWallet = new SmartWallet(SMART_WALLET_CONFIG);
+  //     await smartWallet.connect({
+  //       personalWallet: walletLocal,
+  //     });
+  
+  //     const sdk: ThirdwebSDK = await ThirdwebSDK.fromWallet(smartWallet, CHAIN);
+  //     const contract: MarketplaceV3 = await sdk.getContract(CARD_MARKETPLACE, "marketplace-v3");
+  //     await contract.directListings.buyFromListing(listingId, 1);
+  
+  //   } catch(error: any) {
+  //     console.log(error)
+  //     return error
+  //       }
+  // }
+
+
 
   public async buyCard(buycardData: BuyCardData, token: string): Promise<SuccessMessage> {
     try {
@@ -164,31 +188,6 @@ export default class StoreService {
   }
 
 
-
-  //Initiates a card purchase using the provided wallet information and listing ID.
-  // private async cardPurchase(localWallet: string, localWalletKey: string, listingId: number): Promise<void | Error> {
-  //     try {
-  //     const walletLocal: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
-  //     await walletLocal.import({
-  //       encryptedJson: localWallet,
-  //       password: localWalletKey,
-  //     });
-  //     const smartWallet: SmartWallet = new SmartWallet(SMART_WALLET_CONFIG);
-  //     await smartWallet.connect({
-  //       personalWallet: walletLocal,
-  //     });
-  
-  //     const sdk: ThirdwebSDK = await ThirdwebSDK.fromWallet(smartWallet, CHAIN);
-  //     const contract: MarketplaceV3 = await sdk.getContract(CARD_MARKETPLACE, "marketplace-v3");
-  //     await contract.directListings.buyFromListing(listingId, 1);
-  
-  //   } catch(error: any) {
-  //     console.log(error)
-  //     return error
-  //       }
-  // }
-
-
   private async cardPurchase(walletAddress: string, listingId: string): Promise<void> {
     try {
         const chain: string = "42161";
@@ -212,27 +211,81 @@ export default class StoreService {
   }
 
       
-  private async cardPackPurchase(localWallet: string, localWalletKey: string, listingId: number): Promise<void | Error> {
+  private async cardPackPurchase(walletAddress: string, listingId: string): Promise<void | Error> {
     try {
-    const walletLocal: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
-    await walletLocal.import({
-      encryptedJson: localWallet,
-      password: localWalletKey,
-    });
-    const smartWallet: SmartWallet = new SmartWallet(SMART_WALLET_CONFIG);
-    await smartWallet.connect({
-      personalWallet: walletLocal,
-    });
+      const chain: string = "42161";
+      const buyDetails = {
+          listingId,
+          quantity: "1",
+          buyer: walletAddress,
+      };
 
-    const sdk: ThirdwebSDK = await ThirdwebSDK.fromWallet(smartWallet, CHAIN);
-    const contract: MarketplaceV3 = await sdk.getContract(PACK_MARKETPLACE, "marketplace-v3");
-    await contract.directListings.buyFromListing(listingId, 1);
+      // Make the purchase
+      await engine.marketplaceDirectListings.buyFromListing(
+          chain, 
+          PACK_MARKETPLACE, 
+          "0x0AfF10A2220aa27fBe83C676913aebeb3801DfB6", 
+          buyDetails
+      );
+  } catch (error: any) {
+      console.error("Error in cardPurchases:", error);
+      throw error; // Rethrow the error for further handling if needed
+  }
+  }
 
-  } catch(error: any) {
-    console.log(error)
-    return error
-      }
-}
+
+// private async cardPackPurchase(localWallet: string, localWalletKey: string, listingId: number): Promise<void | Error> {
+//   try {
+//   const walletLocal: LocalWalletNode = new LocalWalletNode({ chain: CHAIN });
+//   await walletLocal.import({
+//     encryptedJson: localWallet,
+//     password: localWalletKey,
+//   });
+//   const smartWallet: SmartWallet = new SmartWallet(SMART_WALLET_CONFIG);
+//   await smartWallet.connect({
+//     personalWallet: walletLocal,
+//   });
+
+//   const sdk: ThirdwebSDK = await ThirdwebSDK.fromWallet(smartWallet, CHAIN);
+//   const contract: MarketplaceV3 = await sdk.getContract(PACK_MARKETPLACE, "marketplace-v3");
+//   await contract.directListings.buyFromListing(listingId, 1);
+
+// } catch(error: any) {
+//   console.log(error)
+//   return error
+//     }
+//   }
+
+
+  // public async buyCardPack(buycardData: BuyCardData, token: string): Promise<SuccessMessage> {
+  //   try {
+  //     const tokenService: TokenService = new TokenService();
+  //     const username: string = await tokenService.verifyAccessToken(token);
+
+  //     const { listingId, uri } = buycardData as BuyCardData;
+
+  //     const session: Session = this.driver.session();
+  //     const result: QueryResult = await session.executeRead(tx =>
+  //       tx.run('MATCH (u:User {username: $username}) RETURN u', { username })
+  //     );
+  //     await session.close();
+  //     if (result.records.length === 0) {
+  //       throw new ValidationError(`User with username '${username}' not found.`, '');
+  //     };
+      
+  //     const userData: UserData = result.records[0].get("u");
+  //     const { localWallet, localWalletKey } = userData.properties;
+
+  //     await this.cardPackPurchase(localWallet, localWalletKey, listingId);
+
+  //     // Create relationship using a separate Cypher query
+  //     await this.createCardPackRelationship(username, uri);
+
+  //     return new SuccessMessage("Purchase was successful");
+  //   } catch (error: any) {
+  //     throw error
+  //   }
+  // }
 
 
   public async buyCardPack(buycardData: BuyCardData, token: string): Promise<SuccessMessage> {
@@ -252,12 +305,12 @@ export default class StoreService {
       };
       
       const userData: UserData = result.records[0].get("u");
-      const { localWallet, localWalletKey } = userData.properties;
+      const { smartWalletAddress} = userData.properties;
 
-      await this.cardPackPurchase(localWallet, localWalletKey, listingId);
+      await this.cardPackPurchase(smartWalletAddress, listingId.toString());
 
       // Create relationship using a separate Cypher query
-      await this.createCardPackRelationship(username, uri);
+      this.createCardPackRelationship(username, uri);
 
       return new SuccessMessage("Purchase was successful");
     } catch (error: any) {
@@ -281,27 +334,6 @@ export default class StoreService {
       
       // Get the card's name
       const session: Session = this.driver.session();
-      // const cardNameResult = await session.run(`
-      //   MATCH (c:Card {uri: $uri})
-      //   RETURN c.Name AS name
-      // `, { uri });
-      // const cardName = cardNameResult.records[0].get("name");
-  
-      // Check for uniqueness of the card's name among BAGGED or INVENTORY relationships
-      // const uniquenessCheck = await session.run(`
-      //   MATCH (u:User {username: $username})-[:BAGGED|INVENTORY]->(c:Card)
-      //   WHERE c.Name = $cardName
-      //   RETURN COUNT(c) AS count, c.id as id
-      // `, { username, cardName });
-      // const count: number = uniquenessCheck.records[0].get("count").toInt();
-      // const id: string = uniquenessCheck.records[0].get("id");
-  
-      // If the card's name is unique, call the firstCardType function
-      // if (count === 0) {
-      //   await rewardService.firstCardType(uri, id)
-      // }
-  
-      // Loop through each relationship type
       for (const rel of relationship) {
         await session.run(`
           MATCH (u:User {username: $username}), (c:Card {uri: $uri})
