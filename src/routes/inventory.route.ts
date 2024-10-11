@@ -6,7 +6,7 @@ import { Driver } from 'neo4j-driver';
 import { getDriver } from '../db/memgraph';
 
 //** INTERFACE IMPORT
-import { InventoryCards } from '../game.services/inventory.services/inventory.interface';
+import { CardMetaData, InventoryCards } from '../game.services/inventory.services/inventory.interface';
 
 //** SERVICES IMPORTS
 import InventoryService from '../game.services/inventory.services/inventory.service';
@@ -118,6 +118,30 @@ const inventory = (app: Elysia): void => {
             }, authorizationBearerSchema
         )
 
+
+        
+    .get('/api/card/inventory/group-equipped/:groupName', async ({ headers, params }): Promise<CardMetaData[]> => {
+            try {
+                const authorizationHeader = headers.authorization;
+                if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+                    throw new Error('Bearer token not found in Authorization header');
+                }
+                const jwtToken: string = authorizationHeader.substring(7);
+                const groupName: string = params.groupName;
+        
+                const driver: Driver = getDriver();
+                const inventoryService: InventoryService = new InventoryService(driver);
+                const output: CardMetaData[] = await inventoryService.openGroupCardEquipped(jwtToken, groupName);
+        
+                return output
+            } catch (error: any) {
+                return error;
+            }
+        }, authorizationBearerSchema
+        )
+        
+
+
     .get('/api/chat/items', async ({ headers }) => {
         try {
             const authorizationHeader = headers.authorization;
@@ -135,7 +159,7 @@ const inventory = (app: Elysia): void => {
             return error
             }
         }, authorizationBearerSchema
-        )  
+        )
 
 };
 
